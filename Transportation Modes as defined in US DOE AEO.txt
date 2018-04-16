@@ -1,0 +1,78 @@
+Transportation Modes and Types as defined in US DOE AEO
+---------------
+Source: AEO Table 36. Transportation Sector Energy Use by Mode and Type
+
+Highway       LightDutyVehicles         Automobiles
+Highway       LightDutyVehicles         LightTrucks
+Highway       LightDutyVehicles         Motorcycles
+Highway       CommercialLightTrucks     LightMedTrucks
+Highway       Buses                     Transit
+Highway       Buses                     Intercity
+Highway       Buses                     School
+Highway       FreightTrucks             Medium_10kto26kLbs
+Highway       FreightTrucks             Large_over26kLbs
+NonHighway    Air                       GeneralAviation
+NonHighway    Air                       DomesticAirCarriers
+NonHighway    Air                       InternationalAirCarriers
+NonHighway    Air                       FreightAirCarriers
+NonHighway    Water                     Freight                   DomesticShipping
+NonHighway    Water                     Freight                   InternationalShipping
+NonHighway    Water                     RecreationalBoats
+NonHighway    Rail                      Freight                   All
+NonHighway    Rail                      Passenger                 Intercity
+NonHighway    Rail                      Passenger                 Transit
+NonHighway    Rail                      Passenger                 Commuter
+NonHighway    Lubricants
+NonHighway    PipelineFuel
+MilitaryUse   Air                       JetFuelandAviationGasoline
+MilitaryUse   Water                     ResidualFuelOil
+MilitaryUse   Land                      DistillatesAndDiesel
+
+Notes
+1. Commercial light trucks from 8,501 to 10,000 pounds.                                                                                                              
+2. Highway Freight Trucks Does not include commercial bus and military use.                                                                                                              
+3. Non-Highway Air Does not include military jet fuel use.                                                                                                               
+4. Non-Highway Water Does not include military residual oil.
+5. Highway Freight Trucks are Medium (10001-26000 pounds) and Large (> 26000 pounds)
+
+
+FuelType
+-----------
+MotorGasoline
+E85
+Diesel
+JetFuel
+ResidualFuelOil
+AviationGasoline
+Propane
+Lubricants
+Petroleum and Other Liquids Subtotal
+M85
+Electricity
+CNG_LNG
+Hydrogen
+PipelineFuelNatGas
+
+Notes:
+5. E85 refers to a blend of 85 percent ethanol (renewable) and 15 percent motor gasoline (nonrenewable).  To address cold starting issues,
+the percentage of ethanol varies seasonally.  The annual average ethanol content of 74 percent is used for these projections.
+Motor gasoline excludes E85
+Jet fuel includes kerosene & naphtha
+6. Diesel includes (military) distillates
+
+
+SizeClass
+--------
+Mini-compact Cars
+Subcompact Cars
+Compact Cars
+Midsize Cars
+Large Cars
+Two Seater Cars
+Small Pickup
+Large Pickup
+Small Van
+Large Van
+Small Utility
+Large Utility
+

@@ -1,0 +1,236 @@
+Reads and Processes NHTS Database
+==========
+
+File: "NHTStestsYYYYMMDD.RMD"
+Created by: Paul Leiby
+Last Modified: 2016_06_17
+
+Notes: 
+
+Directory and File Preparation
+------------------
+
+```{r setupDirectories}
+rm(list = ls())
+
+args = commandArgs(trailingOnly=TRUE)  # get command line args
+
+# ************************************************
+# ******Directory and File Preparation************
+# ************************************************
+
+# *******Define directories for location of data, workfiles, figures, and location of tables
+
+#machine = "PLWinBox"
+#machine = "PLRemoteSiegfried"  # Note Sieglinde has same directory setup, works for both
+machine = "PLMac"
+#machine = "MJLaptop"
+
+projectsubpath = "Papers/2013AutomatedVehicles/2016CAVEnergyModel/"
+datasubpath = paste0("")
+worksubpath = "Results/"  # Destination for output files. (If empty, work right in the project directory)
+
+if (machine == "PLWinBox") {
+  workroot = "D:/"  # for Windows OS, Paul's work desktop
+} else if (machine == "PLRemoteSiegfried") {
+  workroot = "C:/"  # for Windows OS, remote into Siegfried
+} else if (machine == "PLMac") {
+  workroot = "~/Documents/"  # for OSx Paul's Mac  
+} else if (machine == "MJLaptop") {
+  workroot = "C:/Users/wwm/Documents/"  # for Meg's HP
+}  
+
+directory <- paste0(workroot,projectsubpath)
+data_dir <- paste0(directory,datasubpath)
+work_dir <- paste0(directory,worksubpath)
+# setwd(work_dir)
+# setwd(data_dir)
+```
+
+read original dataset and convert for R use
+------------
+
+```{r convertFromSAStoR}
+library("sas7bdat")
+
+primaryNHTSDataReloadWanted = F  # set to True to refresh from original SAS
+if (primaryNHTSDataReloadWanted) {
+  setwd(paste0(workroot, "SPR/Data/NHTS/NHTS2009_Sas"))
+  filename = "hhv2pub"
+  hhv2pub = read.sas7bdat(paste(filename,"sas7bdat",sep="."), debug=FALSE)
+  save(hhv2pub, file=paste(filename,'sav', sep="."))
+
+  filename = "perv2pub"
+  perv2pub = read.sas7bdat(paste(filename,"sas7bdat",sep="."), debug=FALSE)
+  save(perv2pub, file=paste(filename,'sav', sep="."))
+  
+  filename = "dayv2pub"
+  dayv2pub = read.sas7bdat(paste(filename,"sas7bdat",sep="."), debug=FALSE)
+  save(dayv2pub, file=paste(filename,'sav', sep="."))
+  
+  filename = "vehv2pub"
+  vehv2pub = read.sas7bdat(paste(filename,"sas7bdat",sep="."), debug=FALSE)
+  save(vehv2pub, file=paste(filename,'sav', sep="."))
+  
+  # setwd(paste0(workroot,"SPR/Data/NHTS/NHTS2009_Ascii"))
+  # df = read.csv(paste(filename,'csv', sep="."))
+}
+```
+
+Work with Files saved in R format
+--------------
+
+```{r exploreData}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+setwd(paste0(workroot,"SPR/Data/NHTS/NHTS2009_RSav")) # location of R-saved NHTS files
+load("hhv2pub.sav")
+
+hist(hhv2pub$HHVEHCNT,breaks = 25,probability = T, xlim =c(0,5), main="HH Vehicle Count")
+table(hhv2pub$HHVEHCNT)
+
+counts <- table(hhv2pub$HHVEHCNT)
+barplot(counts / sum(counts), main="Distribution of Vehicles Per Household", xlab="Number of Vehicles", ylab="fraction")
+ggplot(hhv2pub, aes(x=HHVEHCNT)) + geom_histogram(binwidth=1, fill="white", colour="black") +
+  ggtitle("HH Vehicle Count") + ylab("count")
+  # + scale_y_continuous(labels=percent)
+
+table(hhv2pub$HHFAMINC)
+hist(hhv2pub$HHFAMINC,breaks = 25,probability = T, xlim =c(0,5), main="Family Income")
+counts <- table(hhv2pub$HHFAMINC)
+barplot(counts / sum(counts), main="Distribution of Family Income by Category", xlab="Category")
+```
+
+[NHTS Online Analysis Tools](http://nhts.ornl.gov/tools.shtml)
+
+```{r exploreTripPurpose}
+
+setwd(paste0(workroot,"SPR/Data/NHTS/NHTS2009_RSav")) # location of R-saved NHTS files
+load("dayv2pub.sav")
+
+# Trip purpose Summary - WHYTRP1S
+WHYTRP1S_TripPurposeCodes = read.delim(textConnection("
+  Code : Meaning
+  -7   : Refused
+  -8   : Don't know 
+  -9   : Not ascertained 
+  01   : Home
+  10   : Work
+  20   : School/Daycare/Religious activity
+  30   : Medical/Dental services
+  40   : Shopping/Errands
+  50   : Social/Recreational
+  60   : Family personal business Obligations Transport someone
+  70   : Transport Someone
+  80   : Meals
+  97   : Other reason
+"),header=TRUE,sep=":",strip.white=TRUE) #;
+
+# WHYTO Travel day purpose of trip
+WHYTO_TripPurposeCodes = read.delim(textConnection("
+  Code : Meaning
+  -1   : Appropriate skip
+  -7   : Refused
+  -8   : Don't know
+  -9   : Not ascertained
+  01   : Home
+  10   : Work
+  11   : Go to work
+  12   : Return to work
+  13   : Attend business meeting/trip
+  14   : Other work related
+  20   : School/religious activity
+  21   : Go to school as student
+  22   : Go to religious activity
+  23   : Go to library- school related
+  24   : OS - Day care
+  30   : Medical/dental services
+  40   : Shopping/errands
+  41   : Buy goods- groceries/clothing/hardware store
+  42   : Buy services- video rentals/dry cleaner/post office/car service/bank
+  43   : Buy gas
+  50   : Social/recreational
+  51   : Go to gym/exercise/play sports
+  52   : Rest or relaxation/vacation
+  53   : Visit friends/relatives
+  54   : Go out/hang out- entertainment/theater/sports event/go to bar
+  55   : Visit public place- historical site/museum/park/library
+  60   : Family personal business/obligations
+  61   : Use professional services- attorney/accountant
+  62   : Attend funeral/wedding
+  63   : Use personal services- grooming/haircut/nails
+  64   : Pet care- walk the dog/vet visits
+  65   : Attend meeting- PTA/home owners association/local government
+  70   : Transport someone 
+  71   : Pick up someone 
+  72   : Take and wait
+  73   : Drop someone off 
+  80   : Meals
+  81   : Social event
+  82   : Get/eat meal
+  83   : Coffee/ice cream/snacks 
+  97   : Other reason
+"),header=TRUE,sep=":",strip.white=TRUE) #;
+
+# TRPTRANS Transportation mode used on trip (as reported C 2 by respondent)
+TRPTRANS_TransportationModeUsed = read.delim(textConnection("
+  Code : Meaning
+  -1   : Appropriate skip
+  -7   : Refused
+  -8   : Don't know
+  -9   : Not ascertained
+  01   : Car
+  02   : Van
+  03   : SUV
+  04   : Pickup truck
+  05   : Other truck
+  06   : RV
+  07   : Motorcycle
+  08   : Light electric veh (golf cart)
+  09   : Local public bus
+  10   : Commuter bus
+  11   : School bus
+  12   : Charter/tour bus
+  13   : City to city bus
+  14   : Shuttle bus
+  15   : Amtrak/inter city train
+  16   : Commuter train
+  17   : Subway/elevated train
+  18   : Street car/trolley
+  19   : Taxicab
+  20   : Ferry
+  21   : Airplane
+  22   : Bicycle
+  23   : Walk
+  24   : Special transit-people w/disabilities
+  97   : Other
+"),header=TRUE,sep=":",strip.white=TRUE) #;
+
+hist(as.numeric(dayv2pub$WHYTRP1S), breaks = nrow(WHYTRP1S_TripPurposeCodes),
+     probability = T, main="Trip Purpose Summary", xlab="WHYTRP1S")
+counts <- table(dayv2pub$WHYTRP1S)
+barplot(counts / sum(counts), main="Trip Purpose Summary", xlab="Category")
+
+hist(as.numeric(dayv2pub$WHYTO), breaks = nrow(WHYTO_TripPurposeCodes),
+     probability = T, main="Trip Purpose Trip Day", xlab="WHYTO")
+counts <- table(dayv2pub$WHYTO)
+barplot(counts / sum(counts), main="Trip Purpose Trip Day", xlab="Category")
+
+counts/sum(counts)
+
+# Table 7-2.
+# Sample sizes and weight sums for travel indicators
+"
+Data                           SampleSize        WeightSum
+Workers                            139068        151373097
+￼￼￼￼￼￼￼Drivers                            249882        212308999 
+￼￼￼￼￼￼￼￼￼￼Person Trips                      1167321     392022844962
+￼Person Miles of Travel (PMT)*    11257336￼ ￼￼ ￼ ￼ 3732791298429
+Vehicle Trips                      748142     233849356482
+￼Vehicle Miles of Travel (VMT)*    6888630    2245111452964
+"# *based on calculated trip distance
+
+```
+

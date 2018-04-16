@@ -1,0 +1,189 @@
+---
+title: "Electric HD Truck Energy Use"
+author: "Paul Leiby"
+date: "March 24, 2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+February 26, 2018
+
+# [Does the Tesla Semi defy the laws of physics?](http://faculty.washington.edu/dwhm/2018/02/26/does-the-tesla-semi-defy-the-laws-of-physics/)
+
+Don MacKenzie
+
+tl;dr – I find the numbers for Tesla’s Semi to be at least plausible, but I welcome comments on my assumptions.
+
+Tesla Motors’ Semi tractor-trailer concept has been met with both excitement and incredulity. Squarely in the latter camp is Daimler’s head of trucks, Martin Daum, who according to [Bloomberg](https://www.bloomberg.com/news/articles/2018-02-21/daimler-throws-shade-at-tesla-e-trucks-plan-as-rivalry-heats-up?utm_source=yahoo&utm_medium=bd&utm_campaign=headline&cmpId=yhoo.headline&yptr=yahoo) recently said that “If Tesla really delivers on this promise, we’ll obviously buy two trucks — one to take apart and one to test because if that happens, something has passed us by… But for now, the same laws of physics apply” in Germany and in California.
+
+If the question is whether a typical US 18-wheeler with an 80,000 lb gross vehicle weight can travel 500 miles on battery power, the answer is yes, it can easily do so without violating the laws of physics. The real question is whether it could do so while carrying the same payload as a conventional diesel truck.
+
+At first glance, such a goal seems unrealistic. Tesla has promised energy consumption of [“less than 2 kWh per mile“](https://www.tesla.com/semi), and some analysts have therefore based their analysis on an [assumption of 2kWh per mile](https://www.teslarati.com/how-much-tesla-semi-truck-battery-pack-weigh/). Indeed the battery size to achieve this would take away an unacceptable amount of payload. A 500 mile range and 2 kWh per mile means 1000 kWh of battery capacity. Assuming an energy density of 160 Wh/kg (consistent with current Tesla pack densities, see [here](https://www.teslarati.com/how-much-tesla-semi-truck-battery-pack-weigh/) and [here](https://forums.tesla.com/forum/forums/energy-density-batterys-model-3)) means the battery pack would weight 6,250 kg, or almost 14,000 lbs. A typical tractor-trailer combination weighs roughly 35,000 lbs empty (see [here](https://www.teslarati.com/how-much-tesla-semi-truck-battery-pack-weigh/) and here), leaving a maximum payload of about 45,000 lbs. 
+
+Thus, in the simple analysis, the battery would eat up about 30% of the truck’s payload, rendering it in all likelihood uncompetitive.
+
+But there are some clues that this is not at all what Tesla is planning. First of all, at least one second-hand report indicates that Tesla does plan to offer the same payload as a conventional truck. Second, Tesla hasn’t exactly made their name by offering electric cars that force sacrifices on other vehicle characteristics like performance, features, or safety. Finally, Tesla has promised energy consumption of less than 2 kWh / mile, not equal to 2 kWh / mile.
+
+So can they do it? And how?
+
+To simplify this problem, let’s fix gross vehicle weight at 80,000 lbs to comply with federal standards. Although some states allow higher GVWs, a new OEM entering the market won’t want to restrict themselves only to those states. In any case, a truck that went over 80,000 lbs on account of battery weight would not be competitive in those states, since it would be competing against diesel trucks that are using that extra weight for payload, not fuel or batteries.
+
+Baseline Energy Consumption
+
+To assess the plausibility of Tesla’s targets, I built a simple model of truck energy consumption for a typical class 8 truck, focusing on steady-speed energy consumption on flat ground. I assume that regenerative braking will moderate^[1] the net energy impacts of acceleration and deceleration, as well as hill ascents and descents.
+
+^[1] Actually, the assumption seems to be that regenerative braking makes accel/decel energy losses negligible. Syltanen (2010) suggests that ordinarily such losses are a notable fracton XXX of energy use.
+
+In this simplified model, the tractive force required is equal to the sum of the rolling resistance and the aerodynamic resistance.
+
+F = F_rolling + F_aero
+
+The rolling resistance is simply
+
+F_rolling = m · g · C_rr
+
+Where m is the vehicle mass, g is the acceleration of gravity, and C_rr is the coefficient of rolling resistance, which we’ll assume to be 0.006 in the base case (see [here](http://www.nvfnorden.org/lisalib/getfile.aspx?itemid=3161) and [here](https://www.lrrb.org/pdf/201539.pdf)). For an 80,000 lb truck, we can estimate that Frolling = 2140 N.
+
+The aerodynamic resistance is calculated using the drag equation:
+
+F_aero = 0.5 · ρ · V2 · A · Cd
+
+Where ρ is the density of air, V is the vehicle’s speed, A is its frontal area, and Cd is the coefficient of drag. We can assume a frontal area of 10.5 m2 (based on a standard tractor width of 102″ and typical height of 13-13.5 feet), a speed of 60 miles/hour, and air density of 1.2 kg/m3. We can also assume the coefficient of drag is 0.6 for the base case. Under these assumptions, F_aero = 2710 N. 
+
+```{r calc_F_rolling}
+kg_per_lb = 1/2.206
+m_per_ft = 1/3.28084
+
+g = 9.8                   # gravitational accel [meters/sec^2]
+
+m_l = 80000 * kg_per_lb   # Class 8 truck mass loaded [kg]
+m_e = 35000 * kg_per_lb   # typical tractor-trailer combination weight empty [kg]
+                          # gross vehicle tare weight (GVTW): weight of tractor sans trailer and freight
+
+
+C_rr = 0.006              # coeff of rolling resistance
+F_rolling = m_l * g * C_rr  # rolling resistance [N]
+
+m_t = m_l-m_e
+
+F_rolling
+```
+
+### More on truck component weights
+
+> A conventional tractor, as we’ve said, has a tare weight of around 32,000 pounds when fully fueled and with a lightweight box trailer in place. Remove the trailer and the truck itself is about 22,500 pounds. It’s difficult to then go to just the weight of the powertrain components and fuel, but they’re considerably less than 11,000 pounds in all. [Turpen 2018]
+
+> "Looking at the shipping weight for a crated engine and transmission for a Class 8 truck, we can see that they weigh about 8,000 pounds on average. Add in fuel and other components and another 1,500 pounds (at most) are put on the truck." [Turpen 2018]
+
+```{r}
+m_conv_tractor    = 32000 *kg_per_lb      # conv tractor weight with light box trailer [Turpen 2018]
+m_conv_drivetrain = (8000+1500)*kg_per_lb # conv drivetrain: engine, transmission, fuel, other [Turpen 2018]  
+```
+
+
+```{r calc_F_aero}
+# The aerodynamic resistance is calculated using the drag equation:
+
+rho = 1.2         # density of air  [kg/m^3]
+V_truck   = 60*5280*m_per_ft/3600  # vehicle’s speed [meters/sec] (for 60 mph)
+A_truck   = (102/12)*m_per_ft * 13.25*m_per_ft  # frontal area 10.5 m2 based on standard tractor width of 102″ and typical height of 13-13.5 ft
+C_d = 0.6         #  coefficient of drag for the base case.
+
+#Under these assumptions, F_aero = 2710 N. 
+
+F_aero = 0.5 * rho * V_truck^2 * A_truck * C_d
+F_aero
+
+```
+# We note here that this split in loads  — roughly 60% aero, 40% rolling at 60 mph — is roughly consistent with results [reported by the Department of Energy.]
+
+
+```{r calc_F_tract}
+F_tract = F_rolling + F_aero
+
+cat("Total tractive force [N]: ", F_tract, "\n")
+cat("  of which aero fraction:    ", round(F_aero/F_tract,4), "\n")
+cat("  of which rolling fraction: ", round(F_rolling/F_tract,4), "\n")
+
+de_batt = 160       # energy density of Tesla battery pack [Wh/kg]
+```
+Under these assumptions, the power required at the wheels would be
+
+P = F · V = 4850 N · 26.8 m/s = 130 N·m/s = 130 kW
+
+And assuming a 90% pack-to-wheels efficiency, the energy consumption per mile would be
+
+130 kW / 0.9 / 60 mi/h = 2.4 kWh / mile
+
+Assuming a 500 mile range and an energy density of 160 Wh/mile implies a battery pack weight of 7,500 kg.
+
+Reduction in Loads
+
+We can now explore some changes in the above assumptions would affect energy consumption of the truck.
+
+Reduced Drag
+
+Tesla claims that their Semi will have a drag coefficient of 0.36. This is much lower than a typical drag coefficient of 0.6 for large trucks, and similar to many crossover utility vehicles. Tesla’s Model S (0.24) and Model 3 (0.23), it is worth noting, have some of the lowest drag coefficients of any production vehicles. If Tesla is able to deliver on a 0.36 Cd value, this alone would cut energy consumption from 2.4 to 1.9 kWh/mile, reducing the necessary battery pack weight from 7,500 to 5,800 kg.
+
+Reduced Rolling Resistance
+
+We can also assume that Tesla will pursue best-in-class rolling resistance, which should mean a coefficient of rolling resistance of 0.005 or lower. In this analysis, we’ll assume a Crr value of 0.0046. On its own, this could cut energy consumption from 2.4 to 2.2 kWh / mile, cutting battery pack weight from 7,500 to 6,700 kg.
+
+Reduced Empty Weight
+
+ 
+
+Reduced Powertrain Weight
+
+We can assume that the empty weight of a class 8 tractor-trailer is about 35,000 lbs, of which about 4,000 lbs is the engine and transmission in the tractor unit. Removing these leaves a base weight of 31,000 lbs (we’ll estimate motor and inverter weights later).
+
+Lightweight Materials
+
+It will also make sense for Tesla to reduce the empty weight of the vehicle, exclusive of the battery and motors. As BMW showed with its carbon-fiber i3 electric car, materials that are not cost effective in gasoline vehicles suddenly make a lot of sense once you commit to an electric drivetrain, since they allow the battery size to be reduced, (or in this case, for an increase in payload).
+
+I don’t have data on the materials breakdown in class 8 tractors and trailers, but we might assume a 20% overall weight reduction is feasible, if conventional steel and iron are replaced with advanced materials like high-strength steels, aluminum, magnesium, and composites. This would reduce base vehicle weight by 6,200 lbs to 24,800 lbs.
+
+Weight of Motors and Inverters
+
+With an electric tractor, the engine and transmission will be replaced with electric motors and inverters. The weight of the motor, inverter, and differential in the Tesla Model S has been estimated at 525 lbs (although the motor itself is only 70 lbs). The Model S motor is rated at 362 hp, or 270 kW, translating to a weight of 1.94 lbs per kW for the motor, inverter, and differential. So how much power will the Semi require? The Semi will reportedly use four of the motors used in the Model 3, each of which is rated at 235 hp (175 kW), suggesting a total tractive power of 700 kW.
+
+We can also consider the performance specifications offered by Tesla. The company has said that the Semi will be able to sustain 60 mph up a 5% grade, and accelerate from 0 to 60 mph in 20 seconds (at 80,000 lbs). The former figure corresponds to a potential energy gain per second of
+
+26.8 m/s · (0.05) · 9.81 m/s2 · 36,300 kg = 478 kW
+
+Adding this to the 140 kW needed to overcome rolling and aerodynamic resistances, we can estimate a total tractive power requirement of 608 kW.
+
+Alternatively, we can consider that the kinetic energy of an 80,000 lb truck traveling 60 mph is
+
+0.5 · 36,300 kg · (26.8 m/s)2 = 13 million joules
+
+Delivering this much energy over 20 seconds corresponds to an average power of 653 kW (ignoring aerodynamic and rolling resistance loads).
+
+Thus, the total power of 700 kW implied by the use of four Model 3 motors seems reasonable. Applying the same 1.94 lbs/kW as in the Model S suggests a weight of 1,360 lbs (618 kg), versus the 4,000 lbs needed for the diesel engine and transmission.
+
+Improved Battery Energy Density
+
+Tesla’s current battery packs reportedly have an energy density of about 160 Wh/kg (see here and here). However, this is well below the energy density of approximately 250 Wh/kg for the cells themselves. If we assume that improved pack design can increase energy density by 20% to 192 Wh/kg, this would enable the pack weight to be reduced from 7,500 kg to 6,300 kg.
+
+Putting it All Together
+
+The figure below plots out how the payload of an electric semi could be increased by improving aerodynamics, reducing rolling resistance, employing more advanced lightweight materials, and improving battery pack energy density. Combining all of these factors has the potential to put a 500-mile electric semi with a 45,000 lb payload within the realm of possibility. Interestingly, the biggest impacts come from improved aerodynamics and advanced materials, not from the battery pack itself.
+
+
+Are these assumptions reasonable? Tesla is on record with the 0.36 drag coefficient, and the assumed coefficient of rolling resistance is available with current tires. I am much less confident about the scope of potential weight reductions in heavy trucks. Much depends on the prevalance of advanced materials already in use, as well as the suitability for such materials in heavy duty trucks. For example, the finite fatigue life of aluminum may be less suitable to the very long service lives of heavy-duty trucks. I also don’t know enough about batteries to judge whether a 20% increase in pack energy density is reasonable, although it seems at least plausible given documented cell energy densities.
+
+```{r XXX}
+
+```
+
+## References
+
+* Mackenzie, D. (2018). Does the Tesla Semi defy the laws of physics? University of Washington Sustainable Tranportation Lab Blog, (February 26), 1–6.
+* Rose McCallen; Richard Couch; Juliana Hsu; Fred Browand; Mustapha Hammache; Anthony Leonard; Mark Brady; Kambiz Salari; Walter Rutledge; James Ross; Bruce Storms; J.T. Heineck; David Driver; James Bell; Gregory Zilliac 1999. "Progress in Reducing Aerodynamic Drag for Higher Efficiency of Heavy Duty Trucks (Class 7-8)", _SAE Technical Papers_, 1999-12-31. https://www.osti.gov/biblio/771211
+* Siltanen, Teppo 2010. Truck Tyre Rolling Resistance and Fuel Economy & Safety, Nokian Tyres. http://www.nvfnorden.org/lisalib/getfile.aspx?itemid=3161.
+* Paterlini, Germana, Sermet Yucel, Melinda Moran Lucking, Jon Magnuson, FuelMiner, Inc. 2015. Rolling Resistance Validation, Minnesota DOT Research Services & Library, Research Report Final Report 2015-39. https://www.lrrb.org/pdf/201539.pdf
+* Turpen, Aaron 2018. "Tesla Semi truck’s battery pack and overall weight explored," Teslarate Blog, Feb. 24. https://www.teslarati.com/how-much-tesla-semi-truck-battery-pack-weigh/
