@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "April 13, 2018"
+date: "April 16, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -454,11 +454,18 @@ For example consider Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTec
 Energy Intensity change is dependent on the Technology Scenario. 
 
 ```{r reportDemScenParams, echo=echoWorking}
-EnergyIntensityChanges %>% filter(Scenario_Number == CurrTechScen, Year == CurrYear)
-#DemScenParams = EnergyIntensityChange
-DemScenParams %>% filter(VC=="LDV", Parameter=="I_deltaCAV")
+nie = EnergyIntensityChanges  %>% ungroup() %>% 
+  filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
+  select(VC, NIE)
+
 # ??? Trick is how to do this assignment
-DemScenParams %>% filter(Parameter=="I_deltaCAV") %>% select(Low:High) = c(2,1)
+#DemScenParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
+#DemScenParams %>% filter(Parameter=="I_deltaCAV")
+DemScenParams %>% gather(key = Sens, value = value, Low:Zero)  %>%
+  mutate(value = ifelse((VC=="LDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="LDV",]$NIE, value),
+         value = ifelse((VC=="HDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="HDV",]$NIE, value)) %>%
+  spread(key=Sens, value=value) ->
+  DemScenParams
 
 kable(x = DemScenParams, 
       caption= "DemScenParams: Important Parameters for the Calculation of Demand by Scenario, Vehicle-type, and Year")
@@ -480,28 +487,34 @@ VoTT                  : LDV     :12.5       :18         :13.7986015 :$/hr  :DoT;
 VMTtot                : LDV     :1560941    :482468     :2043409    :mi/yr :Highway Stat 
 average_speed         : LDV     :           :           :27.6       :mi/hr :EPA
 average_TTC_per_mi    : LDV     :           :           :0.49994933 :$/mi  :=VoT/AveSpeed
-"),header=TRUE,sep=":",strip.white=TRUE) #
+VoTT                  : HDV     :           :           :24.42778   :$/hr  : vs Cambridge Systematics 2009 $30 ave
+VMTtot                : HDV     :           :           :           :mi/yr :Highway Stat 
+average_speed         : HDV     :           :           :39.98      :mi/hr :ATRI 2012 'average industry operational speed'
+average_TTC_per_mi    : HDV     :0.611      :0.611      :0.611      :$/mi  :2011 Driver wages & Benefits, atri-online.org/2012/09/17/an-analysis-of-the-operational-costs-of-trucking-a-2012-update/")
+,
+header=TRUE,sep=":",strip.white=TRUE) #
 # as in "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$35:$E$43"
 
 kable(x = TravTimeCostBasePars, 
       caption= "Travel Time Cost Base Parameters")
 
 str(TravTimeCostBasePars)
-row.names(TravTimeCostBasePars) = TravTimeCostBasePars$var
+row.names(TravTimeCostBasePars) = paste(TravTimeCostBasePars$var,TravTimeCostBasePars$V_Class, sep=".")
 # Test computed vs. specified values in table
-TravTimeCostBasePars["VoTT","average"] - 
-  (TravTimeCostBasePars["VMTtot","local"]*TravTimeCostBasePars["VoTT","local"] +
-  TravTimeCostBasePars["VMTtot","intercity"]*TravTimeCostBasePars["VoTT","intercity"])/
-  (TravTimeCostBasePars["VMTtot","local"]+TravTimeCostBasePars["VMTtot","intercity"])
+TravTimeCostBasePars["VoTT.LDV","average"] - 
+  (TravTimeCostBasePars["VMTtot.LDV","local"]*    TravTimeCostBasePars["VoTT.LDV","local"] +
+   TravTimeCostBasePars["VMTtot.LDV","intercity"]*TravTimeCostBasePars["VoTT.LDV","intercity"])/
+  (TravTimeCostBasePars["VMTtot.LDV","local"]   + TravTimeCostBasePars["VMTtot.LDV","intercity"])
 
-TravTimeCostBasePars["average_TTC_per_mi","average"] -   #  [$/hr]/[mi/hr]
-  TravTimeCostBasePars["VoTT","average"]/TravTimeCostBasePars["average_speed","average"]
+TravTimeCostBasePars["average_TTC_per_mi.LDV","average"] -   #  [$/hr]/[mi/hr]
+  TravTimeCostBasePars["VoTT.LDV","average"]/TravTimeCostBasePars["average_speed.LDV","average"]
 ```
 
 ### Vehicle Travel Cost Components
 
 Specify the primary (private) cost components for (conventional, manual) road vehicle travel.
 
+XXX
 ```{r dataVehCostCompons, echo=echoWorking}
 VehTravelCostCompons <- read.delim(textConnection("
 CostCat               :temp         :LDVAvgSedan :LDVAvgLtTruck  :HDVOther  :HDVClass8  :Units   :Note
