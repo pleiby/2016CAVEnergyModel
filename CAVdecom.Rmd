@@ -442,7 +442,7 @@ DemScenParams = separate(data=DemScenParams, col=case, into=c("VC","Parameter"),
 DemScenParamsm = DemScenParams %>% gather(key=EffectCase, value="value", Low:Zero)
 ```
 
-### Selects a Single Scenario to Examine
+### Select a Single Scenario to Examine
 
 ```{r singleScenarioSelect, echo=echoWorking}
 CurrTechScen = 4
@@ -458,16 +458,17 @@ nie = EnergyIntensityChanges  %>% ungroup() %>%
   filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
   select(VC, NIE)
 
-# ??? Trick is how to do this assignment
+# This assignment is awkward.
 #DemScenParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
 #DemScenParams %>% filter(Parameter=="I_deltaCAV")
-DemScenParams %>% gather(key = Sens, value = value, Low:Zero)  %>%
+DemScenParams %>% gather(key = Sens, value = value, Low:Zero)  %>%  # following assigns the same 
   mutate(value = ifelse((VC=="LDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="LDV",]$NIE, value),
          value = ifelse((VC=="HDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="HDV",]$NIE, value)) %>%
   spread(key=Sens, value=value) ->
   DemScenParams
+DemScenParams = DemScenParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns
 
-kable(x = DemScenParams, 
+kable(x = DemScenParams, digits = 4,
       caption= "DemScenParams: Important Parameters for the Calculation of Demand by Scenario, Vehicle-type, and Year")
 ```
 
@@ -490,34 +491,43 @@ average_TTC_per_mi    : LDV     :           :           :0.49994933 :$/mi  :=VoT
 VoTT                  : HDV     :           :           :24.42778   :$/hr  : vs Cambridge Systematics 2009 $30 ave
 VMTtot                : HDV     :           :           :           :mi/yr :Highway Stat 
 average_speed         : HDV     :           :           :39.98      :mi/hr :ATRI 2012 'average industry operational speed'
-average_TTC_per_mi    : HDV     :0.611      :0.611      :0.611      :$/mi  :2011 Driver wages & Benefits, atri-online.org/2012/09/17/an-analysis-of-the-operational-costs-of-trucking-a-2012-update/")
-,
+average_TTC_per_mi    : HDV     :0.611      :0.611      :0.611      :$/mi  :2011 Driver wages & Benefits, atri-online.org/2012/09/17/an-analysis-of-the-operational-costs-of-trucking-a-2012-update/"
+),
 header=TRUE,sep=":",strip.white=TRUE) #
 # as in "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$35:$E$43"
 
-kable(x = TravTimeCostBasePars, 
-      caption= "Travel Time Cost Base Parameters")
+TravTimeCostBasePars %>% select(-Source_Notes) %>%
+  kable(caption= "Travel Time Cost Base Parameters", digits=3)
 
-str(TravTimeCostBasePars)
+# str(TravTimeCostBasePars)
 row.names(TravTimeCostBasePars) = paste(TravTimeCostBasePars$var,TravTimeCostBasePars$V_Class, sep=".")
-# Test computed vs. specified values in table
-TravTimeCostBasePars["VoTT.LDV","average"] - 
-  (TravTimeCostBasePars["VMTtot.LDV","local"]*    TravTimeCostBasePars["VoTT.LDV","local"] +
-   TravTimeCostBasePars["VMTtot.LDV","intercity"]*TravTimeCostBasePars["VoTT.LDV","intercity"])/
-  (TravTimeCostBasePars["VMTtot.LDV","local"]   + TravTimeCostBasePars["VMTtot.LDV","intercity"])
 
-TravTimeCostBasePars["average_TTC_per_mi.LDV","average"] -   #  [$/hr]/[mi/hr]
-  TravTimeCostBasePars["VoTT.LDV","average"]/TravTimeCostBasePars["average_speed.LDV","average"]
+# Test computed vs. specified values in table
+cat("VoTT for LDV average value matches VMT-weighted average to within",
+  TravTimeCostBasePars["VoTT.LDV","average"] - 
+    (TravTimeCostBasePars["VMTtot.LDV","local"]*    TravTimeCostBasePars["VoTT.LDV","local"] +
+     TravTimeCostBasePars["VMTtot.LDV","intercity"]*TravTimeCostBasePars["VoTT.LDV","intercity"])/
+    (TravTimeCostBasePars["VMTtot.LDV","local"]   + TravTimeCostBasePars["VMTtot.LDV","intercity"]),
+  "$/hr.\n")
+
+cat("Average TTC per mile for LDV average value matches VoTT/speed to within",
+  TravTimeCostBasePars["average_TTC_per_mi.LDV","average"] -   #  [$/hr]/[mi/hr]
+    TravTimeCostBasePars["VoTT.LDV","average"]/TravTimeCostBasePars["average_speed.LDV","average"],
+  "$/mi.\n")
+
+cat("Average TTC per mile for HDV average value matches VoTT/speed to within",
+  TravTimeCostBasePars["average_TTC_per_mi.HDV","average"] -   #  [$/hr]/[mi/hr]
+    TravTimeCostBasePars["VoTT.HDV","average"]/TravTimeCostBasePars["average_speed.HDV","average"],
+  "$/mi.\n")
 ```
 
 ### Vehicle Travel Cost Components
 
 Specify the primary (private) cost components for (conventional, manual) road vehicle travel.
 
-XXX
 ```{r dataVehCostCompons, echo=echoWorking}
 VehTravelCostCompons <- read.delim(textConnection("
-CostCat               :temp         :LDVAvgSedan :LDVAvgLtTruck  :HDVOther  :HDVClass8  :Units   :Note
+CostCat               :LDVAlt       :LDVAvgSedan :LDVAvgLtTruck  :HDVOther  :HDVClass8  :Units   :Note
 MilesDriven           :NA           :11850       :11000          :NA        :99000      :[mi/yr] :Base (MV) EDB-31 for LDVs, ATRI-2012 for HDVs
 Fuel                  :6.1          :14.59       :19.63          :NA        :59.0       :[c/mi]  :LDV changed for TEDB mpg
 Maintenance           :5.3          :5.47        :6.15           :NA        :19.4       :[c/mi]  :Incl tires
@@ -528,40 +538,69 @@ Parking               :1.3          :2.109704641 :2.272727273    :NA        :0.0
 Time                  :34.4         :49.99493298 :49.99493298    :NA        :61.1       :[c/mi]  :VOTT will change for CAVs. For HDVs=Driver wages & benefits
 Registration          :             :5.147679325 :7.218181818    :NA        :0.0        :[c/mi]  :
 Total                 :67.7         :115.6667473 :137.2476603    :NA        :170.6      :[c/mi]  :
-Units                 :c/mile       :c/mile      :c/mile         :c/mile    :c/mile     :NA      :
 Source                :HERS-ST/2005 :AAA/2012    :AAA/2012       :ATRI/2012 :ATRI/2012  :NA      :
 "),header=TRUE,sep=":",strip.white=TRUE) #
 # Operating cost components from 
 # "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$13:$D$27" and "calcul Dem_HDV'!$A$13:$D$28"
 
-kable(x = select(VehTravelCostCompons, -c(temp, HDVOther, Note)), 
+kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)), 
       caption= "Vehicle Travel Cost Components by Vehicle Type")
 
-VTCost = select(VehTravelCostCompons, -c(temp, HDVOther, Units, Note)) %>%
-  filter(!CostCat %in% c("MilesDriven", "Total", "Units", "Source")) %>%
+# transform dropping notes and assuring all values are numeric
+VTCost = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Units, Note)) %>%
+  filter(!CostCat %in% c("MilesDriven", "Total", "Source")) %>%
   gather(key = VehType, value = VTCost_cpm, -CostCat) %>%
-  mutate(VTCost_cpm = as.numeric(VTCost_cpm))
+  mutate(VTCost_cpm = as.numeric(VTCost_cpm))  # all costs in cents/mi
+
+# Check that input tables are consistent with regard to time cost per mile,
+#   for 2 LDV categories and one HDV categopry
+ChkErrorDiff =
+  VTCost %>% filter(CostCat=="Time") %>% select(VTCost_cpm)/100 -
+      c(TravTimeCostBasePars["average_TTC_per_mi.LDV","average"], 
+        TravTimeCostBasePars["average_TTC_per_mi.LDV","average"],
+        TravTimeCostBasePars["average_TTC_per_mi.HDV","average"])
+cat("Check: Input VTCost Time cost for LDVs and HDV matches Average TTC per mile to within", paste(ChkErrorDiff),
+  "cents/mi.\n")
+
+# Update Time cost in the Vehicle Travel Cost matrix for MVs (base), according to current Base Assumption set
+VTCost = VTCost %>% 
+  mutate(VTCost_cpm = ifelse((CostCat=="Time" & substr(VehType, 1, 3)=="LDV"), 
+                             100* TravTimeCostBasePars["average_TTC_per_mi.LDV","average"], VTCost_cpm),
+         VTCost_cpm = ifelse((CostCat=="Time" & substr(VehType, 1, 3)=="HDV"), 
+                             100* TravTimeCostBasePars["average_TTC_per_mi.HDV","average"], VTCost_cpm)
+         )
 
 # sum across categories (excl miles and total) to check total cost by VehType
 VTCost %>% filter(!CostCat %in% c("MilesDriven", "Total")) %>%
   group_by(VehType) %>% 
   summarize(TotCost_cpm = sum(VTCost_cpm, na.rm = T)) # treat NA cost compnents as zero
 
-# Note: definition of automation scenarios by impacts on component costs, not CAV penetration scenarios
+kable(x = spread(VTCost, key = VehType, value = VTCost_cpm), 
+      caption= "Base Vehicle Travel Cost Components by Vehicle Type (cents/mi)")
+
+
+```
+
+```{r readVTcostComponReduction, echo=echoWorking}
+# Note: definition of automation scenarios is by impacts on component costs, not CAV penetration scenarios
 # Penetration is assumed 100%
 VTcostComponReduction <- read.delim(textConnection("
 DemandScenario :VoTT  :Insurance  :Description
-1              :0     :-0.60      :Driver assistance, but no self-driving, little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
-2              :-0.05 :-0.60      :Driver assistance, but no self-driving, so some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
-3              :-0.50 :-0.80      :Self driving, so large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
-4              :-0.80 :-0.80      :Extreme case- Self driving, so large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
+1              :0     :-0.60      :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
+2              :-0.05 :-0.60      :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
+3              :-0.50 :-0.80      :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
+4              :-0.80 :-0.80      :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
 "),header=TRUE,sep=":",strip.white=TRUE)
 # Source: Insurance cost reductions from Celent
 # Source: VoTT cost reductions hypothetical
 # Corresponds to "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]DemandScenarios'!$A$1:$M$6"
 rownames(VTcostComponReduction) = VTcostComponReduction$DemandScenario
 
-# XXX Vehicle Travel Cost Components
+# Assumed Reduction in Vehicle Travel Cost Components
+kable(x = VTcostComponReduction, 
+      caption= "Vehicle Travel Cost Component Reduction by Demand Scenario")
+
+
 ```
 
 ```{r DemandFracVMTchange, echo=echoWorking}
