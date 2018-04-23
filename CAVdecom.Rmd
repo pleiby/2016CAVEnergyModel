@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "April 16, 2018"
+date: "April 22, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -149,14 +149,14 @@ Defining indices
 - f = fuel type
 - t = time period (year)
 
-for sets^[1]
+for sets[^2]
 
 - M = set of transportation modes *m*
 - V = set of vehicle types *v*
 - F = set of fuel types *f*
 - T = set of time periods *t*
 
-^[1 Additional potential disaggretations include by region, vehicle size class, drivetrain type, and time of day (e.g. operating costs vary by time of day, as described in Bösch et al. 2017).]
+[^2]: Additional potential disaggregations include by region, vehicle size class, drivetrain type, and time of day (e.g. operating costs vary by time of day, as described in Bösch et al. 2017).
 
 The variables are
 
@@ -227,6 +227,8 @@ library(ggplot2)
 3. Estimating Energy Impacts
 ===========================
 
+Define the effects of automation on vehicle energy intensity through a set of identified technological and operational "mechanisms." 
+
 The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ are differentiated by year *t* and Vehicle class *v*.
 
 
@@ -279,7 +281,7 @@ HDV  2050   Increased_feature_content     0.0     0.0     0.0
 IEffects$Zero = 0.0   # include additional case of no-impact for each mechanism
 ```
 
-#### Construct multiplicative factors to apply to energy intensities
+#### Construct multiplicative factors to apply to energy intensities for each mechanism
 
 Multipliers $\mu_{tvks}$ apply for each year *t*, vehicle class *v*, mechanism/technology *k*, sensitivity case *s*.
 
@@ -312,11 +314,12 @@ kable(x = IM,
 
 * Note "Right_sizing" and "Increased_features" apply only to LDV passenger travel.
 
-3.2 Energy Intensity by Vehicle Type and Scenario
+3.2 Energy Intensity by Vehicle Type and Technology Scenario
 -----------------
 
-We construct Scenario Multipliers for energy intensity, $\mu_{jtv}$ for Scenario *j*, Year *t*, Vehicle class *v*.
-For each scenario *j*, year *t*, vehicle class *v* and mechanism *k*, the "EffectCase" or sensitivity *s* is specified, i.e. 
+We construct Scenario Multipliers for energy intensity, $\mu_{jtv}$ for Scenario *j*, Year *t*, Vehicle class *v* as a combination of the effect of all the mechanisms.
+
+For each technology scenario *j*, year *t*, vehicle class *v* and mechanism *k*, the "EffectCase" or sensitivity *s* is specified, i.e. 
 
 $s_{jtmv}$ for 
 $s \in \{Zero, Low, Mid, High\}$.
@@ -396,32 +399,32 @@ Note: Constructed Net Energy Intensity Changes match old workbook to within `r N
 ```{r demandScenParams, echo=echoWorking}
 
 # listing of Demand-related Paramters and notes
-DemScenParamNotes <- read.delim(textConnection("
+DemRespParamNotes <- read.delim(textConnection("
 DemParam         : DemParamNote
 ElasVKT          : Elas of travel w.r.t generalized cost,
-InsurCostRed     : Reduction in insurance premiums (fraction),
+InsurCostRed     : Reduction in insurance premiums (fraction) (superceded by DemScenCostReduction)
 ExclWearCost     : Exclude Wear & Ownership Costs (Choose 0 or 1),
-C_incrCAV        : Incr vehicle capital cost from automation (wear and ownership cost/mi),
-ShrECostInternal : Share of energy effic cost gains visible to driver (fraction, 0 to 1),
+C_incrCAV        : Incr vehicle capital cost fraction from automation (wear and ownership cost/mi),
+ShrECostInt      : Share of energy effic cost gains internalized (visible) to driver (fraction, 0 to 1),
 I_deltaCAV       : Fuel energy cost reduction (from effic, fraction)
 "),header=TRUE,sep=":",strip.white=TRUE)
 
-DemScenParams<-read.delim(textConnection("
+DemRespParams<-read.delim(textConnection("
                       Low     Med     High
 LDV.ElasVKT           -1      -1      -1
 LDV.InsurCostRed      0.6     0.7     0.8
 LDV.ExclWearCost      0       0       0
 LDV.C_incrCAV         0       0       0
-LDV.ShrECostInternal  1       1       1
+LDV.ShrECostInt       1       1       1
 LDV.I_deltaCAV        -.7186  -.7186  -.7186
-HDV.ElasVKT           -0.5    -0.97   -2
+HDV.ElasVKT           -0.97   -0.97   -2
 HDV.InsurCostRed      0.4     0.6     0.8
 HDV.ExclWearCost      0       0       0
 HDV.C_incrCAV         0       0       0  
-HDV.ShrECostInternal  1       1       1
+HDV.ShrECostInt       1       1       1
 HDV.I_deltaCAV        -.2815  -.2815  -.2815
 "),header=TRUE,sep="",strip.white=TRUE) #;
-# Corresponds to data in "Demand Response Key parameters"
+# Corresponds to data in "Demand Response Key parameters", but omits HDV low of 0.5 (unused)
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024.xlsx]calcul Dem_HDV'!$A$4:$L$10 and 'calcul Dem_LDV'!$A$4:$L$10
 
 # Notes:
@@ -429,17 +432,39 @@ HDV.I_deltaCAV        -.2815  -.2815  -.2815
 #   Generalized cost includes: fuel+maintenance+accident+tolls+TRAVELtime
 #   Fuel energy cost reduction: Import from 'Policy+Scenario' subsheet calculation for currently chosen technology scenario 
 #   LDV ElasVKT         (HERS-ST technical report, August 2005 + Graham n Glaister 2002).
-#   LDV InsurCostRed    Reduction in insurance premiums . internet/celent report
+#   LDV InsurCostRed    Reduction in insurance premiums . internet/celent report (superceded by Demand Scenario-dependent values)
 #   LDV C_incrCAV       Wadud 2017
 #   HDV ElasVKT         Cambridge Sytematics, 2009
 
-DemScenParams$Zero = 0.0   # establish zero effect case (zero reductions, zero elas)
-DemScenParams["LDV.ShrECostInternal", "Zero"] = 1.0  # kludge to fix this parameter to non-zero val
-DemScenParams["HDV.ShrECostInternal", "Zero"] = 1.0
+DemRespParams$Zero = 0.0   # establish zero effect case (zero reductions, zero elas)
+DemRespParams["LDV.ShrECostInt", "Zero"] = 1.0  # kludge to fix this parameter to non-zero val
+DemRespParams["HDV.ShrECostInt", "Zero"] = 1.0
 
-DemScenParams$case = row.names(DemScenParams)
-DemScenParams = separate(data=DemScenParams, col=case, into=c("VC","Parameter"), sep="\\.")
-DemScenParamsm = DemScenParams %>% gather(key=EffectCase, value="value", Low:Zero)
+DemRespParams$case = row.names(DemRespParams)
+DemRespParams = separate(data=DemRespParams, col=case, into=c("VC","Parameter"), sep="\\.")
+DemRespParamsm = DemRespParams %>% gather(key=EffectCase, value="value", Low:Zero)
+```
+
+(Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "DemScenCostReduction" vs "DemandResponseKeyParameters" tables. 
+The "Low, Med High" cases in DemandResponseKeyParameters table are separate from the Demand Scenario cases in DemScenCostReduction table.
+
+```{r readDemandResponseParameters, echo=echoWorking}
+
+DemandResponseKeyParameters <- read.delim(textConnection("
+Name        :Description                                            :Low    :Med    :High   :Note
+VMTElas     :Elasticity of travel w.r.t. generalized cost           :-1     :-1     :-1     :(fuel+maintenance+accident+tolls+ TRAVEL time) (HERS-ST technical report, August 2005 + Graham n Glaister 2002)
+InsReduc    :Reduction in insurance premiums                        :0.6    :0.7    :0.8    :internet/celent report (Unused, scenario-dependent)
+ExclWearCost:Exclude Wear and Ownership Costs (1 True, 0 False)     :0      :0      :0      :Choose 0 or 1 value
+C_incrCAV   :Incremental veh capital cost from automation           :0      :0      :0      :Fractional (wear and ownership cost/mi)     
+ShrECostInt :Share of energy efficiency costs 'visible' to driver   :1      :1      :1      :0 to 1 (1 means full efficiency gain visible) (driver=person making trip choices) ???
+I_deltaCAV  :Fuel energy cost reduction (from energy efficiency)    :0.3420 :0.3420 :0.3420 :Import from 'Policy+Scenario' subsheet calculation for currently chosen technology scenario
+"),header=TRUE,sep=":",strip.white=TRUE) #
+# Corresponds to "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$4:$L$10" see also "calcul Dem_HDV'!$A$4:$L$10"
+# Note: duplicative: DemandRepsonseKeyParameters duplicates DemRespParams for LDV, but adds "Fuel Energy cost reduction"
+rownames(DemandResponseKeyParameters) = DemandResponseKeyParameters$Name
+
+kable(x = select(DemandResponseKeyParameters, -Note), row.names = F,
+      caption= "Key Parameters for LDV Demand Response (for all Demand Scenarios")
 ```
 
 ### Select a Single Scenario to Examine
@@ -447,38 +472,37 @@ DemScenParamsm = DemScenParams %>% gather(key=EffectCase, value="value", Low:Zer
 ```{r singleScenarioSelect, echo=echoWorking}
 CurrTechScen = 4
 CurrYear     = 2050
+
+CurrDemScen = 1
 ```
 
 For example consider Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
 
 Energy Intensity change is dependent on the Technology Scenario. 
+Update demand response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario,
 
-```{r reportDemScenParams, echo=echoWorking}
+```{r reportDemRespParams, echo=echoWorking}
 nie = EnergyIntensityChanges  %>% ungroup() %>% 
   filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
   select(VC, NIE)
 
 # This assignment is awkward.
-#DemScenParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
-#DemScenParams %>% filter(Parameter=="I_deltaCAV")
-DemScenParams %>% gather(key = Sens, value = value, Low:Zero)  %>%  # following assigns the same 
+#DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
+DemRespParams %>% gather(key = Sens, value = value, Low:Zero)  %>%  # following assigns the same 
   mutate(value = ifelse((VC=="LDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="LDV",]$NIE, value),
          value = ifelse((VC=="HDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="HDV",]$NIE, value)) %>%
   spread(key=Sens, value=value) ->
-  DemScenParams
-DemScenParams = DemScenParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns
+  DemRespParams
+DemRespParams = DemRespParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns
 
-kable(x = DemScenParams, digits = 4,
-      caption= "DemScenParams: Important Parameters for the Calculation of Demand by Scenario, Vehicle-type, and Year")
+kable(x = DemRespParams, digits = 4,
+      caption= "DemRespParams: Important Parameters for the Calculation of Demand Reponse, by Vehicle-type, and Year")
 ```
 
-4.2 Fractional Increase in VKT for Demand Scenarios
+4.2 Establish Base Travel Costs for Each Cost Component
 ---------------------------------
 
-Calculate fractional change in demand, by DemandScenario *d*, Year *t*, and VehicleClass *v*, based on changes in 
-time cost, other vehicle fuel and operating costs, and VMT demand elasticity w.r.t generalized cost.
-
-### Simple Travel Time Cost Calculation
+### Simple Base Travel Time Cost Calculation
 
 ```{r calcTravelTimeCost, echo=echoWorking}
 # Following calculation yields LDV Time cost per mile
@@ -521,9 +545,9 @@ cat("Average TTC per mile for HDV average value matches VoTT/speed to within",
   "$/mi.\n")
 ```
 
-### Vehicle Travel Cost Components
+### Base Vehicle Travel Cost Components
 
-Specify the primary (private) cost components for (conventional, manual) road vehicle travel.
+Specify the primary (private) cost components for base case (conventional, manual) road vehicle travel.
 
 ```{r dataVehCostCompons, echo=echoWorking}
 VehTravelCostCompons <- read.delim(textConnection("
@@ -531,8 +555,8 @@ CostCat               :LDVAlt       :LDVAvgSedan :LDVAvgLtTruck  :HDVOther  :HDV
 MilesDriven           :NA           :11850       :11000          :NA        :99000      :[mi/yr] :Base (MV) EDB-31 for LDVs, ATRI-2012 for HDVs
 Fuel                  :6.1          :14.59       :19.63          :NA        :59.0       :[c/mi]  :LDV changed for TEDB mpg
 Maintenance           :5.3          :5.47        :6.15           :NA        :19.4       :[c/mi]  :Incl tires
-AccidentAndInsurance  :7.0          :8.447257384 :8.490909091    :NA        :6.7        :[c/mi]  :Insurance will change for CAVs
-WearAndOwnership      :12 7         :29.907173   :43.49090909    :NA        :18.9       :[c/mi]  :
+AccAndIns             :7.0          :8.447257384 :8.490909091    :NA        :6.7        :[c/mi]  :Insurance will change for CAVs
+WearAndOwn            :12 7         :29.907173   :43.49090909    :NA        :18.9       :[c/mi]  :Ownership, Wear & tear (depreciation)
 TollsFees             :0.9          :0.0         :0.0            :NA        :5.5        :[c/mi]  :
 Parking               :1.3          :2.109704641 :2.272727273    :NA        :0.0        :[c/mi]  :
 Time                  :34.4         :49.99493298 :49.99493298    :NA        :61.1       :[c/mi]  :VOTT will change for CAVs. For HDVs=Driver wages & benefits
@@ -545,9 +569,11 @@ Source                :HERS-ST/2005 :AAA/2012    :AAA/2012       :ATRI/2012 :ATR
 
 kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)), 
       caption= "Vehicle Travel Cost Components by Vehicle Type")
+```
 
+``` {r calcVTCostBaseCompons, , echo=echoWorking}
 # transform dropping notes and assuring all values are numeric
-VTCost = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Units, Note)) %>%
+VTCostBase = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Units, Note)) %>%
   filter(!CostCat %in% c("MilesDriven", "Total", "Source")) %>%
   gather(key = VehType, value = VTCost_cpm, -CostCat) %>%
   mutate(VTCost_cpm = as.numeric(VTCost_cpm))  # all costs in cents/mi
@@ -555,15 +581,15 @@ VTCost = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Units, Note)) %>%
 # Check that input tables are consistent with regard to time cost per mile,
 #   for 2 LDV categories and one HDV categopry
 ChkErrorDiff =
-  VTCost %>% filter(CostCat=="Time") %>% select(VTCost_cpm)/100 -
+  VTCostBase %>% filter(CostCat=="Time") %>% select(VTCost_cpm)/100 -
       c(TravTimeCostBasePars["average_TTC_per_mi.LDV","average"], 
         TravTimeCostBasePars["average_TTC_per_mi.LDV","average"],
         TravTimeCostBasePars["average_TTC_per_mi.HDV","average"])
-cat("Check: Input VTCost Time cost for LDVs and HDV matches Average TTC per mile to within", paste(ChkErrorDiff),
+cat("Check: Input VTCostBase Time cost for LDVs and HDV matches Average TTC per mile to within", paste(ChkErrorDiff),
   "cents/mi.\n")
 
 # Update Time cost in the Vehicle Travel Cost matrix for MVs (base), according to current Base Assumption set
-VTCost = VTCost %>% 
+VTCostBase = VTCostBase %>% 
   mutate(VTCost_cpm = ifelse((CostCat=="Time" & substr(VehType, 1, 3)=="LDV"), 
                              100* TravTimeCostBasePars["average_TTC_per_mi.LDV","average"], VTCost_cpm),
          VTCost_cpm = ifelse((CostCat=="Time" & substr(VehType, 1, 3)=="HDV"), 
@@ -571,131 +597,253 @@ VTCost = VTCost %>%
          )
 
 # sum across categories (excl miles and total) to check total cost by VehType
-VTCost %>% filter(!CostCat %in% c("MilesDriven", "Total")) %>%
+x = VTCostBase %>% 
+  filter(!CostCat %in% c("MilesDriven", "Total")) %>%  # may be redunant
   group_by(VehType) %>% 
-  summarize(TotCost_cpm = sum(VTCost_cpm, na.rm = T)) # treat NA cost compnents as zero
+  summarize(Total = sum(VTCost_cpm, na.rm = T)) # treat NA cost compnents as zero
+x
+x = x %>% gather(key = CostCat, value = VTCost_cpm, Total) # this allows appending to other costs
 
-kable(x = spread(VTCost, key = VehType, value = VTCost_cpm), 
+VTCostBase = rbind(VTCostBase, x) # append total rows to travel cost array
+
+# established preferred row order
+costCompOrder = VehTravelCostCompons %>% filter(CostCat!="MilesDriven" & CostCat!="Source") %>% select(CostCat)
+costCompOrder$CostCat = as.character(costCompOrder$CostCat)
+
+x = spread(VTCostBase, key = VehType, value = VTCost_cpm)
+rownames(x) = x$CostCat
+x = x[costCompOrder$CostCat,]
+
+kable(x = x, row.names = F, 
       caption= "Base Vehicle Travel Cost Components by Vehicle Type (cents/mi)")
-
 
 ```
 
-```{r readVTcostComponReduction, echo=echoWorking}
-# Note: definition of automation scenarios is by impacts on component costs, not CAV penetration scenarios
-# Penetration is assumed 100%
-VTcostComponReduction <- read.delim(textConnection("
-DemandScenario :VoTT  :Insurance  :Description
-1              :0     :-0.60      :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
-2              :-0.05 :-0.60      :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
-3              :-0.50 :-0.80      :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
-4              :-0.80 :-0.80      :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
+4.3 Fractional Increase in VKT for Demand Scenarios
+---------------------------------
+
+Calculate fractional change in demand, by Demand Scenario *d*, Year *t*, and VehicleClass *v*, based on changes in 
+time cost, other vehicle fuel and operating costs, and VMT demand elasticity w.r.t generalized cost.
+
+### Demand Scenario Cost Reduction Parameters and Demand Response Parameters Drive Demand Scenarios
+
+Note: The definition of automation _demand_ scenarios is by their impacts on selectec component costs (e.g. travel time costs, insurance costs). They are not CAV penetration scenarios. 
+Penetration is assumed 100%.
+
+
+```{r readDemScenCostReduction, echo=echoWorking}
+DemScenCostReduction <- read.delim(textConnection("
+DemScen :VoTT  :Insurance  :Description
+1       :0     :-0.60      :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
+2       :-0.05 :-0.60      :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
+3       :-0.50 :-0.80      :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
+4       :-0.80 :-0.80      :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
 "),header=TRUE,sep=":",strip.white=TRUE)
 # Source: Insurance cost reductions from Celent
 # Source: VoTT cost reductions hypothetical
 # Corresponds to "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]DemandScenarios'!$A$1:$M$6"
-rownames(VTcostComponReduction) = VTcostComponReduction$DemandScenario
+rownames(DemScenCostReduction) = DemScenCostReduction$DemScen
 
 # Assumed Reduction in Vehicle Travel Cost Components
-kable(x = VTcostComponReduction, 
+kable(x = DemScenCostReduction, 
       caption= "Vehicle Travel Cost Component Reduction by Demand Scenario")
 
 
 ```
 
+### Vehicle Travel Cost Shares by Component - Base
+
+```{r calcCostSharesbyComponentBase, echo=echoWorking}
+
+# divide every element by TotCost_cpm to get shares
+VTCShrBase = VTCostBase %>% spread(key = CostCat, value = VTCost_cpm) %>%
+  mutate_at(vars(-c(VehType,Total)), funs( ./Total)) %>%
+  mutate(Total = 1.0) %>%
+  gather(key = CostCat, value=VTCost_cpm, -VehType)
+VTCShrBase = VTCShrBase %>%  spread(key = VehType, value=VTCost_cpm)
+rownames(VTCShrBase) = as.character(VTCShrBase$CostCat)
+
+VTCShrBase = VTCShrBase[costCompOrder$CostCat,]
+
+kable(VTCShrBase, row.names = F, 
+      caption= "Base Vehicle Travel Cost: Components Share by Vehicle Type")
+              
+```
+
+### Cost Shares by Component - CAV Scenario
+
+Costs (relative to Base) are adjusted for assumptions of each Demand Scenario and for the Energy Intensity change associated with the current Technology Scenario. 
+
+Base cost components $\sigma_{itv}^B$ are normalized and add to 1.0. Demand Scenario *relative* costs for each component *i* are relative to the Base (Manual Vehicle) level. Their total can be greater than or less than 1.0. Denoted $\sigma_{itdjv}$, they depend on cost component *i*, Year *t* and Demand Scenario *d*, TechScenario *j*, Year *t*, Vehicle class *v*
+
+- Fuel costs per mile are adjusted by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. That is, for cost component $i = fuel$
+$$\sigma_{fuel,vtdj} = \sigma_{fuel,vtdj}^B \cdot (1+\mu_{jtv}f_{fuelvis,v})$$
+
+```{r calcCostSharesbyComponentCAV, echo=echoWorking}
+# Start with dataframe replicates the Base Cost Shares for each Demand Scenario
+VTCShrAlt = bind_rows(VTCShrBase, VTCShrBase, VTCShrBase, VTCShrBase)  # if 4 Demand Scenarios
+VTCShrAlt$DemScen        = c(rep(1,nrow(VTCShrBase)), 
+                             rep(2,nrow(VTCShrBase)), 
+                             rep(3,nrow(VTCShrBase)), 
+                             rep(4,nrow(VTCShrBase)) )
+
+x = VTCShrAlt %>% gather(key = VehType, value = VCRel, -c(CostCat, DemScen))
+x$VC = substr(as.character(x$VehType), 1, 3)
+x = x %>% spread(key=CostCat, value = VCRel)
+
+y = DemRespParams %>% select(-c(Zero, Med)) %>% 
+  gather(key=Case, value=value, Low:High) %>%
+  spread(key = Parameter, value=value) %>%
+  select(-InsurCostRed)  # Insurance cost reduction determined by Demand Scenario
+
+x = left_join(x, y, by=c("VC"))     # combines base cost shares and Demand Reponse Parameters for their adjustment
+x = left_join(x, select(DemScenCostReduction, -Description), by=c("DemScen")) # appends Dem Scen multipliers
+
+```
+
+4.4 Calculate Adjusted Travel Cost Components for Scenario Conditions
+---------------------------
+
+```{r CalcTravelCostComponentsAdjusted, echo=echoWorking}
+# Changed costs under different automation scenarios (scenarios in DemandScenarios sheet)
+# Corresponds to "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$G$14:$N$28" and "calcul Dem_HDV'!$G$14:$N$28"
+# adjustments to each cost category in VehTravCostCompon
+
+# XXX VehTravCostMult[C_Categ, VSubClass] = XXX
+C_Categ   = c("Fuel", "Maintenance", "AccAndIns", "WearAndOwn", "TollsFees", "Parking", "Time", "Registration")
+VSubClass = c("LDVAvgSedan", "LDVAveLtTruck", "HDVClass8", "HDVOther")
+
+# Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
+y = x %>% mutate(
+  Fuel = Fuel*(1 + I_deltaCAV*ShrECostInt), # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
+  # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
+  Maintenance  = Maintenance * 1.0,
+  AccAndIns    = AccAndIns * (1 + Insurance), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
+  WearAndOwn   = WearAndOwn * (1.0 + C_incrCAV),  # (1+CapitalCostChange)
+  TollsFees    = TollsFees * 1.0,
+  Parking      = Parking   * 1.0,
+  Time         = Time      * (1 + VoTT), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
+  Registration = Registration * 1.0
+# Total = CostMult weighted by base CostFraction
+)
+y$Total = 0
+y %>% select(AccAndIns:WearAndOwn) %>% rowSums(na.rm=TRUE) -> y$Total
+
+# Get main result (total relative cost) for all Demand scenarios, VehType, Cases, and elasticity of VKT
+RelCost = y %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
+
+# Keep array of relative cost components for Demand Scenarios
+y= y %>% filter(Case=="Low") %>% # to this point the Low and High are the same (they only differ in the applied ElasVKT)
+  select(DemScen:WearAndOwn) %>% 
+  gather(key = CostCat, value = value, AccAndIns:WearAndOwn) %>% # reshape
+  spread(key = DemScen, value = value)
+
+VTCShrAlt = y %>% gather(key=DemScen, value =value, c("1","2","3","4")) %>%
+  select(-VC) %>% spread(key=VehType, value=value) %>%
+  arrange(DemScen)
+
+kable(VTCShrAlt, row.names = F, 
+      caption= "Alt Travel Cost Components Relative to Base, by Vehicle Type & Dem Scenario")
+
+```
+
+
+4.5 Fractional VMT Changes in CAV Scenario
+-------------------
+
+Compute fractional increases in VMT from the changes in total generalized travel costs that result from automation.
+
+For Demand Scenario *d*, Vehicle Type *v*, and Elasticity Case *c* (Low and High elasticity)
+$$fractionalVMTIncr_{dvc} = (RelTotalCost_{dv})^{ElasVKT_{cv}}-1$$
+
+Note: The Elasticity of VKT with respect to (generalized) travel cost is key assumption. Does this include mode switching, vehicle efficiency, locational choices, etc?
+Sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
+
 ```{r DemandFracVMTchange, echo=echoWorking}
+# Change in VMT due to vehicle automation: for LDVCar, LDVLtTrk, HDVClass8
+# Pct increase in vehicle travel: low elasticity
+# Pct increase in vehicle travel: high elasticity
 
-DemandResponseKeyParameters <- read.delim(textConnection("
-Name     :Description                                            :Low   :Med  :High  :Note
-VMTElas  :Elasticity of travel w.r.t. generalized cost          :-1    :-1   :-1    :(fuel+maintenance+accident+tolls+ TRAVEL time) (HERS-ST technical report, August 2005 + Graham n Glaister 2002)
-InsReduc :Reduction in insurance premiums                        :0.6   :0.7  :0.8   :internet/celent report
-ExclWear :Exclude Wear and Ownership Costs (1 True, 0 False)     :0     :0    :0     :Choose 0 or 1 value
-IncrVCst :Incremental veh capital cost from automation           :      :     :      :???  (wear and ownership cost/mi)     
-CFuelVis :Share of energy efficiency costs 'visible' to driver   :1     :1    :1     :0 to 1 (1 means full efficiency gain visible) (driver=person making trip choices)
-CFuelRed :Fuel energy cost reduction (from energy efficiency)    :0.3420:     :      :Import from 'Policy+Scenario' subsheet calculation for currently chosen technology scenario
-"),header=TRUE,sep=":",strip.white=TRUE) #
-# Corresponds to "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$4:$L$10" see also "calcul Dem_HDV'!$A$4:$L$10"
-# Note: duplicative: DemandRepsonseKeyParameters duplicates DemScenParams for LDV, but adds "Fuel Energy cost reduction"
-rownames(DemandResponseKeyParameters) = DemandResponseKeyParameters$Name
+# RelCost = VTCShrAlt %>% filter(CostCat=="Total")
+RelCost = RelCost %>% mutate(
+  VMTIncrease = Total^ElasVKT-1.0
+)
 
-# PL note: ElasVKTwrtCost is key assumption. Does this include mode switching, vehicle efficiency, locational choices, etc?
-# Sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
+# Aggregate to single Elasticity Case value for VMT change fraction, for each of LDV and HDV
+# Pct increase LDV personal vehicles VMTdemand: arith ave of low & high elasticity; LDVCar and LDVLtTrk
+# Pct increase HDV vehicles VMTdemand: low elasticity
+VMTIncrease = RelCost %>% filter(!(VC=="HDV" & Case=="High")) %>%
+  select(-VehType) %>%
+  group_by(VC, DemScen) %>%
+  summarise(VMTIncrease = mean(VMTIncrease))
 
-# XXX
-
-#% increase in vehicle travel              :lowElasticity     :0%     :-1%    :2%     :1%  :30%  :22%  :57%  :41%
-#% increase in vehicle travel              :highElasticity    :0%     :-1%    :2%     :1%  :30%  :22%  :57%  :41%
-#% increase LD personal vehicles VMTdemand :lowElasticity     :-0.55% :1.46%  :26.23% :48.88%
-#% increase LD personal vehicles VMTdemand :highElasticity    :-0.55% :1.46%  :26.23% :48.88%
-
-# VMT (Vehicle Travel Increase Due to vehicle automation
-VMTIncrease <- read.delim(textConnection("
-varName             :ElasCase  :AvgSedan_1   :LtTruck_1     :AvgSedan_2  :LtTruck_2    :AvgSedan_3   :LtTruck_3   :AvgSedan_4   :LtTruck_4
-increaseInVehTravel :lowElas   :0.000679779  :-0.011658058  :0.02279916  :0.006459284  :0.301069905  :0.22355823  :0.565120488  :0.412413344
-increaseInVehTravel :highElas  :0.000679779  :-0.011658058  :0.02279916  :0.006459284  :0.301069905  :0.22355823  :0.565120488  :0.412413344 
-"),header=TRUE,sep=":",strip.white=TRUE) #
-
-VMTIncrease = VMTIncrease %>% select(-varName) %>%
-  gather(key = case, value = fracVMTIncr, -ElasCase) %>%
-  mutate(fracVMTIncr = as.numeric(fracVMTIncr)) %>%
-  separate(col = case, into = c("VehType","case")) %>%
-  spread(key = VehType, value = fracVMTIncr)
-VMTIncrease$LDVave =  (VMTIncrease$AvgSedan + VMTIncrease$LtTruck)/2.0
-
+# % increase LD personal vehicles VMTdemand (averating Sedans and LtTrucks)
 VMTIncreaseTemp <- read.delim(textConnection("
 Var                          :ElasCase           :LDV_1           :LDV_2          :LDV_3          :LDV_4
 LDpersonal_vehicles_VMTdemand: lowElas           :-0.005489139    :0.014629222    :0.262314068    :0.488766916
 LDpersonal_vehicles_VMTdemand: highElas          :-0.005489139    :0.014629222    :0.262314068    :0.488766916
 "),header=TRUE,sep=":",strip.white=TRUE) #
 
-# ??? pctVMTIncrFromAutomation[case, vehtype, elasCase] = =G28^$I$5-1
+#% increase LD personal vehicles VMTdemand :highElasticity    :-0.55% :1.46%  :26.23% :48.88%
 
+# VMTIncrease = VMTIncrease %>% select(-varName) %>%
+#   gather(key = case, value = fracVMTIncr, -ElasCase) %>%
+#   mutate(fracVMTIncr = as.numeric(fracVMTIncr)) %>%
+#   separate(col = case, into = c("VehType","case")) %>%
+#   spread(key = VehType, value = fracVMTIncr)
+# VMTIncrease$LDVave =  (VMTIncrease$AvgSedan + VMTIncrease$LtTruck)/2.0
+```
+
+### Effects on VMT Demand from Elderly Drivers, and Car Sharing (Ride Pooling)
+
+```{r VMTAdjustments, echo=echoWorking}
 # multiplier factors on VMT to include larger travel by the elderly
 #   NOTE: multiplier is for total VMT, age distribution included already
 
+# UnderServed Optional (USOption) multipliers
 ElderlyVMTmult <- read.delim(textConnection("
-option  :multiplier    :description
-1       :1.023375114   :driving has a natural decay after 60
-2       :1.051206047   :driving remains same as 60, after 60
-3       :1.07209503    :1+increased number of licenses for young and old, most likely
-4       :1.106094734   :2+increased number of licenses for young and old
+USOption  :multiplier    :description
+0         :1.0           :no explicit effect of CAVs on elderly driving
+1         :1.023375114   :driving has a natural decay after 60
+2         :1.051206047   :driving remains same as 60, after 60
+3         :1.07209503    :1+increased number of licenses for young and old, most likely
+4         :1.106094734   :2+increased number of licenses for young and old
 "),header=TRUE,sep=":",strip.white=TRUE) #
 
 # multiplier factors on VMT to account for VMT decline in response to carsharing
 carSharingMult = 0.8 # multiplier is for total VMT. This is the high-end estimate
 
 # extends logic in "calcul Dem_LDV" and "calcul Dem_HDV"
-# ??? fracVMTincr["LDV","2050"] = =1+H32-1
-```
+VMTIncrease$USOption = c(0, 0, 0, 0, 0, 1, 3, 4)  # UnderservedOption
+VMTIncrease = VMTIncrease %>%
+    left_join(select(ElderlyVMTmult, -description), by=c("USOption"))     # combines base cost shares and Demand Reponse Parameters for their adjustment
+VMTIncrease %>% mutate(multiplier = (1+VMTIncrease)*multiplier - 1)
 
-Calculate Travel Cost Components Adjusted for Scenario Conditions
----------------------------
+#  bind_rows(select(ElderlyVMTmult, description), )
 
-```{r}
-# Changed costs under different automation scenarios (scenarios in DemandScenarios sheet)
-# Corresponds to "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$G$14:$N$28" and "calcul Dem_HDV'!$G$14:$N$28"
-# adjustements to each cost category in VehTravCostCompon
-# XXX VehTravCostMult[C_Categ, VSubClass] = XXX
-C_Categ   = c("Fuel", "Maint", "AccAndIns", "WearOwn", "TollsFees", "Parking", "Time", "Registration")
-VSubClass = c("LDVAvgSedan", "LDVAveLtTruck", "HDVClass8", "HDVOther")
-Fuel = 1 + DemandResponseKeyParameters["CFuelVis","Low"]*
-  DemandResponseKeyParameters["CFuelRed","Low"]  # Share of energy efficiency costs 'visible' to the 'driver' (person making trip choices)"*"Fuel energy cost reduction (from energy efficiency)"
-# "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
-Maint = 1.0
-AccAndIns = 1 - DemandResponseKeyParameters["InsReduc","Low"] # (1-InsReduction[DemScen]) # = "DemandScenarios!$O3"
-AccAndIns = 1 - VTcostComponReduction["4", "Insurance"]
-WearOwn   = 1.0
-TollsFees = 1.0
-Parking   = 1.0
-Time      = 1 - VTcostComponReduction["4", "VoTT"] # DemandResponseKeyParameters["VoTCost_mult","Low"] # (1-VoTTReduction[DemScen]) # = "DemandScenarios!N3" 
-Registration = 1.0
-# Total = CostMult weighted by base CostFraction
 
-# Chang in VMT due to vehicle automation: for LDVCar, LDVLtTrk, HDVClass8
-# Pct increase in vehicle travel: low elasticity
-# Pct increase in vehicle travel: high elasticity
-# Pct increase LD personal vehicles VMTdemand: low & high elasticity; arith ave of LDVCar and LDVLtTrk
-# Pct increase LD personal vehicles VMTdemand: high elasticity
+# OUTPUT TO KAYA CALCULATION:
+# Fractional Increase in VMT for HDVs, for Demand Scenarios
+FracVMTIncreaseExample <- read.delim(textConnection("
+DemScen  :VC   :2023        :2050        :Notes
+1        :HDV  :0.13315986  :0.13315986  :Cost-base response (with ElasVKT) only
+2        :HDV  :0.15600896  :0.15600896  :Cost-base response (with ElasVKT) with Elderly multiplier effect option 1
+3        :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) with Elderly multiplier effect option 3
+4        :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) with Elderly multiplier effect option 4
+5        :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
+6        :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
+7        :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
+1        :LDV  :0.15900210  :0.15900210  :Cost-base response (with ElasVKT) only
+2        :LDV  :0.21410345  :0.21410345  :Cost-base response (with ElasVKT) only
+3        :LDV  :0.64978123  :0.64978123  :Cost-base response (with ElasVKT) only
+4        :LDV  :1.08895536  :1.08895536  :Cost-base response (with ElasVKT) only
+5        :LDV  :1.08895536  :1.08895536  :scenario 4 with higher elasticity
+6        :LDV  :0.67116428  :0.67116428  :scenario 5 with shift to carsharing
+7        :LDV  :0.31982499  :0.31982499  :scenario 3 with shift to carsharing1
+"),header=TRUE,sep=":",strip.white=TRUE) #
+# From 'calcul Dem_LDV' and 'calcul Dem_HDV' sheets
+
+
 ```
 
 
