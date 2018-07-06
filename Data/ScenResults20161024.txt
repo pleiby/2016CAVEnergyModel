@@ -1,0 +1,20 @@
+Scen VC  Energy Intensity  VMT/veh  EnergyUse  EnergyUse  
+1  LDV  -76.9%  66.7%  -61.5%  -44.7%  LDV
+1  HDV  -28.2%  42.9%  2.7%    -44.7%  HDV
+2  LDV  -18.7%  11.9%  -9.0%    -8.8%  LDV
+2  HDV  -17.5%  11.0%  -8.4%    -8.8%  HDV
+3  LDV  -71.9%  67.1%  -53.0%  -33.6%  LDV
+3  HDV  -28.2%  68.3%  20.9%   -33.6%  HDV
+4  LDV   34.2%  64.7%  121.0%  101.0%  LDV
+4  HDV    0.0%  44.9%  44.9%   101.0%  HDV
+5  LDV  -32.7%  14.3%  -23.1%  -19.6%  LDV
+5  HDV  -19.2%  11.7%  -9.8%   -19.6%  HDV
+
+Scenario Summary 2050 at Full Adoption  LDV  LDV  road tran  HDV  HDV  HDV  LDV  
+Scen  I_Energy  VMTpveh  EnergyUse  I_Energy  VMTpveh  EnergyUse  EnergyUse  Scenario Name
+2    -76.93%  66.73%  -44.71%  -28.15%  42.89%   2.67%  -61.54%  Have our cake & eat it too
+7    -18.68%  11.91%   -8.85%  -17.50%  11.00%  -8.43%   -9.00%  Stuck in the middle at Level 2
+4    -71.86%  67.12%  -33.60%  -28.15%  68.29%  20.92%  -52.97%  Strong responses
+3     34.20%  64.67%  101.05%    0.00%  44.94%  44.94%  120.99%  Dystopian nightmare
+1    -32.68%  14.26%  -19.59%  -19.23%  11.72%  -9.76%  -23.08%  Cautiously optimistic
+5      9.92%   7.39%   12.57%  -10.00%   7.98%  -2.82%   18.05%  Driver assist, limited other benefits

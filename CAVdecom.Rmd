@@ -44,7 +44,7 @@ rm(list = ls())
 
 # Logical Flags to indicate which chunks should be displayed in RMarkdown output
 #echoWorking = TRUE # set to FALSE for an exported (non-working version) of output
-echoWorking = TRUE # set to FALSE for an exported (non-working version)
+echoWorking = FALSE # set to FALSE for an exported (non-working version)
 echoMaximal = FALSE # set TRUE only if you want echo just about everything
 ```
 
@@ -83,14 +83,14 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
     * simulate effect of changing costs from technological advances through vehicle automation, electrification, and sharing. 
 
 #### Important driving factors have an economic dimension
-* Demand response to Automation and Shared Mobility
+* Demand response to automation and shared mobility
     * consumer behavior model drives demand response
     * particularly, following Small & Verhoef, others, consumer behavior model determines choice of travel VKT, vehicle efficiency, and travel time
     * Utility derives from travel, goods, leisure.
-    * Utility maximization subject to joint budget and time constraints
+    * Utility maximization subject to joint constraints on budget and time
 * Endogenous interactions
-    * Speed (highway free-flow) endogenous to trade-off energy cost, time and safety costs
-    * Congestion – endogenous to vehicle mix, VKT, automation (determines average achieved speed)
+    * Speed - (highway free-flow) endogenous to trade-off between energy cost, time and safety costs
+    * Congestion – (determines average achieved speed in traffic) endogenous to vehicle mix, VKT, automation
     * Travel demand - endogenous to costs, including energy, congestion and safety, as well as travel time utility (VTT)
     * Distinguish between VKT and PKT, given car-sharing and ride-pooling
         * Compact representation of ride pooling choice
@@ -110,15 +110,15 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
     * Travel patterns - details omitted
         * Impact: Trip chaining patterns
         * Impact: detailed drive cycle changes (power use over different segments of trip)
-* to what extent can CAVs enable fuel switching or electrification?
+* To what extent can CAVs enable fuel switching or electrification?
 * What are the implications of shared-mobility for energy use and VKT?
     - Important to differentiate shared vehicles (aTaxi or *ride-hailing*) and shared rides (*ride-pooling*)
     - Model through occupancy, incremental VKT from re-positioning, and implications to travelers' cost
-* How/when will CAVs be adopted?(not addressed)
+* How/when will CAVs be adopted? (not addressed)
 * What are the special challenges of the transitional period, when a mix of manual, partially automated, and automated vehicles will share the roadways? (not addressed)
 
 #### Contributions of this paper
-This paper describes a new aggregated framework, building on established travel demand literature, that account for key features of vehicle automation, and estimates demand and energy use implications. Unlike prior known aggregate work, which relied largely on fixed-coefficient scenario analysis or accounting, it integrates technological and economic factors, including fuel, vehicle and other travel costs, and incorporates energy and travel behavior responses to economic incentives. This work abstracts from much detail offered by microsimulation models, but complements that evolving work, which models detailed travel and energy implications of specific AV technologies using agent/micro/mesosimulation of travel and traffic in real-world spatial and road network models (MATSIM, BEAM, POLARIS, others). Our framework also is novel in the integration of a utility-based behavioral framework with technological detail and private and public costs, emphasizing the role of financial incentives in the form of costs, fees or taxation/subsidy of transport energy or road use. It extends the private utility maximization framework for travel behavior of Small and Parry 2005, Small and Verhauf 2007, and Leiby and Rubin 2017, combining it with the vehicle efficiency and automated vehicle technological details of Wadud et al 2016. It seeks to address the important issue of how to promote the mobility and energy benefits of CAV technologies while deterring potential adverse outcomes (congestion, emissions) which can have large unaccounted social costs.
+This paper describes a new aggregated framework, building on established travel demand literature, that account for key features of vehicle automation, and estimates demand and energy use implications. Unlike prior known aggregate work, which relied largely on fixed-coefficient scenario analysis or accounting, it integrates technological and economic factors, including fuel, vehicle and other travel costs, and incorporates energy and travel behavior responses to economic incentives. This work abstracts from much detail offered by micro/mesosimulation models, which estimate travel and energy implications of specific AV technologies using agent/micro/mesosimulation of travel and traffic in real-world spatial and road network models (MATSIM, BEAM, POLARIS, others). The aggregate approach here complements that evolving work and seeks to incorporate some of the insights from that detailed spatial travel modeling. Our framework also is novel in the integration of a utility-based behavioral framework with technological detail and private and public costs, emphasizing the role of financial incentives in the form of costs, fees or taxation/subsidy of transport energy or road use. It extends the private utility maximization framework for travel behavior of Small and Parry 2005, Small and Verhauf 2007, and Leiby and Rubin 2017, combining it with the vehicle efficiency and automated vehicle technological details of Wadud et al 2016. It seeks to address the important issue of how to promote the mobility and energy benefits of CAV technologies while deterring potential adverse outcomes (congestion, emissions) which can have large unaccounted social costs.
 
 #### Limitations
 - An incomplete consideration of role of AV safety and its endogenous effect on travel costs and travel behavior.
@@ -175,7 +175,7 @@ The variables are
 - $E_{tvf}$ = energy use in form of fuel f by vehicle type v in year t [MJ/y]
 - $G_{tv}$ = GHGs emitted in year t by type v [MT CO2e/y]
 
-Focusing on passenger travel, we can write Energy Use $E_{tvf}$ as
+Focusing on passenger travel, we can write energy use $E_{tvf}$ as
 $$E_{tvf} = A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \sigma_{tvm} \phi_{tvmf} I_{tvmf}$$
 with units
 $$[MJ/yr] = [pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm]$$
@@ -200,7 +200,7 @@ and can be further decomposed into vehicle size classes, and drivetrain classes.
 
 Mechanisms by Which CAVs Can Alter Energy Use and Emissiona
 ---------------------------
-We identified a set *K* of "Mechanisms" or "Technologies," each $k \in K$ of which corresponds to a multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. A mechanism can affect activities *A*, intensities *I*, or mode and fuel shares $\sigma, \phi$. 
+We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicle automation, each $k \in K$ of which corresponds to a multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. In general, a mechanism can affect travel activity levels *A*, vehicle energy intensities *I*, or mode and fuel shares $\sigma, \phi$. 
 In theory, a mechanism could also effect vehicle class shares or occupancy, but we do not yet consider such effects. 
 
 In the Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. Multiplier values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Technology/Demand scenario *s*, i.e. $\mu_{tvks}$.
@@ -215,7 +215,7 @@ SetK_Mechs = c(   # mechanisms by which automation alters energy and/or demand
   "Right-sizing",
   "Eco_driving",
   "Congestion_mitigation",
-  "Increased_feature",
+  "Increased_feature_load",
   "Higher_highway_speeds"
   # "Vehicle_sharing", # Q: should Mechanism set include this?
   # "Ride_pooling",    # Q: should Mechanism set include this?
@@ -248,9 +248,9 @@ library(ggplot2)
 3. Estimating Energy Impacts
 ===========================
 
-Define the effects of automation on vehicle energy intensity through a set of identified technological and operational "mechanisms." 
+Define the effects of automation on vehicle energy intensity (energy per vehicle km traveled) through a set of identified technological and operational "mechanisms." 
 
-The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ are differentiated by year *t* and Vehicle class *v*.
+The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ indicate the fractional change in energy intensity for a particular mechanism *k*, and are differentiated by year *t* and Vehicle class *v*.
 
 
 ```{r kayaIntensityModifiers, echo=echoWorking}
@@ -268,7 +268,7 @@ LDV  2035   Eco_driving                 -20.0   -12.5    -5.0
 LDV  2035   Congestion_mitigation        -3.4    -1.7     0.0
 LDV  2035   Right_sizing                -45.0   -33.0   -21.0
 LDV  2035   Higher_highway_speeds         7.0    14.5    22.0
-LDV  2035   Increased_feature_content     0.0     5.0    10.0
+LDV  2035   Increased_feature_load        0.0     5.0    10.0
 LDV  2050   Platooning                  -24.8   -14.4    -4.0
 LDV  2050   De_emphasized_performance   -23.0   -14.0    -5.0
 LDV  2050   Improved_crash_avoidance    -22.9   -14.2    -5.5
@@ -276,7 +276,7 @@ LDV  2050   Eco_driving                 -20.0   -12.5    -5.0
 LDV  2050   Congestion_mitigation        -4.2    -2.1     0.0
 LDV  2050   Right_sizing                -45.0   -33.0   -21.0 
 LDV  2050   Higher_highway_speeds         7.0    14.5    22.0
-LDV  2050   Increased_feature_content     0.0     5.0    10.0
+LDV  2050   Increased_feature_load        0.0     5.0    10.0
 HDV  2035   Platooning                  -25.0   -17.5   -10.0
 HDV  2035   De_emphasized_performance     0.0     0.0     0.0
 HDV  2035   Improved_crash_avoidance      0.0     0.0     0.0
@@ -284,7 +284,7 @@ HDV  2035   Eco_driving                   0.0     0.0     0.0
 HDV  2035   Congestion_mitigation        -3.4    -1.7     0.0
 HDV  2035   Right_sizing                  0.0     0.0     0.0
 HDV  2035   Higher_highway_speeds         0.0     0.0     0.0
-HDV  2035   Increased_feature_content     0.0     0.0     0.0
+HDV  2035   Increased_feature_load        0.0     0.0     0.0
 HDV  2050   Platooning                  -25.0   -17.5   -10.0
 HDV  2050   De_emphasized_performance     0.0     0.0     0.0
 HDV  2050   Improved_crash_avoidance      0.0     0.0     0.0
@@ -292,7 +292,7 @@ HDV  2050   Eco_driving                   0.0     0.0     0.0
 HDV  2050   Congestion_mitigation        -4.2    -2.1     0.0
 HDV  2050   Right_sizing                  0.0     0.0     0.0
 HDV  2050   Higher_highway_speeds         0.0     0.0     0.0
-HDV  2050   Increased_feature_content     0.0     0.0     0.0
+HDV  2050   Increased_feature_load        0.0     0.0     0.0
 "),header=TRUE,sep="",strip.white=TRUE) #;
 # Default delimiter is white space.  If there is a header and the first row contains one fewer field than the number of columns,
 # the first column in the input is used for the row names. Otherwise if row.names is missing, the rows are numbered
@@ -304,13 +304,13 @@ IEffects$Zero = 0.0   # include additional case of no-impact for each mechanism
 
 ### 3.1 Construct multiplicative factors to apply to energy intensities for each mechanism
 
-Multipliers $\mu_{tvks}$ apply for each year *t*, vehicle class *v*, mechanism/technology *k*, sensitivity case *s*.
+From the fractional changes in energy intensity, multipliers $\mu_{tvks}$ are constructed to apply for each mechanism/technology *k*, year *t*, vehicle class *v*, and sensitivity case *s*.
 
 $\mu_{tvks} = 1.0 + I_{E,tvks}$
 
-A multiplier value of 1.0 indicates no change and less than one implies a multiplicative reduction in energy intensity.
+A multiplier value of 1.0 indicates no change and less/greater than one implies a multiplicative reduction/increase in energy intensity.
 
-```{r constrIEffects, echo=echoWorking}
+```{r constrIEffects, warning=FALSE, echo=echoWorking}
 # Get (compound) case name and split into separate variables for each part
 
 #IEffects$EffectCase = row.names(IEffects)
@@ -333,21 +333,20 @@ kable(x = IM,
       caption= "Intensity Multipliers by Vehicle-type, Year, and Case")
 ```
 
-* Note "Right_sizing" and "Increased_features" apply only to LDV passenger travel.
+* Note "Right_sizing" and "Increased_feature_load" apply only to LDV passenger travel.
 
-### 3.2 Energy Intensity by Vehicle Type and Technology Scenario
+### 3.2 Energy Intensity by Vehicle Type and Technology Scenario, by Composing Mechanism Effects
 
-We construct Scenario Multipliers for energy intensity, $\mu_{jtv}$, for Scenario *j*, Year *t*, Vehicle class *v* based on the combined the effect of all the mechanisms.
+We construct Scenario Multipliers $\mu_{jtv}$ for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v* based on the combined the effect of all the mechanisms.
 
 For each technology scenario *j*, year *t*, vehicle class *v* and mechanism *k*, the "EffectCase" or sensitivity case *s* is specified, i.e. 
 
 $s_{jtmv}$ for 
 $s \in \{Zero, Low, Mid, High\}$.
 
-This determines the appropriate intensity multiplier for each mechanism, and the total energy intensity multiplier for each scenario is the product a all mechanism multipliers
-$\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtmv}}}$
+This determines the appropriate intensity multiplier for each mechanism.
 
-```{r constructIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
+```{r constructIntensityByScenMech, echo=echoWorking, warning=FALSE, message=FALSE}
 # Load the descriptions of the scenarios
 mechScenAssumps = read_csv(paste0("./Data/","CAV_Scenario_Master.csv"), comment = "#")
 # This table contains: scenario number and demand scenario number;
@@ -372,10 +371,22 @@ msa = left_join(msa, IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
   select(-c(Demand_Scenario, IE)) # drop fractional reductions, keep multipliers
 ```
 
-The Net Energy Intensity change is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
-$\Delta I_{tvs} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtmv}}}-1$
+```{r reportScenarioAssumps, echo=echoWorking, warning=FALSE, message=FALSE}
+scenAssumps = msa %>% select(-IM) %>%
+  spread(key = Scenario_Number, value = EffectCase) %>% 
+  arrange(Year, desc(VC))
+kable(x = scenAssumps, 
+      caption= "Scenario Effect Cases by Year, Vehicle Class, and AV Mechanism")
+```
 
-```{r constructIntensityByScenario2, echo=echoWorking, warning=FALSE, message=FALSE}
+The total energy intensity multiplier for each scenario is the product a all mechanism multipliers
+$\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtmv}}}$
+
+The Net Energy Intensity change is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
+$$\Delta I_{tvs} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtmv}}}-1$$
+
+
+```{r constructIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # Overall energy intensity for the scenario is the product of mechanism multipliers
 EnergyIntensityChanges = msa %>%
   group_by(Year, VC, Scenario_Number) %>%
@@ -397,15 +408,17 @@ NetEnergyIntensityChangeTable = EnergyIntensityChanges %>%
   unite(col=VC_Year, VC, Year, sep="_") %>%
   spread(key=VC_Year, value = NIE)
 
+kable(x = NetEnergyIntensityChangeTable, 
+      caption= "Net Energy Intensity Change by Scenario, Vehicle-type, and Year")
+```
+
+```{r testIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # This table should match NetEnergyIntensityChangeTable
 NEIC_test = mechScenAssumps %>% 
   select(c(Scenario_Number:Scenario_Name)) %>%
   select(-c(Demand_Scenario,Scenario_Name))
 names(NEIC_test) = sub("_Multipliers.", replacement="_", names(NEIC_test))
 NEIC_test = NEIC_test[,names(NetEnergyIntensityChangeTable)] # make column orders match
-
-kable(x = NetEnergyIntensityChangeTable, 
-      caption= "Net Energy Intensity Change by Scenario, Vehicle-type, and Year")
 
 NEIC_test_err = sum(abs(NEIC_test - NetEnergyIntensityChangeTable))
 
@@ -1260,7 +1273,9 @@ Engineers, 1993:119-123.
 
 7.2 Speed and Accident Risk
 -------------------
-* Notes from [Speed and Accident Risk](http://ec.europa.eu/transport/wcm/road_safety/erso/knowledge/Content/20_speed/speed_and_accident_risk.htm), European Road Safety Observatory
+* Notes from [Speed and Accident Risk](https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_accident_risk_en), European Road Safety Observatory
+
+- https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_road_safety_en
 
   > Assessing potential effectiveness of speed reduction measures
 Based on work by Nilsson in Sweden, a change in average speed of 1 km/h will result in a change in accident numbers ranging between 2% for a 120 km/h road and 4% for a 50 km/h road. This result has been confirmed by many before and after studies of different speed reduction measures. This relationship is used by other Scandinavian countries and by Australian and Dutch safety engineers.
@@ -1282,7 +1297,7 @@ References
 ========================
 * Bösch, P. M., Becker, F., Becker, H., & Axhausen, K. W. (2017). Cost-based analysis of autonomous mobility services. _Transport Policy_, (October). http://doi.org/10.1016/j.tranpol.2017.09.005
 * Brown, A., Gonder, J., & Repac, B. (2014). An Analysis of Possible Energy Impacts of Automated Vehicle. In G. Meyer & S. Beiker (Eds.), Road Vehicle Automation (pp. 61-70). Springer. Retrieved from http://link.springer.com/book/10.1007%2F978-3-319-05990-
-* European Road Safety Observatory 20XX [Speed and Accident Risk](http://ec.europa.eu/transport/wcm/road_safety/erso/knowledge/Content/20_speed/speed_and_accident_risk.htm).
+* European Road Safety Observatory 2018 [Speed and Accident Risk](https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_accident_risk_en) (last revised 06/07/2018).
 * Kloeden, C. N., McLean, A. J., Moore, V. M. & Ponte, G. (1997) Travelling speed and the rate of crash involvement. Volume 1: findings. Report No. CR 172. Federal Office of Road Safety FORS, Canberra
 * Kloeden, C. N., Ponte, G. & McLean, A. J. (2001) Travelling speed and the rate of crash involvement on rural roads. Report No. CR 204. Australian Transport Safety Bureau ATSB, Civic Square, ACT
 * Schipper, Lee, Celine Marie-Lilliu, and Roger Gorham, 2000. Flexing the Link between Transport and Greenhouse Gas Emissions: A Path for the World Bank, Washington, DC: World Bank
