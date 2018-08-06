@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "July 05, 2018"
+date: "August 6, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -95,11 +95,12 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
     * Distinguish between VKT and PKT, given car-sharing and ride-pooling
         * Compact representation of ride pooling choice
 * CAV fuel efficiency follows one of three models
-    * CAFE is binding
-      - AVs achieve same MPG as CAFE average, counting some off-cycle benefits. AVs thus have similar intensity as MVs.
-    * Cost effective case 
-      - AVs may be more efficient than standard, _if_ further efficiency reductions are cost-effective from a private perspective
-    * Technically feasible case
+    * The technically feasible case
+        - This provides an upper bound on achieved fuel savings, assuming system optimization with respect to energy.
+    * CAFE-binding case
+        - AVs achieve same MPG as CAFE average, counting some off-cycle benefits. AVs thus have similar intensity as MVs.
+    * Cost-effective case 
+        - AVs may be more efficient than standard, _if_ further efficiency reductions are cost-effective from a private perspective
 
 #### Key Questions (in order of attention paid here)
 * How may vehicle fuel intensity/economy change? 
@@ -109,20 +110,20 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
     * See EEMS2017 study of travel demand for different VOTT reports 30-50% increase in energy, mostly from demand, depending on VOTT [ToDo: see what this implies for VKTDemandElas]
     * Travel patterns - details omitted
         * Impact: Trip chaining patterns
-        * Impact: detailed drive cycle changes (power use over different segments of trip)
-* To what extent can CAVs enable fuel switching or electrification?
+        * Impact: detailed drive cycle changes (power use over different segments of trip, from detailed traffic interactions and speed changes)
 * What are the implications of shared-mobility for energy use and VKT?
     - Important to differentiate shared vehicles (aTaxi or *ride-hailing*) and shared rides (*ride-pooling*)
     - Model through occupancy, incremental VKT from re-positioning, and implications to travelers' cost
+* To what extent can CAVs enable fuel switching or electrification?
 * How/when will CAVs be adopted? (not addressed)
 * What are the special challenges of the transitional period, when a mix of manual, partially automated, and automated vehicles will share the roadways? (not addressed)
 
 #### Contributions of this paper
-This paper describes a new aggregated framework, building on established travel demand literature, that account for key features of vehicle automation, and estimates demand and energy use implications. Unlike prior known aggregate work, which relied largely on fixed-coefficient scenario analysis or accounting, it integrates technological and economic factors, including fuel, vehicle and other travel costs, and incorporates energy and travel behavior responses to economic incentives. This work abstracts from much detail offered by micro/mesosimulation models, which estimate travel and energy implications of specific AV technologies using agent/micro/mesosimulation of travel and traffic in real-world spatial and road network models (MATSIM, BEAM, POLARIS, others). The aggregate approach here complements that evolving work and seeks to incorporate some of the insights from that detailed spatial travel modeling. Our framework also is novel in the integration of a utility-based behavioral framework with technological detail and private and public costs, emphasizing the role of financial incentives in the form of costs, fees or taxation/subsidy of transport energy or road use. It extends the private utility maximization framework for travel behavior of Small and Parry 2005, Small and Verhauf 2007, and Leiby and Rubin 2017, combining it with the vehicle efficiency and automated vehicle technological details of Wadud et al 2016. It seeks to address the important issue of how to promote the mobility and energy benefits of CAV technologies while deterring potential adverse outcomes (congestion, emissions) which can have large unaccounted social costs.
+This paper describes a new aggregated framework, building on established travel demand literature, that account for key features of vehicle automation, and estimates demand and energy use implications. Unlike prior known aggregate work, which relied largely on fixed-coefficient scenario analysis or accounting, it integrates technological and economic factors, including fuel, vehicle and other travel costs, and incorporates energy and travel behavior responses to economic incentives. This work abstracts from much detail offered by micro and mesosimulation models, which estimate travel and energy implications of specific AV technologies using agent/micro/mesosimulation of travel and traffic in real-world spatial and road network models (MATSIM, BEAM, POLARIS, others). The aggregate approach here complements that evolving work and seeks to incorporate some of the insights from that detailed spatial travel modeling. Our framework also is novel in the integration of a utility-based behavioral framework with technological detail and private and public costs, emphasizing the role of financial incentives in the form of costs, fees or taxation/subsidy of transport energy or road use. It extends the private utility maximization framework for travel behavior of Small and Parry 2005, Small and Verhauf 2007, and Leiby and Rubin 2017, combining it with the vehicle efficiency and automated vehicle technological details of Wadud et al 2016. It seeks to address the important issue of how to promote the mobility and energy benefits of CAV technologies while deterring potential adverse outcomes (congestion, emissions) that can have large unaccounted social costs.
 
 #### Limitations
 - An incomplete consideration of role of AV safety and its endogenous effect on travel costs and travel behavior.
-- Includes only an approximate representation of the effects of AV technologies and systems on vehicle energy use for specific drivetrains, roadway network, traffic conditions, and drivecycles, such as can be modeled in more detailed vehicle and spatial models such as Autonomie, FASTSim, BEAM/POLARIS, etc.
+- The abstraction of potentially important detail, discussed above. It includes only an approximate representation of the effects of AV technologies and systems on vehicle energy use for specific drivetrains, roadway network, traffic conditions, and drivecycles, such as can be modeled in more detailed vehicle and spatial models such as Autonomie, FASTSim, BEAM/POLARIS, etc.
 - xxx
 
 
@@ -938,10 +939,11 @@ CAVmod$CAVpenetration =  # Fractional Increase in VMT for Demand Scenarios
 Final Scenario Results Table for 2050
 ------------------------
 
-TranspEnergyUse_AVScenario = 
-   TranspEnergyUseRef*((1+ModalEfficiencyFactors)^ReboundElas)*(1+FuelCarbonIntensities)*(1+Modal Shares/Activity Factors)
+$$TranspEnergyUse_{AVScenario} = 
+   TranspEnergyUse_{Ref} \cdot (1+ModalEfficiencyFactors)^{ReboundElas} \cdot (1+FuelCarbonIntensities) \cdot
+   (1+ \frac {Modal Shares}{Activity Factors})$$
 
-```{r}
+```{r specifyScenarioSummary, echo=echoWorking}
 # Scenario Summary 2050 Energy Intensity, VMP and Energy Use Changes at Full Adoption
 summaryScenarioResultsTableExample <- read.delim(textConnection("
 TechScen :LDV.EIntens :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse :HDV.EUse :Tot.EUse :ScenarioName
@@ -954,9 +956,15 @@ TechScen :LDV.EIntens :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse :HDV.EUse
 "),header=TRUE,sep=":",strip.white=TRUE)
 # As in '[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170914r1.xlsx]Policy+Scenario'!$A$97:$I$105
 ```
+```{r}
+kable(summaryScenarioResultsTableExample)
+```
+
 
 5.2 Bar Chart Representation of Results
 ------------------
+
+XXX
 
 ```{r policyAndScenarioCalcs2, echo=echoWorking}
 
@@ -1038,13 +1046,14 @@ LDVFuelUsePerYear_L
 **Summary of MPG vs. Speed data:
 Percent mpg decrease for a given 10 mph increase based on 74 vehicles.**
 
-Speed increase             | Average | Data range | Std. deviation | Middle 2/3s of vehicle data
----------------------------|---------|------------|----------------|----------------------
-50 to 60 mph               | 12.4    | 6.9-18.3   | 2.2 | 10.0-14.3
-60 to 70 mph               | 14.0    | 8.8-19.5   | 2.6 | 11.2-16.1
-70 to 80 mph               | 15.4    | 10.8-26.0  | 3.0 | 12.5-17.5
-All three speed increments | 13.9    | 6.9-26.0   | 2.9 | N/A
+Speed increase             | Average   | Data range    | Std. deviation | Middle 2/3s of vehicle data
+---------------------------|-----------|---------------|----------------|----------------------
+50 to 60 mph               | 12.4      | 6.9-18.3      | 2.2            | 10.0-14.3
+60 to 70 mph               | 14.0      | 8.8-19.5      | 2.6            | 11.2-16.1
+70 to 80 mph               | 15.4      | 10.8-26.0     | 3.0            | 12.5-17.5
+All three speed increments | 13.9      | 6.9-26.0      | 2.9            | N/A
 
+We can calculate the percentage decrease in MPG for a range of speed changes using the methodology Thomas, Hwang, West and Huff 2013.
 
 ```{r getPctMPGdect, echo=echoWorking}
 percentMPGdecreaseTHWH2014 <- function(S, refMPG = 25.0) {
@@ -1071,8 +1080,8 @@ for (i in 1:nrow(pmd)) {
 }
 
 # pmd # percent MPG decreases
-kable(x = pmd, 
-      caption= "Percent MPG Decreases With Speed (Rows are Ref Speed)")
+kable(x = round(pmd,2), 
+      caption= "Table: Percent MPG Decreases With Speed (Rows are Ref Speed)")
 ```
 
 6.2 Fuel Consumption vs Speed - Berry Approach
