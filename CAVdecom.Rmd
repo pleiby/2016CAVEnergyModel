@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "August 6, 2018"
+date: "August 13, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -124,13 +124,12 @@ This paper describes a new aggregated framework, building on established travel 
 #### Limitations
 - An incomplete consideration of role of AV safety and its endogenous effect on travel costs and travel behavior.
 - The abstraction of potentially important detail, discussed above. It includes only an approximate representation of the effects of AV technologies and systems on vehicle energy use for specific drivetrains, roadway network, traffic conditions, and drivecycles, such as can be modeled in more detailed vehicle and spatial models such as Autonomie, FASTSim, BEAM/POLARIS, etc.
-- xxx
 
 
 2. Decomposition of Energy and GHG Impacts of CAVs
 =========================
 
-The energy and GHG emissions of CAV transportation result from the interaction of a wide range of mechanisms, including the impact of vehicle technologies and vehicle design changes that alter vehicle operations and efficiency; system-level changes in infrastructure that alter traffic coordination, speeds, and patterns; and consumer behavioral responses that determine the number, length, and nature of trips demanded. The composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_, as used in transportation emissions by (McCollum & Yang, 2009, Greene and Plotkin, 2011) or equivalently the _Schipper ASIF framework_ (Schipper et al. 2000, 2011). Mechanistic and scenario-base approaches of this type have been used to explore CAV impacts by Wadud, MacKenzie and Leiby (2016) and by Stephens et al. 2016. While this approch assumes a degree of separability in the impact of certain identified mechanisms on energy use, e.g. weight reduction and aerodynamic load reduction through platooning, this is supported in some cases by more detailed models and experimental data [cite XXX].
+The energy and GHG emissions of CAV transportation result from the interaction of a wide range of mechanisms, including the impact of vehicle technologies and vehicle design changes on vehicle operations and efficiency; system-level changes in infrastructure that alter traffic coordination, speeds, and patterns; and consumer behavioral responses that determine the number, length, and nature of trips demanded. The composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_, as used in transportation emissions by (McCollum & Yang, 2009, Greene and Plotkin, 2011) or equivalently the _Schipper ASIF framework_ (Schipper et al. 2000, 2011). Mechanistic and scenario-base approaches of this type have been used to explore CAV impacts by Wadud, MacKenzie and Leiby (2016) and by Stephens et al. 2016. While this approch assumes a degree of separability in the impact of certain identified mechanisms on energy use, e.g. weight reduction versus aerodynamic load reduction through platooning, this is supported in some cases by more detailed models and experimental data [cite XXX].
 
 From this so-called *ASIF* approach the total GHG emissions are the product of
 
@@ -167,24 +166,28 @@ for sets[^2]
 
 The variables are
 
-- $A_{tv}$ = the transportation services Activity provided by type (passenger v.s freight, or LDV/HDV) [passenger-km or tonne-km traveled/yr]
+- $A_{tv}$ = the transportation services Activity provided by type (passenger v.s freight, or LDV/HDV) [billion passenger-km or tonne-km traveled/yr]
 - $o_{tv}$ = occupancy of each vehicle type v in year t [pass/veh, or PKT/VKT, for passenger travel; tonne/veh for freight]
 - $\sigma_{tmv}$ = share of energy services in transportation mode m by vehicle type v in year t [unitless]
 - $\phi_{tmvf}$ = the share of energy-service share $\sigma_{tmv}$ produced by fuel type f [unitless]
-- $I_{tvmf}$ = the energy intensity of vehicle v in mode m using fuel type f in year t [MJ/veh-km]
+- $I_{tvmf}$ = the energy intensity of vehicle v in mode m using fuel type f in year t [MJ/veh-km] ([EJ/Bill veh-km])
 - $g_{tf}$ = the GHG intensity of fuel f in year t [g CO2e/MJ (MegaT CO2e/EJ)]
-- $E_{tvf}$ = energy use in form of fuel f by vehicle type v in year t [MJ/y]
+- $E_{tvf}$ = energy use in form of fuel f by vehicle type v in year t [EJ/y]
 - $G_{tv}$ = GHGs emitted in year t by type v [MT CO2e/y]
 
 Focusing on passenger travel, we can write energy use $E_{tvf}$ as
 $$E_{tvf} = A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \sigma_{tvm} \phi_{tvmf} I_{tvmf}$$
 with units
-$$[MJ/yr] = [pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm]$$
+$$[EJ/yr] = [bill~ pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm]$$
 
 Total Emissions are
 $$G_{tv} = \Sigma_f E_{tvf} g_{tf}$$
 
-$$[gCO2e/yr] = [pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm] \cdot [g/MJ] = [MJ/yr] \cdot [g/MJ]$$
+$$\begin{aligned}
+~[bill ~ gCO2e/yr] = [MT CO2e/yr] &= [bill~pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm] \cdot [g/MJ] \\
+&= [EJ/yr] \cdot [g/MJ]
+\end{aligned}
+$$
 Combining, overall total emissions per year are
 $$G_{t} = \Sigma_v \Sigma_f \left [ 
 A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \left ( \sigma_{tvm} \phi_{tvmf} I_{tvmf} \right ) \right ] g_{tf}$$
@@ -201,10 +204,10 @@ and can be further decomposed into vehicle size classes, and drivetrain classes.
 
 Mechanisms by Which CAVs Can Alter Energy Use and Emissiona
 ---------------------------
-We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicle automation, each $k \in K$ of which corresponds to a multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. In general, a mechanism can affect travel activity levels *A*, vehicle energy intensities *I*, or mode and fuel shares $\sigma, \phi$. 
-In theory, a mechanism could also effect vehicle class shares or occupancy, but we do not yet consider such effects. 
+We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicle automation, each $k \in K$ of which has an effect represented by multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. In general, a mechanism can affect travel activity levels *A*, vehicle energy intensities *I*, or mode and fuel shares $\sigma, \phi$. 
+Furthermore, a mechanism could also effect vehicle class shares or occupancy, but we do not yet consider such effects. 
 
-In the Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. Multiplier values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Technology/Demand scenario *s*, i.e. $\mu_{tvks}$.
+Taking a Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. For each scenario values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Technology/Demand scenario *s*, i.e. $\mu_{tvks}$???.
 
 ``` {r defineIndexSets, echo=echoWorking}
 # [Aside: how to bold E in equation?](https://tex.stackexchange.com/questions/595/how-can-i-get-bold-math-symbols)  \mathbf for bold non-italic \boldsymbol for bold_italic
@@ -249,9 +252,9 @@ library(ggplot2)
 3. Estimating Energy Impacts
 ===========================
 
-Define the effects of automation on vehicle energy intensity (energy per vehicle km traveled) through a set of identified technological and operational "mechanisms." 
+We define the effects of automation on vehicle energy intensity (energy per vehicle km traveled) through a set of identified technological and operational "mechanisms." 
 
-The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ indicate the fractional change in energy intensity for a particular mechanism *k*, and are differentiated by year *t* and Vehicle class *v*.
+The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[We start from the values developed in Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ indicate the fractional change in energy intensity for a particular mechanism *k*, and are differentiated by year *t*, vehicle class *v*, and scenario *s*???.
 
 
 ```{r kayaIntensityModifiers, echo=echoWorking}
@@ -305,7 +308,7 @@ IEffects$Zero = 0.0   # include additional case of no-impact for each mechanism
 
 ### 3.1 Construct multiplicative factors to apply to energy intensities for each mechanism
 
-From the fractional changes in energy intensity, multipliers $\mu_{tvks}$ are constructed to apply for each mechanism/technology *k*, year *t*, vehicle class *v*, and sensitivity case *s*.
+From the fractional changes in energy intensity, multipliers $\mu_{tvks}$ are constructed to apply for each mechanism/technology *k*, year *t*, vehicle class *v*, and sensitivity case???scenario *s*.
 
 $\mu_{tvks} = 1.0 + I_{E,tvks}$
 
@@ -325,7 +328,8 @@ IEffectsm = IEffects %>% gather(key=EffectCase, value="IE", Opt:Zero) %>%
 # IM = dataframe(TechScen, DmndScen, Mech, Year, VC) # intensity multiplying factors
 
 IM = IEffectsm %>% select(-IE) %>%
-  spread(key = EffectCase, value = IM)
+  spread(key = EffectCase, value = IM) %>%
+  arrange(desc(VC), Year)
   # arrange(order(match(Mech, IEffects$Mech)))
 # sort columns same way as original data frame
 IM = IM[,c(colnames(IEffects))]
@@ -338,11 +342,11 @@ kable(x = IM,
 
 ### 3.2 Energy Intensity by Vehicle Type and Technology Scenario, by Composing Mechanism Effects
 
-We construct Scenario Multipliers $\mu_{jtv}$ for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v* based on the combined the effect of all the mechanisms.
+We construct Scenario Multipliers $\mu_{jtv}$ (supressing subscripts *m, f*) for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v* based on the combined the effect of all the mechanisms.
 
-For each technology scenario *j*, year *t*, vehicle class *v* and mechanism *k*, the "EffectCase" or sensitivity case *s* is specified, i.e. 
+For each technology scenario *j*, year *t*, vehicle class *v* and mechanism *k*, the "EffectCase" or effect sensitivity case *s* is specified, i.e. 
 
-$s_{jtmv}$ for 
+$s_{jtvk}$ for 
 $s \in \{Zero, Low, Mid, High\}$.
 
 This determines the appropriate intensity multiplier for each mechanism.
@@ -374,17 +378,20 @@ msa = left_join(msa, IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
 
 ```{r reportScenarioAssumps, echo=echoWorking, warning=FALSE, message=FALSE}
 scenAssumps = msa %>% select(-IM) %>%
+  # scenAssumps = scenAssumps[,c("Scenario_Number", "VC", "Year", "Mech", "EffectCase")] # re-order cols
   spread(key = Scenario_Number, value = EffectCase) %>% 
   arrange(Year, desc(VC))
 kable(x = scenAssumps, 
-      caption= "Scenario Effect Cases by Year, Vehicle Class, and AV Mechanism")
+      caption= "Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Scenario")
 ```
 
-The total energy intensity multiplier for each scenario is the product a all mechanism multipliers
-$\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtmv}}}$
+*??? VoTT assumptions for LDV and HDV by Scenario?*
+
+The total energy intensity multiplier for each scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially suppressed and fixed. I.e. *m* = road_vehicle and *f* = petro] 
+$\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 
 The Net Energy Intensity change is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
-$$\Delta I_{tvs} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtmv}}}-1$$
+$$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
 
 ```{r constructIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
@@ -423,11 +430,9 @@ NEIC_test = NEIC_test[,names(NetEnergyIntensityChangeTable)] # make column order
 
 NEIC_test_err = sum(abs(NEIC_test - NetEnergyIntensityChangeTable))
 
-# cat("Constructed Net Energy Intensity Changes match old workbook to within",
+#cat("Note/Aside: Constructed Net Energy Intensity Changes match old workbook to within",
 #    NEIC_test_err, "total absolute error.\n")
 ```
-
-Note/Aside: Constructed Net Energy Intensity Changes match old workbook to within `r NEIC_test_err` total error.
 
 
 4. Demand Response to CAVs
@@ -487,7 +492,7 @@ DemRespParams = separate(data=DemRespParams, col=case, into=c("VC","Parameter"),
 DemRespParamsm = DemRespParams %>% gather(key=EffectCase, value="value", Low:Zero)
 ```
 
-(Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "DemScenCostReduction" vs "DemandResponseKeyParameters" tables. 
+The following are the default parameter values.  (Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "DemScenCostReduction" vs "DemandResponseKeyParameters" tables. 
 The "Low, Med, High" cases in DemandResponseKeyParameters table are separate from the Demand Scenario cases in DemScenCostReduction table.
 
 ```{r readDemandResponseParameters, echo=echoWorking}
@@ -518,9 +523,10 @@ CurrYear     = 2050
 CurrDemScen = 1
 ```
 
+Energy Intensity change is dependent on the Technology Scenario, and year of interest.
+
 For example consider Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
 
-Energy Intensity change is dependent on the Technology Scenario. 
 Update demand response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario,
 
 ```{r reportDemRespParams, echo=echoWorking}
@@ -528,7 +534,8 @@ nie = EnergyIntensityChanges  %>% ungroup() %>%
   filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
   select(VC, NIE)
 
-# This assignment is awkward.
+# This assignment is awkward, due to non-ideal organization of data tables.
+#  Get updated change in net energy intensity (based on product of active mechanisms in current tech scenario and year)
 #DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
 DemRespParams %>% gather(key = Sens, value = value, Low:Zero)  %>%  # following assigns the same 
   mutate(value = ifelse((VC=="LDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="LDV",]$NIE, value),
