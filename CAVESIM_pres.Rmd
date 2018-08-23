@@ -1,0 +1,42 @@
+---
+title: "CAVESIM Presentation"
+author: "Paul Leiby"
+date: "August 23, 2018"
+output:
+  beamer_presentation:
+    theme: "AnnArbor"
+    colortheme: "dolphin"
+    fonttheme: "structurebold"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = F}
+library(knitr)
+load(file="CAVdecom.sav")
+kable(x = IM, 
+      caption= "Intensity Multipliers by Vehicle-type, Year, and Case")
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+

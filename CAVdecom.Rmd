@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "August 13, 2018"
+date: "August 22, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -212,7 +212,7 @@ Taking a Scenario Approach, we can construct scenarios *s* that combine technolo
 ``` {r defineIndexSets, echo=echoWorking}
 # [Aside: how to bold E in equation?](https://tex.stackexchange.com/questions/595/how-can-i-get-bold-math-symbols)  \mathbf for bold non-italic \boldsymbol for bold_italic
 
-SetK_Mechs = c(   # mechanisms by which automation alters energy and/or demand
+SetK_Mechs = c(   # mechanisms k by which automation alters energy and/or demand
   "Platooning",
   "De_emphasized_performance",
   "Improved_crash_avoidance",
@@ -225,11 +225,11 @@ SetK_Mechs = c(   # mechanisms by which automation alters energy and/or demand
   # "Ride_pooling",    # Q: should Mechanism set include this?
 )
 
-SetV_Class = c("LDV", "HDV")  # Vehicle Classes
-SetT_Years = c(2035, 2050)
-SetJ_TechScen = 1:8
+SetV_Class = c("LDV", "HDV")  # Vehicle Classes v
+SetT_Years = c(2035, 2050)    # Years t
+SetJ_TechScen = 1:8           # Scenarios j
 SetD_DmndScen = 1:7
-SetS_Sense = c(
+SetS_Sense = c(               # Sensitivity cases s for mechanism effects
   "Opt",
   "Mid",
   "Pess",
@@ -976,6 +976,11 @@ XXX
 ```{r policyAndScenarioCalcs2, echo=echoWorking}
 
 ```
+
+```{r saveCAVdecomEnvironment, echo=echoWorking}
+save(list = ls(), file="CAVdecom.sav")
+```
+
 
 
 Travel Time Budget
