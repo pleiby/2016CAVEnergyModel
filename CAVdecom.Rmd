@@ -254,7 +254,7 @@ library(ggplot2)
 
 We define the effects of automation on vehicle energy intensity (energy per vehicle km traveled) through a set of identified technological and operational "mechanisms." 
 
-The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[We start from the values developed in Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ indicate the fractional change in energy intensity for a particular mechanism *k*, and are differentiated by year *t*, vehicle class *v*, and scenario *s*???.
+The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[We start from the values developed in Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for effect sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ indicate the fractional change in energy intensity for a particular mechanism *k*, and are differentiated by year *t*, vehicle class *v*, and effect sensitivity *s*.
 
 
 ```{r kayaIntensityModifiers, echo=echoWorking}
@@ -308,7 +308,7 @@ IEffects$Zero = 0.0   # include additional case of no-impact for each mechanism
 
 ### 3.1 Construct multiplicative factors to apply to energy intensities for each mechanism
 
-From the fractional changes in energy intensity, multipliers $\mu_{tvks}$ are constructed to apply for each mechanism/technology *k*, year *t*, vehicle class *v*, and sensitivity case???scenario *s*.
+From the fractional changes in energy intensity, multipliers $\mu_{tvks}$ are constructed to apply for each mechanism/technology *k*, year *t*, vehicle class *v*, and effect sensitivity case *s*.
 
 $\mu_{tvks} = 1.0 + I_{E,tvks}$
 
@@ -358,6 +358,9 @@ mechScenAssumps = read_csv(paste0("./Data/","CAV_Scenario_Master.csv"), comment 
 # resulting multipliers for LDV and HDV in 2 years;
 # scenario name and description; and setting levels (Zero, Low, Mid, High) for each mechanism 
 
+mechScenDescriptors = mechScenAssumps %>% 
+  select(Scenario_Number, Demand_Scenario, Scenario_Name, Scenario_Description)
+
 msa = mechScenAssumps %>% 
   select(-c(LDV_Multipliers.2035:Scenario_Description)) %>%  # drop aggregatred result for scenario and Name, Description
   gather(key=VehMechYear, value = EffectCase, LDV.Platooning.2035:HDV.Higher_highway_speeds.2050)
@@ -387,7 +390,7 @@ kable(x = scenAssumps,
 
 *??? VoTT assumptions for LDV and HDV by Scenario?*
 
-The total energy intensity multiplier for each scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially suppressed and fixed. I.e. *m* = road_vehicle and *f* = petro] 
+The total energy intensity multiplier for each scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially fixed and suppressed, i.e. *m* = road_vehicle and *f* = petro.] 
 $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 
 The Net Energy Intensity change is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
@@ -511,7 +514,7 @@ I_deltaCAV  :Fuel energy cost reduction (from energy efficiency)    :0.3420 :0.3
 rownames(DemandResponseKeyParameters) = DemandResponseKeyParameters$Name
 
 kable(x = select(DemandResponseKeyParameters, -Note), row.names = F,
-      caption= "Key Parameters for LDV Demand Response (for all Demand Scenarios")
+      caption= "Key Parameters for LDV Demand Response (for all Demand Scenarios)")
 ```
 
 ### Select a Single Scenario to Examine
@@ -523,16 +526,16 @@ CurrYear     = 2050
 CurrDemScen = 1
 ```
 
-Energy Intensity change is dependent on the Technology Scenario, and year of interest.
+Energy Intensity change is dependent on the Technology Scenario, and year of interest. For example consider Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
 
-For example consider Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
-
-Update demand response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario,
+Demand response is a function of full (generalized) travel cost, and energy intensity affects the energy component of travel cost. So the full scenario requires updating Demand Response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario and year
 
 ```{r reportDemRespParams, echo=echoWorking}
 nie = EnergyIntensityChanges  %>% ungroup() %>% 
   filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
-  select(VC, NIE)
+  select(VC, NIE) # leaves a small df with net intensity changes for each vehicle class
+
+# Transcribe current net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
 
 # This assignment is awkward, due to non-ideal organization of data tables.
 #  Get updated change in net energy intensity (based on product of active mechanisms in current tech scenario and year)
@@ -567,7 +570,7 @@ average_speed         : HDV     :           :           :39.98      :mi/hr :ATRI
 average_TTC_per_mi    : HDV     :0.611      :0.611      :0.611      :$/mi  :2011 Driver wages & Benefits, atri-online.org/2012/09/17/an-analysis-of-the-operational-costs-of-trucking-a-2012-update/"
 ),
 header=TRUE,sep=":",strip.white=TRUE) #
-# as in "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$35:$E$43"
+# as in "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$35:$E$43" ('calcul Dem_LDV'!$A$39:$E$47 in later versions)
 
 TravTimeCostBasePars %>% select(-Source_Notes) %>%
   kable(caption= "Travel Time Cost Base Parameters", digits=3)

@@ -1,31 +1,127 @@
 ---
-title: "CAVESIM Presentation"
+title: "CAVESIM Summary and Status"
 author: "Paul Leiby"
 date: "August 23, 2018"
-output:
-  beamer_presentation:
-    theme: "AnnArbor"
-    colortheme: "dolphin"
-    fonttheme: "structurebold"
+output: 
+   word_document:
+     fig_caption: yes
+     fig_height: 5
+     fig_width: 7
+     df_print: kable
+     reference_docx: mystyles.docx
 ---
 
 ```{r setup, include=FALSE}
+# output:
+#   beamer_presentation:
+#     theme: "AnnArbor"
+#     colortheme: "dolphin"
+#     fonttheme: "structurebold"
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+## CAVESIM Status by End FY18
 
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+- Q3: Preliminary design of HDV & shared mobility model components (ORNL)
+- Q4: Model implementation and runs including multiyear dynamics and new components for LDVs (ORNL)
+	- link the model from a static annual to simple dynamic
+		- Seek penetration scenario from MA3T or ADOPT/Workflow Taskforce
+	- include available cost information for alternative technologies
+	- include TNC (ride sharing) to distinguish PKT from VKT
+	- (phase 1) benchmark to inputs and results from larger simulations
+		- Following the "Workflow" development to understand and ID major features 
+			- See "WFT- CACC exercise - 180726.xlsx" and "WFT-TNC-Example - 180810.xlsx
+	- FY18 Product will be a paper (draft)
+      - Feeds Quad Chart item "Annual: Reports on national aggregate energy and travel impacts depending on incentives and economic drivers""
+
+## Base inputs from "Scenario Generation"
+- Technology set (vehicle types) and mix
+- Technology Info
+	- Cost information
+	- Impacts on energy use
+	- Impacts on speed and VKT
+	- CACC and platooning tech and impact assumptions
+		- (from POLARIS study initial results)
+		- Impacts on energy use
+		- Impacts on congestion (ave speed in congested areas)
+	- TNC tech and impact assumptions
+		- (from BEAM-centered work?)
+		- Impacts on trip numbers, and length
+			- deadheading/repositioning inflation factor on VKT
+			- ride pooling reduction factor on VKT per PKT
+			- ride-pooling inflation factor on PKT (actual including detours vs. desired trip duration)
+- Demand response Info
+	- From WholeTraveler
+		- VoTT distributions
+			- By travel type: region, roadtype, conditions (congested)
+		- Other expectations and behavior, e.g. re TNC 
+		- Travel utility functional form
+	- From Land-Use model
+		- Land-use-based rebound effects on PKT demand
 
 
+## Planned Next Steps for CAVESIM (FY19)
 
-## Slide with Bullets
-
-- Bullet 1
-- Bullet 2
+- Revise/update all key parameters from draft values to values consistent with SMART Workflow data and scenarios
+- Update additional cost and economic conditions (response elasticities) based on Lit review (share insights and conclusions re parameters with others)
 - Bullet 3
 
-## Slide with R Output
+
+
+## CAVESIM Table Main Inputs
+CAVESIM Main Inputs	|Units
+-------------------------------------------|----------------
+Reference VKT by year(1), sector(2), Region(6) |	veh-km/yr
+Reference PKT by year	                       | pass-km/yr
+Energy consumption by fuel type(3) by year, sector(2)	|quad or EJ/yr
+Vehicle stock by year, by powertrain(4), control-type(5) | share
+Efficiency gains for key technology/mechanisms(7), by powertrain | % reduction in energy intensity, mJ/v-km per % adoption (a constant, or a function)
+Effect of (regional) congestion on ave speed	| % reduction in speed ave speed, (km/hr) as fn of VKT
+Effect of (regional) congestion on energy use	| % increase in energy intensity, (mJ/v-km) as fn of VKT
+VoTT by sector, Control-type, and trip purpose	| $/pass-hr
+Incentives & Costs: vehicle						| $/veh or $/veh-km
+Incentives & Costs: fuel						| $/mJ or $/gge
+Incentives & Costs: road use (by region)		| $/veh-km
+Incentives & Costs: ride pooling				| $/pass-km
+Costs of TNC operation by control-type			| $/veh-km
+User-cost (disutility) of ride-pooling			| $/pass-km shared with stranger
+Reference: Extent of ride-pooling by year, region	| % of PKT
+Deadhead km from ride sharing (car hailing)			| ave % incr. in VKT per trip
+Incremental veh km (reduction) from ride pooling	| ave % decr. in VKT per trip
+Incremental passenger km travel from ride pooling	| ave % incr. in PKT per trip
+Elasticities (cost responses) of travel w.r.t. full cost	| unitless
+Elasticities (cost response) of veh fuel economy to fuel cost	| unitless
+Traveler Utility functions (trading off trip attributes, and travel vs other activities)	| [functional form, or marginal utilities for various attributes]
+*NOTES:*	| (1) Outputs at 5 year increments, but can be annual	
+| (2) Sector: Passenger road travel; Road freight	
+| (3) Fueltype: petroleum, electricity	
+| (4) Powertrain: ICE, [HEV?], BEV	
+| (5) Control: Manual, AV (for case-dependent AV level)	
+| (6) Region: Urban, Highway	
+| (7) Mechanism (currently include): Platooning; Eco-Driving; Traffic-flow Control; Higher-highway Speeds; De-emphasized performance; Accident reduction	
+
+## CAVESIM Table Main Outputs
+
+CAVESIM Main Outputs	| Units
+-------------------------------------------|----------------
+Travel demand response: VKT by year(1), sector(2)	| veh-km/yr
+Travel demand response: PKT by year (MEP metric), passenger road travel	| pass-km/yr
+Energy consumption by fuel type(3) by year, sector(2)	| quad or EJ/yr
+Net average energy intensity for road travel by sector(2), region (6)	| mJ/v-km
+Average travel speed by region(6)	| km/hr
+
+
+
+## Issues/Questions
+- Q: does abstracting from regional/temporal detail make sense?
+	- What questions are we trying to answer?
+	- How accurate a representation is "good enough to be useful"?
+	- What can be learned with such a compact/aggregate system that is hard to learn with the full representation?
+		- What about the NREL "Scenario Generation" model (YASDM)
+- Q: How t=do we best support/contribute to the MEP measure?
+
+
+## Static Estimates of Energy Intensity Effects Updated and Made Dynamic
 
 ```{r cars, echo = F}
 library(knitr)
@@ -34,9 +130,9 @@ kable(x = IM,
       caption= "Intensity Multipliers by Vehicle-type, Year, and Case")
 ```
 
-## Slide with Plot
 
-```{r pressure}
+```{r pressure, include=F}
+
+## Slide with Plot
 plot(pressure)
 ```
-
