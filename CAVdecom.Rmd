@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "August 22, 2018"
+date: "August 29, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -21,12 +21,13 @@ keywords:
 #output: rticles::elsevier_article
 
 output: 
-   word_document:
-     fig_caption: yes
-     fig_height: 5
-     fig_width: 7
-     df_print: kable
-     reference_docx: mystyles.docx
+  word_document:
+    toc: true
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    df_print: kable
+    reference_docx: mystyles.docx
 #   pdf_document: default
 
 file: CAVdecomp_2018MMDD.Rmd
@@ -393,6 +394,8 @@ kable(x = scenAssumps,
 The total energy intensity multiplier for each scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially fixed and suppressed, i.e. *m* = road_vehicle and *f* = petro.] 
 $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 
+$s_{jtvk}$ is the sensitivity case value for mechanism *k* on vehicle class *v* in technology scenario *j* and year *t*.
+
 The Net Energy Intensity change is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
 $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
@@ -446,6 +449,9 @@ In addition to the changes in energy intensity we account for a travel demand re
 4.1 Key parameters for Demand scenarios
 -----------------------
 
+The following are the default parameter values.  (Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "DemScenCostReduction" vs "DemRespParams" tables. 
+The "Low, Med, High" cases in DemdRespParams table are separate from the Demand Scenario cases in DemScenCostReduction table.
+
 ```{r demandScenParams, echo=echoWorking}
 
 # listing of Demand-related Paramters and notes
@@ -474,7 +480,7 @@ HDV.C_incrCAV         0       0       0
 HDV.ShrECostInt       1       1       1
 HDV.I_deltaCAV        -.2815  -.2815  -.2815
 "),header=TRUE,sep="",strip.white=TRUE) #;
-# Corresponds to data in "Demand Response Key parameters", but omits HDV low of 0.5 (unused)
+# Corresponds to data in "Demand Response Key parameters", but omits low value for HDV.ElasVKT of 0.5 (unused)
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024.xlsx]calcul Dem_HDV'!$A$4:$L$10 and 'calcul Dem_LDV'!$A$4:$L$10
 
 # Notes:
@@ -482,9 +488,11 @@ HDV.I_deltaCAV        -.2815  -.2815  -.2815
 #   Generalized cost includes: fuel+maintenance+accident+tolls+TRAVELtime
 #   Fuel energy cost reduction: Import from 'Policy+Scenario' subsheet calculation for currently chosen technology scenario 
 #   LDV ElasVKT         (HERS-ST technical report, August 2005 + Graham n Glaister 2002).
+#                       Generalized cost = (fuel + maintenance + insurance/accident + tolls + Travel time) 
 #   LDV InsurCostRed    Reduction in insurance premiums . internet/celent report (superceded by Demand Scenario-dependent values)
 #   LDV C_incrCAV       Wadud 2017
 #   HDV ElasVKT         Cambridge Sytematics, 2009
+#   I_DeltaCAV          Import/update from 'Policy+Scenario' calculation for currently chosen technology scenario
 
 DemRespParams$Zero = 0.0   # establish zero effect case (zero reductions, zero elas)
 DemRespParams["LDV.ShrECostInt", "Zero"] = 1.0  # kludge to fix this parameter to non-zero val
@@ -495,27 +503,16 @@ DemRespParams = separate(data=DemRespParams, col=case, into=c("VC","Parameter"),
 DemRespParamsm = DemRespParams %>% gather(key=EffectCase, value="value", Low:Zero)
 ```
 
-The following are the default parameter values.  (Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "DemScenCostReduction" vs "DemandResponseKeyParameters" tables. 
-The "Low, Med, High" cases in DemandResponseKeyParameters table are separate from the Demand Scenario cases in DemScenCostReduction table.
 
-```{r readDemandResponseParameters, echo=echoWorking}
+```{r displayDemRespParam, echo=echoWorking}
+DemRespParams = DemRespParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns
+# rownames(DemRespParams) = DemRespParams$Name
 
-DemandResponseKeyParameters <- read.delim(textConnection("
-Name        :Description                                            :Low    :Med    :High   :Note
-VMTElas     :Elasticity of travel w.r.t. generalized cost           :-1     :-1     :-1     :(fuel+maintenance+accident+tolls+ TRAVEL time) (HERS-ST technical report, August 2005 + Graham n Glaister 2002)
-InsReduc    :Reduction in insurance premiums                        :0.6    :0.7    :0.8    :internet/celent report (Unused, scenario-dependent)
-ExclWearCost:Exclude Wear and Ownership Costs (1 True, 0 False)     :0      :0      :0      :Choose 0 or 1 value
-C_incrCAV   :Incremental veh capital cost from automation           :0      :0      :0      :Fractional (wear and ownership cost/mi)     
-ShrECostInt :Share of energy efficiency costs 'visible' to driver   :1      :1      :1      :0 to 1 (1 means full efficiency gain visible) (driver=person making trip choices) ???
-I_deltaCAV  :Fuel energy cost reduction (from energy efficiency)    :0.3420 :0.3420 :0.3420 :Import from 'Policy+Scenario' subsheet calculation for currently chosen technology scenario
-"),header=TRUE,sep=":",strip.white=TRUE) #
-# Corresponds to "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$4:$L$10" see also "calcul Dem_HDV'!$A$4:$L$10"
-# Note: duplicative: DemandRepsonseKeyParameters duplicates DemRespParams for LDV, but adds "Fuel Energy cost reduction"
-rownames(DemandResponseKeyParameters) = DemandResponseKeyParameters$Name
-
-kable(x = select(DemandResponseKeyParameters, -Note), row.names = F,
+kable(x = DemRespParams, digits = 4, row.names = F,
       caption= "Key Parameters for LDV Demand Response (for all Demand Scenarios)")
+
 ```
+
 
 ### Select a Single Scenario to Examine
 
@@ -545,8 +542,8 @@ DemRespParams %>% gather(key = Sens, value = value, Low:Zero)  %>%  # following 
          value = ifelse((VC=="HDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="HDV",]$NIE, value)) %>%
   spread(key=Sens, value=value) ->
   DemRespParams
-DemRespParams = DemRespParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns
 
+DemRespParams = DemRespParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns
 kable(x = DemRespParams, digits = 4,
       caption= "DemRespParams: Important Parameters for the Calculation of Demand Reponse, by Vehicle-type, and Year")
 ```
@@ -767,6 +764,7 @@ VTCShrAlt = x
 # VSubClass = c("LDVAvgSedan", "LDVAveLtTruck", "HDVClass8", "HDVOther")
 
 # Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
+# Note that this is perceived/internalized cost (may not include all energy gains)
 VTCShrAlt = VTCShrAlt %>% mutate(
   Fuel = Fuel*(1 + I_deltaCAV*ShrECostInt), # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
   # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
