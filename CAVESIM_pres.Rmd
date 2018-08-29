@@ -2,13 +2,24 @@
 title: "CAVESIM Summary and Status"
 author: "Paul Leiby"
 date: "August 23, 2018"
-output: 
-   word_document:
-     fig_caption: yes
-     fig_height: 5
-     fig_width: 7
-     df_print: kable
-     reference_docx: mystyles.docx
+output:
+  beamer_presentation:
+    colortheme: dolphin
+    fonttheme: structurebold
+    theme: AnnArbor
+  html:
+    number_sections: yes
+    toc: yes
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    df_print: kable
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    reference_docx: mystyles.docx
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -30,34 +41,33 @@ knitr::opts_chunk$set(echo = FALSE)
 	- include TNC (ride sharing) to distinguish PKT from VKT
 	- (phase 1) benchmark to inputs and results from larger simulations
 		- Following the "Workflow" development to understand and ID major features 
-			- See "WFT- CACC exercise - 180726.xlsx" and "WFT-TNC-Example - 180810.xlsx
 	- FY18 Product will be a paper (draft)
-      - Feeds Quad Chart item "Annual: Reports on national aggregate energy and travel impacts depending on incentives and economic drivers""
+    - Feeds Quad Chart item "Annual: Reports on national aggregate energy and travel impacts depending on incentives and economic drivers""
 
-## Base inputs from "Scenario Generation"
+## Base inputs from "Scenario Generation"    -    Technology Info
 - Technology set (vehicle types) and mix
-- Technology Info
-	- Cost information
+- Automation Tech Cost information
+- Impacts on energy use
+- Impacts on speed and VKT
+- CACC and platooning tech and impact assumptions
+	- (from POLARIS study initial results)
 	- Impacts on energy use
-	- Impacts on speed and VKT
-	- CACC and platooning tech and impact assumptions
-		- (from POLARIS study initial results)
-		- Impacts on energy use
-		- Impacts on congestion (ave speed in congested areas)
-	- TNC tech and impact assumptions
-		- (from BEAM-centered work?)
-		- Impacts on trip numbers, and length
-			- deadheading/repositioning inflation factor on VKT
-			- ride pooling reduction factor on VKT per PKT
-			- ride-pooling inflation factor on PKT (actual including detours vs. desired trip duration)
-- Demand response Info
-	- From WholeTraveler
-		- VoTT distributions
-			- By travel type: region, roadtype, conditions (congested)
-		- Other expectations and behavior, e.g. re TNC 
-		- Travel utility functional form
-	- From Land-Use model
-		- Land-use-based rebound effects on PKT demand
+	- Impacts on congestion (ave speed in congested areas)
+- TNC tech and impact assumptions
+	- (from BEAM-centered work?)
+	- Impacts on trip numbers, and length
+		- deadheading/repositioning inflation factor on VKT
+		- ride pooling reduction factor on VKT per PKT
+		- ride-pooling inflation factor on PKT (actual including detours vs. desired trip duration)
+			
+## Base inputs from "Scenario Generation" -    Demand Response Info
+- From WholeTraveler
+	- VoTT distributions
+		- By travel type: region, roadtype, conditions (congested)
+	- Other expectations and behavior, e.g. re TNC 
+	- Travel utility functional form
+- From Land-Use model
+	- Land-use-based rebound effects on PKT demand
 
 
 ## Planned Next Steps for CAVESIM (FY19)
@@ -68,14 +78,18 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 
-## CAVESIM Table Main Inputs
+## CAVESIM Table Main Inputs (1)
 CAVESIM Main Inputs	|Units
--------------------------------------------|----------------
+-------------------------------------------|---------------------
 Reference VKT by year(1), sector(2), Region(6) |	veh-km/yr
 Reference PKT by year	                       | pass-km/yr
 Energy consumption by fuel type(3) by year, sector(2)	|quad or EJ/yr
 Vehicle stock by year, by powertrain(4), control-type(5) | share
 Efficiency gains for key technology/mechanisms(7), by powertrain | % reduction in energy intensity, mJ/v-km per % adoption (a constant, or a function)
+
+## CAVESIM Table Main Inputs (2)
+CAVESIM Main Inputs	|Units
+-------------------------------------------|---------------------
 Effect of (regional) congestion on ave speed	| % reduction in speed ave speed, (km/hr) as fn of VKT
 Effect of (regional) congestion on energy use	| % increase in energy intensity, (mJ/v-km) as fn of VKT
 VoTT by sector, Control-type, and trip purpose	| $/pass-hr
@@ -83,30 +97,39 @@ Incentives & Costs: vehicle						| $/veh or $/veh-km
 Incentives & Costs: fuel						| $/mJ or $/gge
 Incentives & Costs: road use (by region)		| $/veh-km
 Incentives & Costs: ride pooling				| $/pass-km
+
+## CAVESIM Table Main Inputs (3)
+CAVESIM Main Inputs	|Units
+-------------------------------------------|---------------------
 Costs of TNC operation by control-type			| $/veh-km
-User-cost (disutility) of ride-pooling			| $/pass-km shared with stranger
-Reference: Extent of ride-pooling by year, region	| % of PKT
-Deadhead km from ride sharing (car hailing)			| ave % incr. in VKT per trip
-Incremental veh km (reduction) from ride pooling	| ave % decr. in VKT per trip
-Incremental passenger km travel from ride pooling	| ave % incr. in PKT per trip
-Elasticities (cost responses) of travel w.r.t. full cost	| unitless
-Elasticities (cost response) of veh fuel economy to fuel cost	| unitless
+User-cost (disutility) of ride-pooling			| $/pass-km pooled with stranger
+Ref Extent of ride-pooling by yr, region	| % of PKT
+Deadhead km from car hailing			| ave % incr. VKT/trip
+Incremental veh km (reduction) from ride pooling	| ave % decr. VKT/trip
+Incremental passenger km travel from ride pooling	| ave % incr. PKTtrip
+Cost responses:                         |  
+Elasticities of travel w.r.t. full cost	| unitless
+Elasticities of veh fuel economy to fuel cost	| unitless
 Traveler Utility functions (trading off trip attributes, and travel vs other activities)	| [functional form, or marginal utilities for various attributes]
-*NOTES:*	| (1) Outputs at 5 year increments, but can be annual	
-| (2) Sector: Passenger road travel; Road freight	
-| (3) Fueltype: petroleum, electricity	
-| (4) Powertrain: ICE, [HEV?], BEV	
-| (5) Control: Manual, AV (for case-dependent AV level)	
-| (6) Region: Urban, Highway	
-| (7) Mechanism (currently include): Platooning; Eco-Driving; Traffic-flow Control; Higher-highway Speeds; De-emphasized performance; Accident reduction	
+
+## CAVESIM Table Main Inputs (Notes)
+
+*NOTES*:
+ (1) Outputs at 5 year increments, but can be annual	
+ (2) Sector: Passenger road travel; Road freight	
+ (3) Fueltype: petroleum, electricity	
+ (4) Powertrain: ICE, [HEV?], BEV	
+ (5) Control: Manual, AV (for case-dependent AV level)	
+ (6) Region: Urban, Highway	
+ (7) Mechanisms (currently include): Platooning; Eco-Driving; Traffic-flow Control; Higher-highway Speeds; De-emphasized performance; Accident reduction	
 
 ## CAVESIM Table Main Outputs
 
 CAVESIM Main Outputs	| Units
 -------------------------------------------|----------------
 Travel demand response: VKT by year(1), sector(2)	| veh-km/yr
-Travel demand response: PKT by year (MEP metric), passenger road travel	| pass-km/yr
-Energy consumption by fuel type(3) by year, sector(2)	| quad or EJ/yr
+Travel demand response: PKT by year, passenger road travel	| pass-km/yr
+Energy consumption by fuel type(3), year, sector(2)	| quad or EJ/yr
 Net average energy intensity for road travel by sector(2), region (6)	| mJ/v-km
 Average travel speed by region(6)	| km/hr
 
