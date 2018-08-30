@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "August 29, 2018"
+date: "August 30, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -553,8 +553,12 @@ kable(x = DemRespParams, digits = 4,
 
 ### Simple Base Travel Time Cost Calculation
 
+Unit travel time cost per mile $\underline c_{T,v}$ is differentiated by vehicle class, and depends on average speed and hourly time cost.
+
 ```{r calcTravelTimeCost, echo=echoWorking}
-# Following calculation yields LDV Time cost per mile
+
+# Start with some urban/non-urban differentiation, but use distance-weighted average value.
+
 TravTimeCostBasePars <- read.delim(textConnection("
 var                   : V_Class :local      :intercity  :average    :Units :Source_Notes
 VoTT                  : LDV     :12.5       :18         :13.7986015 :$/hr  :DoT; others=local; interstate urb+rur = intercity; average is VMT-weighted ave of local & intercity
@@ -572,9 +576,11 @@ header=TRUE,sep=":",strip.white=TRUE) #
 TravTimeCostBasePars %>% select(-Source_Notes) %>%
   kable(caption= "Travel Time Cost Base Parameters", digits=3)
 
-# str(TravTimeCostBasePars)
+# Note: this approach of constructing row names from col vars and then using row/col names for subsequent calculations
+#   is contrary to recommended tidyverse approach, which eschews row names in favor of column vars.
 row.names(TravTimeCostBasePars) = paste(TravTimeCostBasePars$var,TravTimeCostBasePars$V_Class, sep=".")
 
+# Following calculation yields LDV Time cost per mile
 # Test computed vs. specified values in table
 cat("VoTT for LDV average value matches VMT-weighted average to within",
   TravTimeCostBasePars["VoTT.LDV","average"] - 
@@ -620,14 +626,14 @@ kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)),
       caption= "Vehicle Travel Cost Components by Vehicle Type")
 ```
 
-``` {r calcVTCostBaseCompons, , echo=echoWorking}
+``` {r calcVTCostBaseCompons, echo=echoWorking}
 # transform dropping notes and assuring all values are numeric
 VTCostBase = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Units, Note)) %>%
   filter(!CostCat %in% c("MilesDriven", "Total", "Source")) %>%
   gather(key = VehType, value = VTCost_cpm, -CostCat) %>%
   mutate(VTCost_cpm = as.numeric(VTCost_cpm))  # all costs in cents/mi
 
-# Check that input tables are consistent with regard to time cost per mile,
+# Check that input tables (VTVCostBase and TravelTimeCostBasePars) are consistent with regard to time cost per mile,
 #   for 2 LDV categories and one HDV categopry
 ChkErrorDiff =
   VTCostBase %>% filter(CostCat=="Time") %>% select(VTCost_cpm)/100 -
@@ -636,8 +642,11 @@ ChkErrorDiff =
         TravTimeCostBasePars["average_TTC_per_mi.HDV","average"])
 cat("Check: Input VTCostBase Time cost for LDVs and HDV matches Average TTC per mile to within", paste(ChkErrorDiff),
   "cents/mi.\n")
+```
 
-# Update Time cost in the Vehicle Travel Cost matrix for MVs (base), according to current Base Assumption set
+```{r updateTravCostPerMil, echo=echoWorking}
+# Update unit Time cost per mile in the Vehicle Travel Cost matrix for MVs (base),
+#   according to current Base Assumption set for Trav Time Cost
 VTCostBase = VTCostBase %>% 
   mutate(VTCost_cpm = ifelse((CostCat=="Time" & substr(VehType, 1, 3)=="LDV"), 
                              100* TravTimeCostBasePars["average_TTC_per_mi.LDV","average"], VTCost_cpm),
@@ -647,23 +656,24 @@ VTCostBase = VTCostBase %>%
 
 # sum across categories (excl miles and total) to check total cost by VehType
 x = VTCostBase %>% 
-  filter(!CostCat %in% c("MilesDriven", "Total")) %>%  # may be redunant
+  filter(!CostCat %in% c("MilesDriven", "Total")) %>%  # may be redunant, these are already gone
   group_by(VehType) %>% 
-  summarize(Total = sum(VTCost_cpm, na.rm = T)) # treat NA cost compnents as zero
-x
-x = x %>% gather(key = CostCat, value = VTCost_cpm, Total) # this allows appending to other costs
+  summarize(Total = sum(VTCost_cpm, na.rm = T)) %>% # treat NA cost components as zero
+  gather(key = CostCat, value = VTCost_cpm, Total) # this allows appending to other costs
 
 VTCostBase = rbind(VTCostBase, x) # append total rows to travel cost array
 
-# established preferred row order
-costCompOrder = VehTravelCostCompons %>% filter(CostCat!="MilesDriven" & CostCat!="Source") %>% select(CostCat)
-costCompOrder$CostCat = as.character(costCompOrder$CostCat)
+# established preferred row order to match a prior dataframe
+costCompOrder = VehTravelCostCompons %>% 
+  filter(CostCat!="MilesDriven" & CostCat!="Source") %>% 
+  select(CostCat) %>%
+  mutate(CostCat = as.character(CostCat))
 
 x = spread(VTCostBase, key = VehType, value = VTCost_cpm)
 rownames(x) = x$CostCat
 x = x[costCompOrder$CostCat,]
 
-kable(x = x, row.names = F, 
+kable(x = x, row.names = F, digits=3,
       caption= "Base Vehicle Travel Cost Components by Vehicle Type (cents/mi)")
 
 ```
