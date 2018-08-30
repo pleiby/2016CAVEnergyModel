@@ -3,6 +3,8 @@ title: "CAVESIM Summary and Status"
 author: "Paul Leiby"
 date: "August 23, 2018"
 output:
+  powerpoint_presentation:
+    reference_doc: ORNL-template.pptx
   beamer_presentation:
     colortheme: dolphin
     fonttheme: structurebold
