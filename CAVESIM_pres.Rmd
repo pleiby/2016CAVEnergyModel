@@ -3,8 +3,13 @@ title: "CAVESIM Summary and Status"
 author: "Paul Leiby"
 date: "August 23, 2018"
 output:
-  powerpoint_presentation:
-    reference_doc: ORNL-template.pptx
+  word_document:
+    df_print: kable
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    reference_docx: mystyles.docx
+    toc: yes
   beamer_presentation:
     colortheme: dolphin
     fonttheme: structurebold
@@ -15,13 +20,8 @@ output:
   pdf_document:
     number_sections: yes
     toc: yes
-  word_document:
-    df_print: kable
-    fig_caption: yes
-    fig_height: 5
-    fig_width: 7
-    reference_docx: mystyles.docx
-    toc: yes
+  powerpoint_presentation:
+    reference_doc: ORNL-template.pptx
 ---
 
 ```{r setup, include=FALSE}
