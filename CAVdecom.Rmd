@@ -722,6 +722,20 @@ kable(VTCShrBase, row.names = F, digits=3,
               
 ```
 
+```{r baseCostShareStackedBarGraph, echo=echoWorking}
+# geom_bar(mapping = NULL, data = NULL, stat = "count",
+#  position = "stack", ..., width = NULL, binwidth = NULL, na.rm = FALSE,
+#  show.legend = NA, inherit.aes = TRUE)
+VTCShrBase %>% filter(CostCat != "Total") %>%
+  gather(key = VehType, value=VTCost_shr, -CostCat) %>%
+  ggplot() + 
+    geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
+    ggtitle("Fig: Base Cost Shares for Vehicle Travel", subtitle = "Manual Vehicle, Current Year")
+# Bar charts are automatically stacked when multiple bars are placed
+# at the same location. The order of the fill is designed to match
+# the legend
+
+```
 
 4.3 Fractional Increase in VKT for Demand Scenarios
 ---------------------------------
