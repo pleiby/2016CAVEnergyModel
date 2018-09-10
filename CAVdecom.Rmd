@@ -386,17 +386,17 @@ scenAssumps = msa %>% select(-IM) %>%
   spread(key = Scenario_Number, value = EffectCase) %>% 
   arrange(Year, desc(VC))
 kable(x = scenAssumps, 
-      caption= "Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Scenario")
+      caption= "Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario")
 ```
 
-*??? VoTT assumptions for LDV and HDV by Scenario?*
+*??? Specify VoTT assumptions for LDV and HDV by Scenario here?*
 
 The total energy intensity multiplier for each scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially fixed and suppressed, i.e. *m* = road_vehicle and *f* = petro.] 
 $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 
 $s_{jtvk}$ is the sensitivity case value for mechanism *k* on vehicle class *v* in technology scenario *j* and year *t*.
 
-The Net Energy Intensity change is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
+The Net Energy Intensity change for the technology scenario *j* is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
 $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
 
@@ -523,9 +523,9 @@ CurrYear     = 2050
 CurrDemScen = 1
 ```
 
-Energy Intensity change is dependent on the Technology Scenario, and year of interest. For example consider Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
+Energy Intensity change is dependent on the Technology Scenario, and year of interest. For example consider Technology Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
 
-Demand response is a function of full (generalized) travel cost, and energy intensity affects the energy component of travel cost. So the full scenario requires updating Demand Response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario and year
+Demand response is a function of full (generalized) travel cost, and energy intensity affects the energy component of travel cost. The full scenario requires updating Demand Response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario and year, and updating other costs (travel time cost, accident/insurance costs, vehicle capital and maintenance costs) based on the Demand Scenario assumptions.
 
 ```{r reportDemRespParams, echo=echoWorking}
 nie = EnergyIntensityChanges  %>% ungroup() %>% 
@@ -574,7 +574,7 @@ header=TRUE,sep=":",strip.white=TRUE) #
 # as in "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$35:$E$43" ('calcul Dem_LDV'!$A$39:$E$47 in later versions)
 
 TravTimeCostBasePars %>% select(-Source_Notes) %>%
-  kable(caption= "Travel Time Cost Base Parameters", digits=3)
+  kable(caption= "Base Travel Time Cost Parameters", digits=3)
 
 # Note: this approach of constructing row names from col vars and then using row/col names for subsequent calculations
 #   is contrary to recommended tidyverse approach, which eschews row names in favor of column vars.
@@ -607,7 +607,6 @@ Note: travel time parameter values for LDVs are an average for Car and Light-tru
 
 Specify the primary (private) cost components for base case (conventional, manual) road vehicle travel.
 
-#### Original base table
 ```{r dataVehCostCompons, echo=echoWorking}
 VehTravelCostCompons <- read.delim(textConnection("
 CostCat               :LDVAlt       :LDVAvgSedan :LDVAvgLtTruck  :HDVOther  :HDVClass8  :Units   :Note
@@ -625,22 +624,22 @@ Source                :HERS-ST/2005 :AAA/2012    :AAA/2012       :ATRI/2012 :ATR
 "),header=TRUE,sep=":",strip.white=TRUE) #
 # Operating cost components from 
 # "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$13:$D$27" and "calcul Dem_HDV'!$A$13:$D$28"
-
-kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)), 
-      caption= "Vehicle Travel Cost Components by Vehicle Type")
 ```
 
-### XXX Transform 
+```{r showVehCostComponsData, echo=echoWorking, include=echoWorking}
+kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)), 
+      caption= "Table: Original Base Vehicle Travel Cost Components by Vehicle Type")
+```
 
 ``` {r calcVTCostBaseCompons, echo=echoWorking}
-# transform dropping notes and assuring all values are numeric
+# reshape base cost component data to VTCostBase dataframe, dropping notes and assuring all values are numeric
 VTCostBase = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Units, Note)) %>%
   filter(!CostCat %in% c("MilesDriven", "Total", "Source")) %>%
   gather(key = VehType, value = VTCost_cpm, -CostCat) %>%
   mutate(VTCost_cpm = as.numeric(VTCost_cpm))  # all costs in cents/mi
 
 # Check that input tables (VTVCostBase and TravelTimeCostBasePars) are consistent with regard to time cost per mile,
-#   for 2 LDV categories and one HDV categopry
+#   for 2 LDV categories (Lt Truck and Car) and one HDV categopry
 ChkErrorDiff =
   VTCostBase %>% filter(CostCat=="Time") %>% select(VTCost_cpm)/100 -
       c(TravTimeCostBasePars["average_TTC_per_mi.LDV","average"], 
@@ -653,6 +652,7 @@ cat("Check: Input VTCostBase Time cost for LDVs and HDV matches Average TTC per 
 ```{r updateTravCostPerMil, echo=echoWorking}
 # Update unit Time cost per mile in the Vehicle Travel Cost matrix for MVs (base),
 #   according to current Base Assumption set for Trav Time Cost
+#   I.e., TravTimeCostBasePars supersedes VTCost_cpm
 VTCostBase = VTCostBase %>% 
   mutate(VTCost_cpm = ifelse((CostCat=="Time" & substr(VehType, 1, 3)=="LDV"), 
                              100* TravTimeCostBasePars["average_TTC_per_mi.LDV","average"], VTCost_cpm),
@@ -661,14 +661,15 @@ VTCostBase = VTCostBase %>%
          )
 
 # sum across categories (excl miles and total) to check total cost by VehType
-x = VTCostBase %>% 
-  filter(!CostCat %in% c("MilesDriven", "Total"))
-x = x %>%  # may be redundant, these are already gone
-  group_by(VehType) %>% 
-  bind_rows(summarise_all(., funs(if(is.numeric(.)) sum(., na.rm = T) else "Total")))
+
+# this approach to add totals by group did not work
+# x = VTCostBase %>% 
+#   filter(!CostCat %in% c("MilesDriven", "Source", "Total"))  # may be redundant, these are already gone
+#   group_by(VehType) %>% 
+#   bind_rows(summarise_all(., funs(if(is.numeric(.)) sum(., na.rm = T) else "Total")))
 
 x = VTCostBase %>% 
-  filter(!CostCat %in% c("MilesDriven", "Total")) %>%  # may be redunant, these are already gone
+  filter(!CostCat %in% c("MilesDriven", "Source", "Total")) %>%  # may be redunant, these are already gone
   group_by(VehType) %>% 
   summarize(Total = sum(VTCost_cpm, na.rm = T)) %>% # treat NA cost components as zero
   gather(key = CostCat, value = VTCost_cpm, Total) # this allows appending to other costs
@@ -679,23 +680,48 @@ VTCostBase = rbind(VTCostBase, x) # append total rows to travel cost array
 ```{r displayVTCostBase, echo=echoWorking}
 # re-order rows and display
 # established preferred row order to match a prior dataframe
-costCompOrder = VehTravelCostCompons %>% 
-  filter(CostCat!="MilesDriven" & CostCat!="Source") %>% 
+costComponOrder = VehTravelCostCompons %>% 
+  filter(!CostCat %in% c("MilesDriven", "Source")) %>% 
   select(CostCat) %>%
   mutate(CostCat = as.character(CostCat))
 
-x = spread(VTCostBase, key = VehType, value = VTCost_cpm)
-rownames(x) = x$CostCat   # row names needed if they are to be used for re-ordering rows
-x = x[costCompOrder$CostCat,]
+# non-tidyverse way
+# x = spread(VTCostBase, key = VehType, value = VTCost_cpm)
+# rownames(x) = x$CostCat   # row names needed if they are to be used for re-ordering rows
+# x = x[costComponOrder$CostCat,]
 
-# xxx
-# x = spread(x, key = VehType, value = VTCost_cpm)
-# x = arrange(x, factor(CostCat, levels = costCompOrder$CostCat))
+# re-organize the row order to be consistent with prior displays
+x = spread(VTCostBase, key = VehType, value = VTCost_cpm) %>% 
+  arrange(factor(CostCat, levels = costComponOrder$CostCat))
 
 kable(x = x, row.names = F, digits=3,
       caption= "Base Vehicle Travel Cost Components by Vehicle Type (cents/mi)")
 
 ```
+Note: these values are the average of local and intercity.
+
+### Vehicle Travel Cost Shares by Component - Base
+
+```{r calcCostSharesbyComponentBase, echo=echoWorking}
+
+# divide every cost element by Total (cost in cpm) to get shares
+VTCShrBase = VTCostBase %>% spread(key = CostCat, value = VTCost_cpm) %>%
+  mutate_at(vars(-c(VehType,Total)), funs( ./Total)) %>%
+  mutate(Total = 1.0) %>%
+  gather(key = CostCat, value=VTCost_cpm, -VehType)  # gather for pivot from cols as CostCat to cols as VehType
+
+VTCShrBase = VTCShrBase %>%  
+  spread(key = VehType, value=VTCost_cpm) %>%
+  arrange(factor(CostCat, levels = costComponOrder$CostCat))
+# rownames(VTCShrBase) = as.character(VTCShrBase$CostCat)
+
+# VTCShrBase = VTCShrBase[costComponOrder$CostCat,] # re-order to desired order
+
+kable(VTCShrBase, row.names = F, digits=3,
+      caption= "Base Vehicle Travel Cost: Components Share by Vehicle Type, Year=2018")
+              
+```
+
 
 4.3 Fractional Increase in VKT for Demand Scenarios
 ---------------------------------
@@ -705,11 +731,14 @@ time cost, other vehicle fuel and operating costs, and VMT demand elasticity w.r
 
 ### Demand Scenario Cost Reduction Parameters and Demand Response Parameters Drive Demand Scenarios
 
-Note: The definition of automation _demand_ scenarios is by their impacts on selectec component costs (e.g. travel time costs, insurance costs). They are not CAV penetration scenarios. 
-Penetration is assumed 100%.
+Automation _demand_ scenarios are defined by assumptions regarding CAV impacts on selected component costs (e.g. travel time costs, internal accident and insurance costs, and vehicle costs), and on the sensitivity of road travel demand to costs. They are not CAV penetration scenarios. 
+Penetration is exogenous, and initially assumed 100%.
 
 
 ```{r readDemScenCostReduction, echo=echoWorking}
+
+# Should we add VehCapCost shifts to this Demand Scenario Table?
+
 DemScenCostReduction <- read.delim(textConnection("
 DemScen :VoTT  :Insurance  :Description
 1       :0     :-0.60      :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
@@ -724,38 +753,24 @@ rownames(DemScenCostReduction) = DemScenCostReduction$DemScen
 
 # Assumed Reduction in Vehicle Travel Cost Components
 kable(x = DemScenCostReduction, 
-      caption= "Vehicle Travel Cost Component Reduction by Demand Scenario")
-
+      caption= "Vehicle Travel Cost Component Change (Reduction) by Demand Scenario")
 
 ```
 
-### Vehicle Travel Cost Shares by Component - Base
+### Vehicle Travel Cost Shares by Component - CAV Scenario
 
-```{r calcCostSharesbyComponentBase, echo=echoWorking}
+Costs are adjusted relative to Base for cost and other assumptions of each Demand Scenario and for the Energy Intensity change associated with the current Technology Scenario. Energy intensity drives the energy cost, but this component is typically less than 15% of total costs for LDVs, and less than 35% of total costs for HDVs.
 
-# divide every element by TotCost_cpm to get shares
-VTCShrBase = VTCostBase %>% spread(key = CostCat, value = VTCost_cpm) %>%
-  mutate_at(vars(-c(VehType,Total)), funs( ./Total)) %>%
-  mutate(Total = 1.0) %>%
-  gather(key = CostCat, value=VTCost_cpm, -VehType)
-VTCShrBase = VTCShrBase %>%  spread(key = VehType, value=VTCost_cpm)
-rownames(VTCShrBase) = as.character(VTCShrBase$CostCat)
+Base cost components $\sigma_{ivt}^B$ are normalized and add to 1.0. Demand Scenario *relative* costs for each cost component *i* are relative to the Base (Manual Vehicle) level. The total relative cost can be greater than or less than 1.0. Denoted $\sigma_{ivtdj}$, they depend on cost component *i*, Vehicle class *v*, Year *t* and Demand Scenario *d*, and TechScenario *j*.
 
-VTCShrBase = VTCShrBase[costCompOrder$CostCat,]
+- Fuel costs per mile are adjusted by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. The perceived change in fuel cost effects for consumers/riders also depends on the fraction $f_{fuelvis,v})$ of fuel costs that are assumed visible to or perceived by them. That is, for cost component $i = fuel$:
+$$\sigma_{ivtdj} = \sigma_{fuel,vt}^B \cdot (1+\mu_{jtv} \cdot f_{fuelvis,v})$$
 
-kable(VTCShrBase, row.names = F, 
-      caption= "Base Vehicle Travel Cost: Components Share by Vehicle Type")
-              
-```
+Other cost components *i* have similar scenario-based adjustments:
+$$\sigma_{fuel,vtdj} = \sigma_{ivt}^B \cdot (1+\gamma_{dtv})$$
 
-### Cost Shares by Component - CAV Scenario
 
-Costs (relative to Base) are adjusted for assumptions of each Demand Scenario and for the Energy Intensity change associated with the current Technology Scenario. 
-
-Base cost components $\sigma_{itv}^B$ are normalized and add to 1.0. Demand Scenario *relative* costs for each component *i* are relative to the Base (Manual Vehicle) level. Their total can be greater than or less than 1.0. Denoted $\sigma_{itdjv}$, they depend on cost component *i*, Year *t* and Demand Scenario *d*, TechScenario *j*, Year *t*, Vehicle class *v*
-
-- Fuel costs per mile are adjusted by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. That is, for cost component $i = fuel$
-$$\sigma_{fuel,vtdj} = \sigma_{fuel,vtdj}^B \cdot (1+\mu_{jtv}f_{fuelvis,v})$$
+XXX
 
 ```{r calcCostSharesbyComponentCAV, echo=echoWorking}
 # Start with dataframe replicates the Base Cost Shares for each Demand Scenario
@@ -782,6 +797,10 @@ VTCShrAlt = x
 
 4.4 Calculate Adjusted Travel Cost Components for Scenario Conditions
 ---------------------------
+
+Updated cost component table based on Scenario VoTT and other costs.
+Calculate cost component fractions for all demand scenarios. The Technology (energy intensity) scenario is held 
+at number `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario.
 
 ```{r CalcTravelCostComponentsAdjusted, echo=echoWorking}
 # Changed costs under different automation scenarios (scenarios in DemandScenarios sheet)
@@ -823,8 +842,8 @@ VTCShrAlt = VTCShrAlt %>% gather(key=DemScen, value =value, c("1","2","3","4")) 
   select(-VC) %>% spread(key=VehType, value=value) %>%
   arrange(DemScen)
 
-kable(VTCShrAlt, row.names = F, 
-      caption= "Alt Travel Cost Components Relative to Base, by Vehicle Type & Dem Scenario")
+kable(VTCShrAlt, row.names = F, digits=3,
+      caption= "Alt Travel Cost Components Relative to Base, by Demand Scenario & Vehicle Type")
 
 ```
 
@@ -835,7 +854,8 @@ kable(VTCShrAlt, row.names = F,
 Compute fractional increases in VMT from the changes in total generalized travel costs that result from automation.
 
 For Demand Scenario *d*, Vehicle Type *v*, and Elasticity Case *c* (Low and High elasticity)
-$$fractionalVMTIncr_{dvc} = (RelTotalCost_{dv})^{ElasVKT_{cv}}-1$$
+$$RelTotalCost_{vtdj} \equiv \frac {C_{tot,vtdj}} {C_{tot,vt}^B}$$
+$$fractionalVKTIncr_{dvc} = (RelTotalCost_{vtdj})^{ElasVKT_{dv}}-1$$
 
 Note: The Elasticity of VKT with respect to (generalized) travel cost is key assumption. Does this include mode switching, vehicle efficiency, locational choices, etc?
 Sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
@@ -901,7 +921,10 @@ VMTIncrease = VMTIncrease %>%
 VMTIncrease = VMTIncrease %>% mutate(fracVMTIncr = (1+fracVMTIncr)*multiplier - 1)
 
 #  bind_rows(select(ElderlyVMTmult, description), )
+```
 
+```{r checkVMTAdjustments, echo=echoWorking, include=echoWorking}
+# Internal Test of values calculated here vs prior calcs.
 
 # OUTPUT TO KAYA CALCULATION:
 # Fractional Increase in VMT for HDVs, for Demand Scenarios
@@ -935,7 +958,7 @@ cat("Test output to Kaya (VMTIncrease table) matches example to within",
 5. Policy and Scenario Calculations
 =======================
 
-VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050
+VMT Demand Response: pick up chosen Demand and Technology Scenario, and value for chosen scenario, for years 2035 & 2050
 
 LDV Demand impact (depends on scenario choice in B3)
 HDV Demand impact (depends on scenario choice in B3)
