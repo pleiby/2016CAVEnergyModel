@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "August 30, 2018"
+date: "Sept. 9, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -450,7 +450,7 @@ In addition to the changes in energy intensity we account for a travel demand re
 -----------------------
 
 The following are the default parameter values.  (Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "DemScenCostReduction" vs "DemRespParams" tables. 
-The "Low, Med, High" cases in DemdRespParams table are separate from the Demand Scenario cases in DemScenCostReduction table.
+The "Low, Med, High" cases in DemdRespParams table are separate from the Demand Scenario cases in DemScenCostReduction table (section 4.3 below).
 
 ```{r demandScenParams, echo=echoWorking}
 
@@ -459,23 +459,23 @@ DemRespParamNotes <- read.delim(textConnection("
 DemParam         : DemParamNote
 ElasVKT          : Elas of travel w.r.t generalized cost,
 InsurCostRed     : Reduction in insurance premiums (fraction) (superceded by DemScenCostReduction)
-ExclWearCost     : Exclude Wear & Ownership Costs (Choose 0 or 1),
-C_incrCAV        : Incr vehicle capital cost fraction from automation (wear and ownership cost/mi),
+ExclVehCapCost   : Exclude Veh Capital Cost (wear & ownership costs) (Choose 0 or 1),
+C_incrCAV        : Incr vehicle capital cost (fraction) from automation (wear and ownership cost/mi),
 ShrECostInt      : Share of energy effic cost gains internalized (visible) to driver (fraction, 0 to 1),
-I_deltaCAV       : Fuel energy cost reduction (from effic, fraction)
+I_deltaCAV       : Fuel energy cost reduction (from effic, fraction, computed from intensity mechanisms)
 "),header=TRUE,sep=":",strip.white=TRUE)
 
 DemRespParams<-read.delim(textConnection("
                       Low     Med     High
 LDV.ElasVKT           -1      -1      -1
 LDV.InsurCostRed      0.6     0.7     0.8
-LDV.ExclWearCost      0       0       0
+LDV.ExclVehCapCost    0       0       0
 LDV.C_incrCAV         0       0       0
 LDV.ShrECostInt       1       1       1
 LDV.I_deltaCAV        -.7186  -.7186  -.7186
 HDV.ElasVKT           -0.97   -0.97   -2
 HDV.InsurCostRed      0.4     0.6     0.8
-HDV.ExclWearCost      0       0       0
+HDV.ExclVehCapCost    0       0       0
 HDV.C_incrCAV         0       0       0  
 HDV.ShrECostInt       1       1       1
 HDV.I_deltaCAV        -.2815  -.2815  -.2815
@@ -565,7 +565,7 @@ VoTT                  : LDV     :12.5       :18         :13.7986015 :$/hr  :DoT;
 VMTtot                : LDV     :1560941    :482468     :2043409    :mi/yr :Highway Stat 
 average_speed         : LDV     :           :           :27.6       :mi/hr :EPA
 average_TTC_per_mi    : LDV     :           :           :0.49994933 :$/mi  :=VoT/AveSpeed
-VoTT                  : HDV     :           :           :24.42778   :$/hr  : vs Cambridge Systematics 2009 $30 ave
+VoTT                  : HDV     :24.42778   :24.42778   :24.42778   :$/hr  : vs Cambridge Systematics 2009 $30 ave. Assume local = intercity.
 VMTtot                : HDV     :           :           :           :mi/yr :Highway Stat 
 average_speed         : HDV     :           :           :39.98      :mi/hr :ATRI 2012 'average industry operational speed'
 average_TTC_per_mi    : HDV     :0.611      :0.611      :0.611      :$/mi  :2011 Driver wages & Benefits, atri-online.org/2012/09/17/an-analysis-of-the-operational-costs-of-trucking-a-2012-update/"
@@ -599,19 +599,23 @@ cat("Average TTC per mile for HDV average value matches VoTT/speed to within",
     TravTimeCostBasePars["VoTT.HDV","average"]/TravTimeCostBasePars["average_speed.HDV","average"],
   "$/mi.\n")
 ```
+Note: travel time parameter values for LDVs are an average for Car and Light-truck vehicle types
+
+**ToDo** Needed data: Seek to benchmark average speed for local and intercity driving, for both LDVs and HDVs. These regional values should be consistent with overall average speed.
 
 ### Base Vehicle Travel Cost Components
 
 Specify the primary (private) cost components for base case (conventional, manual) road vehicle travel.
 
+#### Original base table
 ```{r dataVehCostCompons, echo=echoWorking}
 VehTravelCostCompons <- read.delim(textConnection("
 CostCat               :LDVAlt       :LDVAvgSedan :LDVAvgLtTruck  :HDVOther  :HDVClass8  :Units   :Note
-MilesDriven           :NA           :11850       :11000          :NA        :99000      :[mi/yr] :Base (MV) EDB-31 for LDVs, ATRI-2012 for HDVs
+MilesDriven           :NA           :11850       :11000          :NA        :99000      :[mi/veh-yr]:Base (MV) EDB-31 for LDVs, ATRI-2012 for HDVs
 Fuel                  :6.1          :14.59       :19.63          :NA        :59.0       :[c/mi]  :LDV changed for TEDB mpg
 Maintenance           :5.3          :5.47        :6.15           :NA        :19.4       :[c/mi]  :Incl tires
 AccAndIns             :7.0          :8.447257384 :8.490909091    :NA        :6.7        :[c/mi]  :Insurance will change for CAVs
-WearAndOwn            :12 7         :29.907173   :43.49090909    :NA        :18.9       :[c/mi]  :Ownership, Wear & tear (depreciation)
+VehCapCost            :12.7         :29.907173   :43.49090909    :NA        :18.9       :[c/mi]  :Ownership, Wear & tear (depreciation)
 TollsFees             :0.9          :0.0         :0.0            :NA        :5.5        :[c/mi]  :
 Parking               :1.3          :2.109704641 :2.272727273    :NA        :0.0        :[c/mi]  :
 Time                  :34.4         :49.99493298 :49.99493298    :NA        :61.1       :[c/mi]  :VOTT will change for CAVs. For HDVs=Driver wages & benefits
@@ -625,6 +629,8 @@ Source                :HERS-ST/2005 :AAA/2012    :AAA/2012       :ATRI/2012 :ATR
 kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)), 
       caption= "Vehicle Travel Cost Components by Vehicle Type")
 ```
+
+### XXX Transform 
 
 ``` {r calcVTCostBaseCompons, echo=echoWorking}
 # transform dropping notes and assuring all values are numeric
@@ -656,13 +662,22 @@ VTCostBase = VTCostBase %>%
 
 # sum across categories (excl miles and total) to check total cost by VehType
 x = VTCostBase %>% 
+  filter(!CostCat %in% c("MilesDriven", "Total"))
+x = x %>%  # may be redundant, these are already gone
+  group_by(VehType) %>% 
+  bind_rows(summarise_all(., funs(if(is.numeric(.)) sum(., na.rm = T) else "Total")))
+
+x = VTCostBase %>% 
   filter(!CostCat %in% c("MilesDriven", "Total")) %>%  # may be redunant, these are already gone
   group_by(VehType) %>% 
   summarize(Total = sum(VTCost_cpm, na.rm = T)) %>% # treat NA cost components as zero
   gather(key = CostCat, value = VTCost_cpm, Total) # this allows appending to other costs
 
 VTCostBase = rbind(VTCostBase, x) # append total rows to travel cost array
+```
 
+```{r displayVTCostBase, echo=echoWorking}
+# re-order rows and display
 # established preferred row order to match a prior dataframe
 costCompOrder = VehTravelCostCompons %>% 
   filter(CostCat!="MilesDriven" & CostCat!="Source") %>% 
@@ -670,8 +685,12 @@ costCompOrder = VehTravelCostCompons %>%
   mutate(CostCat = as.character(CostCat))
 
 x = spread(VTCostBase, key = VehType, value = VTCost_cpm)
-rownames(x) = x$CostCat
+rownames(x) = x$CostCat   # row names needed if they are to be used for re-ordering rows
 x = x[costCompOrder$CostCat,]
+
+# xxx
+# x = spread(x, key = VehType, value = VTCost_cpm)
+# x = arrange(x, factor(CostCat, levels = costCompOrder$CostCat))
 
 kable(x = x, row.names = F, digits=3,
       caption= "Base Vehicle Travel Cost Components by Vehicle Type (cents/mi)")
@@ -770,7 +789,7 @@ VTCShrAlt = x
 # adjustments to each cost category in VehTravCostCompon
 
 # VehTravCostMult[C_Categ, VSubClass] = 
-# C_Categ   = c("Fuel", "Maintenance", "AccAndIns", "WearAndOwn", "TollsFees", "Parking", "Time", "Registration")
+# C_Categ   = c("Fuel", "Maintenance", "AccAndIns", "VehCapCost", "TollsFees", "Parking", "Time", "Registration")
 # VSubClass = c("LDVAvgSedan", "LDVAveLtTruck", "HDVClass8", "HDVOther")
 
 # Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
@@ -780,7 +799,7 @@ VTCShrAlt = VTCShrAlt %>% mutate(
   # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
   Maintenance  = Maintenance * 1.0,
   AccAndIns    = AccAndIns * (1 + Insurance), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
-  WearAndOwn   = WearAndOwn * (1.0 + C_incrCAV),  # (1+CapitalCostChange)
+  VehCapCost   = VehCapCost * (1.0 + C_incrCAV),  # (1+CapitalCostChange)
   TollsFees    = TollsFees * 1.0,
   Parking      = Parking   * 1.0,
   Time         = Time      * (1 + VoTT), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
@@ -788,7 +807,7 @@ VTCShrAlt = VTCShrAlt %>% mutate(
 # Total = CostMult weighted by base CostFraction
 )
 VTCShrAlt$Total = 0
-VTCShrAlt %>% select(AccAndIns:WearAndOwn) %>% rowSums(na.rm=TRUE) -> VTCShrAlt$Total
+VTCShrAlt %>% select(AccAndIns:VehCapCost) %>% rowSums(na.rm=TRUE) -> VTCShrAlt$Total
 
 # Get main result (total relative cost) for all Demand scenarios, VehType, Cases, and elasticity of VKT
 RelCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
@@ -796,8 +815,8 @@ RelCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
 # Keep array of relative cost components for Demand Scenarios
 VTCShrAlt= VTCShrAlt %>% 
   filter(Case=="Low") %>% # to this point the Low and High are the same (they only differ in the applied ElasVKT)
-  select(DemScen:WearAndOwn) %>% 
-  gather(key = CostCat, value = value, AccAndIns:WearAndOwn) %>% # reshape
+  select(DemScen:VehCapCost) %>% 
+  gather(key = CostCat, value = value, AccAndIns:VehCapCost) %>% # reshape
   spread(key = DemScen, value = value)
 
 VTCShrAlt = VTCShrAlt %>% gather(key=DemScen, value =value, c("1","2","3","4")) %>%
