@@ -770,18 +770,18 @@ Penetration is exogenous, and initially assumed 100%.
 #  If so, conflicts with C_deltaCAV elsewhere
 
 #DemScenCostChange <- read.delim(textConnection("
-#DemScen :VoTT  :Insurance  :C_deltaCAV :Description
-#1       :0     :-0.60      :0.0        :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
-#2       :-0.05 :-0.60      :0.0        :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
-#3       :-0.50 :-0.80      :0.0        :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
-#4       :-0.80 :-0.80      :0.0        :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
+#DemScen :C_deltaVoTT :C_deltaInsur :C_deltaCAV :Description
+#1       :0           :-0.60        :0.0        :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
+#2       :-0.05       :-0.60        :0.0        :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
+#3       :-0.50       :-0.80        :0.0        :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
+#4       :-0.80       :-0.80        :0.0        :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
 #"),header=TRUE,sep=":",strip.white=TRUE)
 DemScenCostChange <- read.delim(textConnection("
-DemScen :VoTT  :Insurance  :Description
-DS1     :0     :-0.60      :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
-DS2     :-0.05 :-0.60      :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
-DS3     :-0.50 :-0.80      :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
-DS4     :-0.80 :-0.80      :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
+DemScen :C_deltaVoTT :C_deltaInsur :Description
+DS1     :0           :-0.60        :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
+DS2     :-0.05       :-0.60        :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
+DS3     :-0.50       :-0.80        :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
+DS4     :-0.80       :-0.80        :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
 "),header=TRUE,sep=":",strip.white=TRUE)
 DemScenCostChange$DemScen = as.character(DemScenCostChange$DemScen)
 # Source: Insurance cost reductions from Celent
@@ -826,7 +826,7 @@ x = x %>% spread(key=CostCat, value = VCRel)
 y = DemRespParams %>% select(-c(Zero, Med)) %>% 
   gather(key=Case, value=value, Low:High) %>%      # for two cases (Low and High)
   spread(key = Parameter, value=value) %>%
-  select(-InsurCostRed)  # UGLY: Insurance cost reduction determined by Demand Scenario
+  select(-InsurCostRed)  # UGLY: **Unused** Insurance cost reduction determined by Demand Scenario
 
 x = left_join(x, y, by=c("VC"))     # combines base cost shares and Demand Reponse Parameters for their adjustment
 x = left_join(x, select(DemScenCostChange, -Description), by=c("DemScen")) # appends Dem Scen multipliers for other vars (VoTT and Insurance)
@@ -856,11 +856,11 @@ VTCShrAlt = VTCShrAlt %>% mutate(
   Fuel = Fuel*(1 + I_deltaCAV*ShrECostInt), # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
   # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
   Maintenance  = Maintenance * 1.0,
-  AccAndIns    = AccAndIns * (1 + Insurance), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
+  AccAndIns    = AccAndIns * (1 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
   VehCapCost   = VehCapCost * (1.0 + C_deltaCAV),  # (1+CapitalCostChange)
   TollsFees    = TollsFees * 1.0,
   Parking      = Parking   * 1.0,
-  Time         = Time      * (1 + VoTT), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
+  Time         = Time      * (1 + C_deltaVoTT), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
   Registration = Registration * 1.0
 # Total = CostMult weighted by base CostFraction
 )
@@ -877,59 +877,48 @@ RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
 VTCShrAlt= VTCShrAlt %>% 
   filter(Case=="Low") %>% # to this point the Low and High are the same (they only differ in the applied ElasVKT)
   select(DemScen, VehType, VC, AccAndIns:VehCapCost) %>% 
-  gather(key = CostCat, value = value, AccAndIns:VehCapCost) %>% # reshape
-  spread(key = DemScen, value = value)
+  gather(key = CostCat, value = VTCost_shr, AccAndIns:VehCapCost) %>% 
+  arrange(DemScen, VehType)
 
-VTCShrAlt = VTCShrAlt %>% gather(key=DemScen, value =value, c("DS1","DS2","DS3","DS4")) %>%
-  select(-VC) %>% spread(key=VehType, value=value) %>%
-  arrange(DemScen)
 ```
 
 ```{r dispVTCShrAlt, echo=echoWorking}
-kable(VTCShrAlt, row.names = F, digits=3,
+VTCShrAlt %>% 
+  select(-VC) %>% spread(key=VehType, value=VTCost_shr) %>%
+  # arrange(factor(CostCat, levels = costComponOrder$CostCat)) %>%
+  arrange(DemScen) %>%
+  kable(., row.names = F, digits=3,
       caption= "Alt Travel Cost Components Relative to Base, by Demand Scenario & Vehicle Type")
 
 ```
 
 #### Display Alternative Scenario Travel Costs per Mile by Component
 
+```{r defFn_plotStackedBarShares, echo=echoWorking}
+# function to take dataframe of shares by demand scenario and VehType, and
+#   for specified demand scenario ds,
+#   plot stacked bar graph with one column for each VehType.
+plotStackedBarShares <- function(df, ds) {
+  df %>% filter(DemScen == ds) %>%
+  filter(CostCat != "Total") %>%
+  ggplot() + 
+    geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
+    ggtitle(paste0("Fig: Alt Cost Components for Vehicle Travel, DemScen=",ds), subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
+    scale_fill_brewer(palette="Spectral") +
+    # scale_fill_brewer(palette="Blues")
+    scale_y_continuous(limits = c(0,1.0))
+  
+}
+```
+
 ```{r altCostComponStackedBarGraph, echo=echoWorking}
+plotStackedBarShares(VTCShrAlt, "DS1")
 
+plotStackedBarShares(VTCShrAlt, "DS2")
 
-x =  VTCShrAlt %>% filter(CostCat != "Total") %>%
-  gather(key = VehType, value=VTCost_shr, -c(CostCat, DemScen))
+plotStackedBarShares(VTCShrAlt, "DS3")
 
-x %>% filter(DemScen == "DS1") %>%
-  ggplot() + 
-    geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
-    ggtitle("Fig: Alt Cost Components for Vehicle Travel, DemScen=1", subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
-    scale_fill_brewer(palette="Spectral") +
-    # scale_fill_brewer(palette="Blues")
-    scale_y_continuous(limits = c(0,1.0))
-
-x %>% filter(DemScen == "DS2") %>%
-  ggplot() + 
-    geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
-    ggtitle("Fig: Alt Cost Components for Vehicle Travel, DemScen=2", subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
-    scale_fill_brewer(palette="Spectral") +
-    # scale_fill_brewer(palette="Blues")
-    scale_y_continuous(limits = c(0,1.0))
-
-x %>% filter(DemScen == "DS3") %>%
-  ggplot() + 
-    geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
-    ggtitle("Fig: Alt Cost Components for Vehicle Travel, DemScen=3", subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
-    scale_fill_brewer(palette="Spectral") +
-    # scale_fill_brewer(palette="Blues")
-    scale_y_continuous(limits = c(0,1.0))
-
-x %>% filter(DemScen == "DS4") %>%
-  ggplot() + 
-    geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
-    ggtitle("Fig: Alt Cost Components for Vehicle Travel, DemScen=4", subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
-    scale_fill_brewer(palette="Spectral") +
-    # scale_fill_brewer(palette="Blues")
-    scale_y_continuous(limits = c(0,1.0))
+plotStackedBarShares(VTCShrAlt, "DS4")
 ```
 
 4.5 Fractional VMT Changes in CAV Scenario
