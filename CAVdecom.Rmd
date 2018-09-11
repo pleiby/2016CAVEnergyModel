@@ -927,7 +927,7 @@ plotStackedBarShares(VTCShrAlt, "DS4")
 Compute fractional increases in VMT from the changes in total generalized travel costs that result from automation.
 
 For Demand Scenario *d*, Vehicle Type *v*, and Elasticity Case *c* (Low and High elasticity)
-[??? is elasticity case to be governed by demand scenario?]
+[??? is elasticity case to be governed by demand scenario *d*, or separate index *c*?]
 
 Define
 
@@ -937,16 +937,17 @@ Define
 $$c_{rel,vtdj} = RelTotalCost_{vtdj} \equiv \frac {C_{tot,vtdj}} {C_{tot,vt}^B}$$
 
 
-$$fractionalVKTIncr_{dvc} = (RelTotalCost_{vtdj})^{ElasVKT_{dv}}-1$$
+$$fractionalVKTIncr_{dvc} = (RelTotalCost_{vtdj})^{ElasVKT_{cv}}-1$$
 
-Note: The Elasticity of VKT with respect to (generalized) travel cost is key assumption. Does this include mode switching, vehicle efficiency, locational choices, etc?
+Note: The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. Does this include mode switching, and longer-run locational choices, etc. as well the costs considered here (travel-time, vehicle capital and operation costs, including fuel, insuarance, maintenance, etc.)?
 Sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
 
-Note: Additional adjustments to the fractional change in VKT for LDV travel follow from:
+
+Note: Additional adjustments to the fractional change in VKT for LDV travel, beyond those from the elastic demand response to changing full generalized cost, follow from:
 
 - multiplier factors on VMT to include larger travel by the elderly
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$39:$K$44
-- multiplier factors on VMT to account for VMT decline in response to carsharing
+- multiplier factors on VMT to account for VKT increase or decline in response to ride-hailing/ride-pooling, for the same level of PKT.
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$46:$K$48
     
 ```{r DemandFracVMTchange, echo=echoWorking}
@@ -965,22 +966,33 @@ RelTotCost = RelTotCost %>% mutate(
 VMTIncrease = RelTotCost %>% filter(!(VC=="HDV" & Case=="High")) %>%
   select(-VehType) %>%
   group_by(VC, DemScen) %>%
-  summarise(fracVMTIncr = mean(fracVMTIncr))
+  summarise(fracVMTIncr = mean(fracVMTIncr)) # this is an unweighted mean for Sedans and LtTrucks
 
-# % increase LD personal vehicles VMTdemand (averating Sedans and LtTrucks)
-VMTIncreaseTemp <- read.delim(textConnection("
-Var                          :ElasCase           :LDV_1           :LDV_2          :LDV_3          :LDV_4
-LDpersonal_vehicles_VMTdemand: lowElas           :-0.005489139    :0.014629222    :0.262314068    :0.488766916
-LDpersonal_vehicles_VMTdemand: highElas          :-0.005489139    :0.014629222    :0.262314068    :0.488766916
-"),header=TRUE,sep=":",strip.white=TRUE) #
+# OLDER CASE: % increase LD personal vehicles VMTdemand (averaging Sedans and LtTrucks)
+# LDpersonal_vehicles_VMTdemand: lowElas           :-0.005489139    :0.014629222    :0.262314068    :0.488766916
+# LDpersonal_vehicles_VMTdemand: highElas          :-0.005489139    :0.014629222    :0.262314068    :0.488766916
+
+# % increase LD personal vehicles VMTdemand (averaging Sedans and LtTrucks)
+VMTIncreaseTest <- read.delim(textConnection("
+VC  :varName    :ElasCase           :DS1             :DS2            :DS3            :DS4
+LDV :VMTdemand  :lowElas            :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
+LDV :VMTdemand  :highElas           :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
+HDV :VMTdemand  :lowElas            :0.133159862		 :0.156008958		 :0.428904653		 :0.682936788
+HDV :VMTdemand  :highElas           :0.294018792		 :0.348394295		 :1.087345456		 :1.924954964
+"),header=TRUE,sep=":",strip.white=TRUE)
+# Test data From "increase in vehicle travel" at
+#  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$C$36:$N$37
+#  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_HDV'!$C$34:$N$35
+
 
 #% increase LD personal vehicles VMTdemand :highElasticity    :-0.55% :1.46%  :26.23% :48.88%
 
-# VMTIncrease = VMTIncrease %>% select(-varName) %>%
-#   gather(key = case, value = fracVMTIncr, -ElasCase) %>%
+# VMTIncreaseTest 
+x = VMTIncreaseTest %>% select(-varName) %>%
+   gather(key = DemScen, value = fracVMTIncr, DS1:DS4) %>%
 #   mutate(fracVMTIncr = as.numeric(fracVMTIncr)) %>%
-#   separate(col = case, into = c("VehType","case")) %>%
-#   spread(key = VehType, value = fracVMTIncr)
+   spread(key = VC, value = fracVMTIncr)
+# XXX
 # VMTIncrease$LDVave =  (VMTIncrease$AvgSedan + VMTIncrease$LtTruck)/2.0
 ```
 
