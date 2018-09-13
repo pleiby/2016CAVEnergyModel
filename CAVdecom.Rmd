@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "Sept. 9, 2018"
+date: "Sept. 12, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -571,7 +571,7 @@ average_speed         : HDV     :           :           :39.98      :mi/hr :ATRI
 average_TTC_per_mi    : HDV     :0.611      :0.611      :0.611      :$/mi  :2011 Driver wages & Benefits, atri-online.org/2012/09/17/an-analysis-of-the-operational-costs-of-trucking-a-2012-update/"
 ),
 header=TRUE,sep=":",strip.white=TRUE) #
-# as in "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$35:$E$43" ('calcul Dem_LDV'!$A$39:$E$47 in later versions)
+# Source: as in "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20180325r1.xlsx]calcul Dem_LDV'!$A$35:$E$43" ('calcul Dem_LDV'!$A$39:$E$47 in later versions)
 
 TravTimeCostBasePars %>% select(-Source_Notes) %>%
   kable(caption= "Base Travel Time Cost Parameters", digits=3)
@@ -873,7 +873,7 @@ RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
 ```
 
 ```{r CalcTravelCostComponentsAdjusted2, echo=echoWorking}
-# Keep array of relative cost components for Demand Scenarios. 
+# Keep array of relative cost components for alternative Demand Scenarios. 
 VTCShrAlt= VTCShrAlt %>% 
   filter(Case=="Low") %>% # to this point the Low and High are the same (they only differ in the applied ElasVKT)
   select(DemScen, VehType, VC, AccAndIns:VehCapCost) %>% 
@@ -883,6 +883,7 @@ VTCShrAlt= VTCShrAlt %>%
 ```
 
 ```{r dispVTCShrAlt, echo=echoWorking}
+# Rearrange and display Vehicle Travel Cost Share ests for alternative Demand Scenarios
 VTCShrAlt %>% 
   select(-VC) %>% spread(key=VehType, value=VTCost_shr) %>%
   # arrange(factor(CostCat, levels = costComponOrder$CostCat)) %>%
@@ -945,7 +946,7 @@ Sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaiste
 
 Note: Additional adjustments to the fractional change in VKT for LDV travel, beyond those from the elastic demand response to changing full generalized cost, follow from:
 
-- multiplier factors on VMT to include larger travel by the elderly
+- multiplier factors on VMT to include larger travel by underserved population (elderly, youth, physically challenged)
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$39:$K$44
 - multiplier factors on VMT to account for VKT increase or decline in response to ride-hailing/ride-pooling, for the same level of PKT.
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$46:$K$48
@@ -955,7 +956,6 @@ Note: Additional adjustments to the fractional change in VKT for LDV travel, bey
 # Pct increase in vehicle travel: low elasticity
 # Pct increase in vehicle travel: high elasticity
 
-# RelTotCost = VTCShrAlt %>% filter(CostCat=="Total")
 RelTotCost = RelTotCost %>% mutate(
   fracVMTIncr = Total^ElasVKT-1.0
 )
@@ -965,7 +965,7 @@ RelTotCost = RelTotCost %>% mutate(
 # Pct increase HDV vehicles VMTdemand: low elasticity
 
 # New Calculated Values: % increase LD personal vehicles in VMTdemand from cost-elastic response (averaging LDV Sedans and LtTrucks)
-VMTIncrease = RelTotCost %>% filter(!(VC=="HDV" & Case=="High")) %>%
+VMTIncrease = RelTotCost %>% filter(Case=="Low") %>%
   select(-VehType) %>%
   group_by(VC, DemScen) %>%
   summarise(fracVMTIncr = mean(fracVMTIncr)) # this is an unweighted mean for Sedans and LtTrucks
@@ -1007,33 +1007,40 @@ cat("Check: Calculated VMTIncrease from cost-elastic response matches Test value
 
 ```
 
-### Effects on VMT Demand from Elderly Drivers, and Car Sharing (Ride Pooling)
+### Effects on VMT Demand from Underserved Population, and Car Sharing/Ride Pooling
+The fractional change in VMT demand due to the cost-elastic response is augmented by adjustments reflecting:
+- estimated additional road travel by underserved/non-driving populations, specifically older and young people;
+- 
 
 ```{r VMTAdjustments, echo=echoWorking}
-# multiplier factors on VMT to include larger travel by the elderly
+# multiplier factors on VMT to include larger travel by the underserved (incl. elderly, youth)
 #   NOTE: multiplier is for total VMT, age distribution included already
-# XXX
 
 # UnderServed Optional (USOption) multipliers
-ElderlyVMTmult <- read.delim(textConnection("
+UnderservedVMTmult <- read.delim(textConnection("
 USOption  :multiplier    :description
-0         :1.0           :no explicit effect of CAVs on elderly driving
+0         :1.0           :no explicit effect of CAVs on underserved/elderly driving
 1         :1.023375114   :driving has a natural decay after 60
 2         :1.051206047   :driving remains same as 60, after 60
 3         :1.07209503    :1+increased number of licenses for young and old, most likely
 4         :1.106094734   :2+increased number of licenses for young and old
 "),header=TRUE,sep=":",strip.white=TRUE) #
+# Note: Test results from ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$39:$K$44
 
-# multiplier factors on VMT to account for VMT decline in response to carsharing
-carSharingMult = 0.8 # multiplier is for total VMT. This is the high-end estimate
+# multiplier factors on VMT to account for VMT decline in response to ridepooling
+rideSharingPoolingMult = 0.8 # multiplier is for total LDV VMT. This is the high-end estimate. (Mult for HDV=1.0)
+# Note: Test results from ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$46:$K$48
 
 # extends logic in "calcul Dem_LDV" and "calcul Dem_HDV"
+# Danger! Following assumes a particular ordering of rows
 VMTIncrease$USOption = c(0, 0, 0, 0, 0, 1, 3, 4)  # UnderservedOption for augmented DemScens
 VMTIncrease = VMTIncrease %>%
-    left_join(select(ElderlyVMTmult, -description), by=c("USOption"))     # combines base cost shares and Demand Reponse Parameters for their adjustment
+    left_join(select(UnderservedVMTmult, -description), by=c("USOption"))     # combines base cost shares and Demand Reponse Parameters for their adjustment
 VMTIncrease = VMTIncrease %>% mutate(fracVMTIncr = (1+fracVMTIncr)*multiplier - 1)
+# XXX
 
-#  bind_rows(select(ElderlyVMTmult, description), )
+
+#  bind_rows(select(UnderservedVMTmult, description), )
 ```
 
 ```{r checkVMTAdjustments, echo=echoWorking, include=echoWorking}
@@ -1044,9 +1051,9 @@ VMTIncrease = VMTIncrease %>% mutate(fracVMTIncr = (1+fracVMTIncr)*multiplier - 
 FracVMTIncreaseExample <- read.delim(textConnection("
 DemScen  :VC   :y2023       :y2050       :Notes
 DS1      :HDV  :0.13315986  :0.13315986  :Cost-base response (with ElasVKT) only
-DS2      :HDV  :0.15600896  :0.15600896  :Cost-base response (with ElasVKT) with Elderly multiplier effect option 1
-DS3      :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) with Elderly multiplier effect option 3
-DS4      :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) with Elderly multiplier effect option 4
+DS2      :HDV  :0.15600896  :0.15600896  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
+DS3      :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
+DS4      :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
 DS5      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
 DS6      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
 DS7      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
@@ -1055,10 +1062,11 @@ DS2      :LDV  :0.21410345  :0.21410345  :Cost-base response (with ElasVKT) only
 DS3      :LDV  :0.64978123  :0.64978123  :Cost-base response (with ElasVKT) only
 DS4      :LDV  :1.08895536  :1.08895536  :Cost-base response (with ElasVKT) only
 DS5      :LDV  :1.08895536  :1.08895536  :scenario 4 with higher elasticity
-DS6      :LDV  :0.67116428  :0.67116428  :scenario 5 with shift to carsharing
-DS7      :LDV  :0.31982499  :0.31982499  :scenario 3 with shift to carsharing1
+DS6      :LDV  :0.67116428  :0.67116428  :scenario 5 with shift to ridesharing_ridepooling
+DS7      :LDV  :0.31982499  :0.31982499  :scenario 3 with shift to ridesharing_ridepooling
 "),header=TRUE,sep=":",strip.white=TRUE) #
 # From 'calcul Dem_LDV' and 'calcul Dem_HDV' sheets
+# Source of test resultsL ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$A$54:$E$63
 
 # Check some calcs
 FracVMTIncreaseExample = FracVMTIncreaseExample %>% select(DemScen, VC, y2050)  %>% 
