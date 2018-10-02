@@ -79,6 +79,23 @@ Notes from Lee and Kochelman 2018 "Energy and Emission Implications of Self-Driv
             - vehicle right-sizing
             - ride pooling (DRS)
             - -5% to -12% (Fagnant et al 2014)
+
+#### TABLE 1 Summary of Impacts
+
+Category              |Impacts              |Description              |Energy Impacts
+----------------------|---------------------|-------------------------|------------------------
+Travel Demand Changes |Better Route Choices |Route choice based on real-time traffic data from connected environment |-5% to -20%
+Travel Demand Changes |New Trips from Under-served Populations |Motorized trips by limited drivers & non- drivers |+10% to +14%
+Travel Demand Changes |Shared Automated Vehicles – Empty Driving |SAVs traveling to next passenger, empty |+6% to +14%
+Travel Demand Changes |More Long-distance Travel |Longer distance travel caused from lower driving task of CAVs | +6% to +18%
+Driving Details |Smoother Driving Cycle; More fuel-efficient driving cycles |-10% to -20%
+Driving Details |Computer & Sensor Power Demands |Energy for sensors, on-board computing, vehicle control & navigation |+4% to +15%
+Driving Details |Faster Travel from Improved Driving Skills |Fast & throughput-efficient driving cycle    |+7% to +30%
+Multi- vehicle Operation |V2V & Platooning |Vehicle-to-vehicle connectivity & platooning |-2% to -19%
+Multi- vehicle Operation |Shared AVs & Ride- Sharing |Fuel-efficiency from vehicle right-sizing & dynamic ride-sharing (DRS) |-5% to -12%
+Multi- vehicle Operation |V2I & Smart Intersections |Vehicle-to-infrastructure connectivity & smart intersection   |-6% to -30%
+Powertrain Energy Source |Plug-in Electric & Hybrid Electric Vehicles |Drivetrain shifts from gasoline to electricity |-30% to -70%
+
 Research Needs
 -----------
 * Travel Demand Models
