@@ -746,6 +746,7 @@ VTCostBase %>% filter(CostCat != "Total") %>%
   ggplot() + 
     geom_bar(aes(x=VehType, y=VTCost_cpm, fill=CostCat), stat="identity") +
     ggtitle("Fig: Base Cost Components for Vehicle Travel", subtitle = "Manual Vehicle, Current Year, cents/mi") +
+    ylab("cents/mi") +
     scale_fill_brewer(palette="Spectral")
     # scale_fill_brewer(palette="Blues")
 
@@ -905,6 +906,7 @@ plotStackedBarShares <- function(df, ds) {
   ggplot() + 
     geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
     ggtitle(paste0("Fig: Alt Cost Components for Vehicle Travel, DemScen=",ds), subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
+    ylab("Share") +
     scale_fill_brewer(palette="Spectral") +
     # scale_fill_brewer(palette="Blues")
     scale_y_continuous(limits = c(0,1.0))
@@ -912,7 +914,7 @@ plotStackedBarShares <- function(df, ds) {
 }
 ```
 
-```{r altCostComponStackedBarGraph, echo=echoWorking}
+```{r altCostSharesStackedBarGraph, echo=echoWorking}
 plotStackedBarShares(VTCShrAlt, "DS1")
 
 plotStackedBarShares(VTCShrAlt, "DS2")
@@ -920,6 +922,42 @@ plotStackedBarShares(VTCShrAlt, "DS2")
 plotStackedBarShares(VTCShrAlt, "DS3")
 
 plotStackedBarShares(VTCShrAlt, "DS4")
+```
+
+```{r}
+VTCostAlt = VTCostBase %>% filter(CostCat=="Total") %>% select(-CostCat) # first get Base total cost for each VehType
+VTCostAlt = left_join(VTCShrAlt, VTCostAlt, by = c("VehType"))
+VTCostAlt = VTCostAlt %>% rename(BaseVTCost_cpm=VTCost_cpm) %>%
+  mutate(VTCost_cpm = BaseVTCost_cpm * VTCost_shr)
+
+```
+
+```{r defFn_plotStackedBarCostCompons, echo=echoWorking}
+# function to take dataframe of shares by demand scenario and VehType, and
+#   for specified demand scenario ds,
+#   plot stacked bar graph with one column for each VehType.
+plotStackedBarCostCompons <- function(df, ds) {
+  df %>% filter(DemScen == ds) %>%
+  filter(CostCat != "Total") %>%
+  ggplot() + 
+    geom_bar(aes(x=VehType, y=VTCost_cpm, fill=CostCat), stat="identity") +
+    ggtitle(paste0("Fig: Alt Cost Components for Vehicle Travel, DemScen=",ds), subtitle = "Automated Vehicle, Current Year, cents/mi") +
+    ylab("cents/mi") +
+    scale_fill_brewer(palette="Spectral") +
+    # scale_fill_brewer(palette="Blues")
+    scale_y_continuous(limits = c(0,175.0))
+}
+```
+
+
+```{r altCostComponStackedBarGraph, echo=echoWorking}
+plotStackedBarCostCompons(VTCostAlt, "DS1")
+
+plotStackedBarCostCompons(VTCostAlt, "DS2")
+
+plotStackedBarCostCompons(VTCostAlt, "DS3")
+
+plotStackedBarCostCompons(VTCostAlt, "DS4")
 ```
 
 4.5 Fractional VMT Changes in CAV Scenario
