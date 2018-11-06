@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "Sept. 12, 2018"
+date: "Nov. 05, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -40,7 +40,6 @@ library(knitr)
 
 ```{r setChunkOptions, echo=FALSE}
 ## clear: remove (almost) everything in the working environment.
-## You will get no warning, so don't do this unless you are really sure.
 rm(list = ls())
 
 # Logical Flags to indicate which chunks should be displayed in RMarkdown output
@@ -52,36 +51,19 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
 ```{r setWorkingEnv, include=FALSE}
 # # opts_chunk$set(comment=NA, fig.width=6, fig.height=6)
 # # opts_chunk$set(dpi=150)
-# 
-# #machine = "PLWinLaptop"
-# #machine = "PLWinBox"
-# machine = "PLMac"
-# #machine = "PLRemoteSiegfried"
-# worksubpath = "/Papers/2013AutomatedVehicles/2016CAVEnergyModel/"
-# datasubpath = paste0(worksubpath,"Data/")  # subdirectory for data
-# 
-# if (machine == "PLWinBox") {
-#   workroot = "D:/"  # for Windows OS, Paul's work desktop
-# } else if (machine == "PLRemoteSiegfried") {
-#   workroot = "C:/Users/pzl/Documents"  # for Windows OS, remote into Siegfried
-# } else if (machine == "PLWinLaptop") {
-#   workroot = "C:/" # for Windows OS on laptop
-# } else if (machine == "PLMac") {
-#   workroot = "~/Documents/"  # for OSx Paul's Mac  
-# } else if (machine == "JRLaptop") {
-#   workroot = "C:/"  # JR - set this to any machine-specific prefix to the worksubpath above 
-# }
-# 
 # knitr::opts_chunk$set(root.dir = paste0(workroot, worksubpath))
 ```
 
 
 1. Introduction, Main Points, Key Factors
 ====================
-* Potential value of (goals for) compact/aggregate model: 
-    * determine minimum cost to achieve some level of energy use and level of mobility
-        * large simulation models would have to do many simulations
-    * simulate effect of changing costs from technological advances through vehicle automation, electrification, and sharing. 
+
+#### Goals for and Potential value of compact/aggregate model: 
+* explore affects of costs and tecnological progress on outcomes
+* determine minimum cost to achieve some level of energy use and level of mobility
+    * large simulation models would have to do many simulations
+* approximate influence of some factors not yet in detailed ABM/Microsimulation models
+* simulate effect of changing costs from technological advances through vehicle automation, electrification, and sharing. 
 
 #### Important driving factors have an economic dimension
 * Demand response to automation and shared mobility
@@ -89,7 +71,7 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
     * particularly, following Small & Verhoef, others, consumer behavior model determines choice of travel VKT, vehicle efficiency, and travel time
     * Utility derives from travel, goods, leisure.
     * Utility maximization subject to joint constraints on budget and time
-* Endogenous interactions
+* Endogenous interactions (identified, in development)
     * Speed - (highway free-flow) endogenous to trade-off between energy cost, time and safety costs
     * Congestion – (determines average achieved speed in traffic) endogenous to vehicle mix, VKT, automation
     * Travel demand - endogenous to costs, including energy, congestion and safety, as well as travel time utility (VTT)
@@ -108,7 +90,8 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
     * [technical and behavioral factors]
     * [dependence on infrastructure, and degree of penetration]
 * How will travel demand change?
-    * See EEMS2017 study of travel demand for different VOTT reports 30-50% increase in energy, mostly from demand, depending on VOTT [ToDo: see what this implies for VKTDemandElas]
+    * See EEMS2017 study of travel demand for different VOTT reports 30-50% increase in energy, mostly from demand, depending on VOTT
+        * [ToDo: see what this implies for VKTDemandElas]
     * Travel patterns - details omitted
         * Impact: Trip chaining patterns
         * Impact: detailed drive cycle changes (power use over different segments of trip, from detailed traffic interactions and speed changes)
@@ -116,11 +99,13 @@ echoMaximal = FALSE # set TRUE only if you want echo just about everything
     - Important to differentiate shared vehicles (aTaxi or *ride-hailing*) and shared rides (*ride-pooling*)
     - Model through occupancy, incremental VKT from re-positioning, and implications to travelers' cost
 * To what extent can CAVs enable fuel switching or electrification?
-* How/when will CAVs be adopted? (not addressed)
+* How/when will CAVs be adopted? (not addressed endogenously)
 * What are the special challenges of the transitional period, when a mix of manual, partially automated, and automated vehicles will share the roadways? (not addressed)
+* HDV Automation: travel demand and energy intensity implications
+    * Restricted focus on long-distance HD trucking
 
 #### Contributions of this paper
-This paper describes a new aggregated framework, building on established travel demand literature, that account for key features of vehicle automation, and estimates demand and energy use implications. Unlike prior known aggregate work, which relied largely on fixed-coefficient scenario analysis or accounting, it integrates technological and economic factors, including fuel, vehicle and other travel costs, and incorporates energy and travel behavior responses to economic incentives. This work abstracts from much detail offered by micro and mesosimulation models, which estimate travel and energy implications of specific AV technologies using agent/micro/mesosimulation of travel and traffic in real-world spatial and road network models (MATSIM, BEAM, POLARIS, others). The aggregate approach here complements that evolving work and seeks to incorporate some of the insights from that detailed spatial travel modeling. Our framework also is novel in the integration of a utility-based behavioral framework with technological detail and private and public costs, emphasizing the role of financial incentives in the form of costs, fees or taxation/subsidy of transport energy or road use. It extends the private utility maximization framework for travel behavior of Small and Parry 2005, Small and Verhauf 2007, and Leiby and Rubin 2017, combining it with the vehicle efficiency and automated vehicle technological details of Wadud et al 2016. It seeks to address the important issue of how to promote the mobility and energy benefits of CAV technologies while deterring potential adverse outcomes (congestion, emissions) that can have large unaccounted social costs.
+This paper describes a new aggregated framework, building on established travel demand literature, that accounts for key features of vehicle automation, and estimates demand and energy use implications. Unlike prior known aggregate work, which relied largely on fixed-coefficient scenario analysis or accounting, it integrates technological and economic factors, including fuel, vehicle and other travel costs, and incorporates energy and travel behavior responses to economic incentives. This work abstracts from much detail offered by micro and meso-simulation models, which estimate travel and energy implications of specific AV technologies using agent/micro/mesosimulation of travel and traffic in real-world spatial and road network models (MATSIM, BEAM, POLARIS, others). The aggregate approach here complements that evolving work and seeks to incorporate some of the insights from that detailed spatial travel modeling. Our framework also is novel in the integration of a utility-based behavioral framework with technological detail and private and public costs, emphasizing the role of financial incentives in the form of costs, fees or taxation/subsidy of transport energy or road use. It extends the private utility maximization framework for travel behavior of Small and Parry 2005, Small and Verhauf 2007, and Leiby and Rubin 2017, combining it with the vehicle efficiency and automated vehicle technological details of Wadud et al 2016. It seeks to address the important issue of how to promote the mobility and energy benefits of CAV technologies while deterring potential adverse outcomes (congestion, emissions) that can have large unaccounted social costs.
 
 #### Limitations
 - An incomplete consideration of role of AV safety and its endogenous effect on travel costs and travel behavior.
