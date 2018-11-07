@@ -1,15 +1,8 @@
 ---
 title: "CAVESIM Summary and Status"
 author: "Paul Leiby"
-date: "August 23, 2018"
+date: "November 05, 2018"
 output:
-  word_document:
-    df_print: kable
-    fig_caption: yes
-    fig_height: 5
-    fig_width: 7
-    reference_docx: mystyles.docx
-    toc: yes
   beamer_presentation:
     colortheme: dolphin
     fonttheme: structurebold
@@ -22,31 +15,35 @@ output:
     toc: yes
   powerpoint_presentation:
     reference_doc: ORNL-template.pptx
+  word_document:
+    df_print: kable
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    reference_docx: mystyles.docx
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
-# output:
-#   beamer_presentation:
-#     theme: "AnnArbor"
-#     colortheme: "dolphin"
-#     fonttheme: "structurebold"
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## CAVESIM Status by End FY18
+## CAVESIM Status at End FY18
 
 - Q3: Preliminary design of HDV & shared mobility model components (ORNL)
 - Q4: Model implementation and runs including multiyear dynamics and new components for LDVs (ORNL)
+	- include TNC (ride sharing) to distinguish PKT from VKT
 	- link the model from a static annual to simple dynamic
 		- Seek penetration scenario from MA3T or ADOPT/Workflow Taskforce
+- FY19 Q1-Q2
 	- include available cost information for alternative technologies
-	- include TNC (ride sharing) to distinguish PKT from VKT
 	- (phase 1) benchmark to inputs and results from larger simulations
 		- Following the "Workflow" development to understand and ID major features 
-	- FY18 Product will be a paper (draft)
+	- FY18 Product paper (in draft)
     - Feeds Quad Chart item "Annual: Reports on national aggregate energy and travel impacts depending on incentives and economic drivers""
 
-## Base inputs from "Scenario Generation"    -    Technology Info
+## Base inputs from "Scenario Generation" - Technology Info
+- [ToDo: reconcile with SMART Workflow Scenario Parameters]
 - Technology set (vehicle types) and mix
 - Automation Tech Cost information
 - Impacts on energy use
@@ -55,14 +52,14 @@ knitr::opts_chunk$set(echo = FALSE)
 	- (from POLARIS study initial results)
 	- Impacts on energy use
 	- Impacts on congestion (ave speed in congested areas)
-- TNC tech and impact assumptions
-	- (from BEAM-centered work?)
+- TNC/MaaS tech and impact assumptions
+	- (adopt insights from BEAM-centered work?)
 	- Impacts on trip numbers, and length
 		- deadheading/repositioning inflation factor on VKT
 		- ride pooling reduction factor on VKT per PKT
 		- ride-pooling inflation factor on PKT (actual including detours vs. desired trip duration)
 			
-## Base inputs from "Scenario Generation" -    Demand Response Info
+## Base inputs from Other SMART Workflow Model Results - Demand Response Info
 - From WholeTraveler
 	- VoTT distributions
 		- By travel type: region, roadtype, conditions (congested)
@@ -76,7 +73,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 - Revise/update all key parameters from draft values to values consistent with SMART Workflow data and scenarios
 - Update additional cost and economic conditions (response elasticities) based on Lit review (share insights and conclusions re parameters with others)
-- Bullet 3
+- XXX Bullet 3
 
 
 
@@ -91,26 +88,26 @@ Efficiency gains for key technology/mechanisms(7), by powertrain | % reduction i
 
 ## CAVESIM Table Main Inputs (2)
 CAVESIM Main Inputs	|Units
--------------------------------------------|---------------------
+----------------------------------------------|---------------------
 Effect of (regional) congestion on ave speed	| % reduction in speed ave speed, (km/hr) as fn of VKT
 Effect of (regional) congestion on energy use	| % increase in energy intensity, (mJ/v-km) as fn of VKT
-VoTT by sector, Control-type, and trip purpose	| $/pass-hr
-Incentives & Costs: vehicle						| $/veh or $/veh-km
-Incentives & Costs: fuel						| $/mJ or $/gge
-Incentives & Costs: road use (by region)		| $/veh-km
-Incentives & Costs: ride pooling				| $/pass-km
+VoTT by sector, Control-type, and trip purpose| $/pass-hr
+Incentives & Costs: vehicle						        | $/veh or $/veh-km
+Incentives & Costs: fuel						          | $/mJ or $/gge
+Incentives & Costs: road use (by region)		  | $/veh-km
+Incentives & Costs: ride pooling				      | $/pass-km
 
 ## CAVESIM Table Main Inputs (3)
 CAVESIM Main Inputs	|Units
--------------------------------------------|---------------------
-Costs of TNC operation by control-type			| $/veh-km
-User-cost (disutility) of ride-pooling			| $/pass-km pooled with stranger
-Ref Extent of ride-pooling by yr, region	| % of PKT
-Deadhead km from car hailing			| ave % incr. VKT/trip
-Incremental veh km (reduction) from ride pooling	| ave % decr. VKT/trip
-Incremental passenger km travel from ride pooling	| ave % incr. PKTtrip
-Cost responses:                         |  
-Elasticities of travel w.r.t. full cost	| unitless
+----------------------------------------------|---------------------
+Costs of TNC operation by control-type		  	| $/veh-km
+User-cost (disutility) of ride-pooling			  | $/pass-km pooled with stranger
+Ref Extent of ride-pooling by yr, region	    | % of PKT
+Deadhead km from car hailing			            | ave % incr. VKT/trip
+Incr. veh km (reduction) from ride pooling	  | ave % decr. VKT/trip
+Incr. passenger km travel from ride pooling	| ave % incr. PKTtrip
+Cost responses:                               |  
+Elasticities of travel w.r.t. full cost	      | unitless
 Elasticities of veh fuel economy to fuel cost	| unitless
 Traveler Utility functions (trading off trip attributes, and travel vs other activities)	| [functional form, or marginal utilities for various attributes]
 
