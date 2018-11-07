@@ -1,0 +1,41 @@
+---
+title: "CAVSIM Overview and Thrusts for FY19"
+author: "Paul Leiby"
+date: "11/8/2018"
+output: powerpoint_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+CAVESIM overview presentation for E. Boyd DOE
+
+## CAVESIM OVerview
+- inputs, 
+- outputs, results at National Level
+- assumptions
+- type of questions the model can answer and 
+- how it answers them. 
+
+## Incorporating outputs or numbers from other SMART projects
+
+- "walk through an example"
+
+## Scope; LD CAVs 
+- Up until this point CAVESIM has been looking at the impact of LD CAVs
+- Re freight:
+  - Understood that across SMART, not possible to consider freight for all projects in FY19.]
+
+## Alternative Funding
+
+- Quad chart originally called for $200K
+- Currently listed in combination with other ORNL task for $320k
+  - 1/2 is $160k
+- what could be accomplished with a 
+  - $200k funding level
+  - $250k funding level
+    - "If this funding level is restrictive, I’d rather a scenario where freight is put on hold and effort is focused on LD rather than doing a rough job on freight and LD."
+ 
+ 
+
