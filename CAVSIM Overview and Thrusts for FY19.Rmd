@@ -1,6 +1,6 @@
 ---
 title: "CAVSIM Overview and Thrusts for FY19"
-author: "Paul Leiby"
+author: "Paul N. Leiby"
 date: "11/8/2018"
 output: powerpoint_presentation
 ---
@@ -18,9 +18,15 @@ CAVESIM overview presentation for E. Boyd DOE
 - type of questions the model can answer and 
 - how it answers them. 
 
-## Incorporating outputs or numbers from other SMART projects
+## Incorporating outputs or numbers from other SMART projects[^1]
 
 - "walk through an example"
+- Auld/Polaris shared/autonomous vehicle analysis (FY19 task building on work at/with UT Austin
+    - HH/Private AV sharing model
+    - Quantify impacts of SAV fleet system optimization strategies
+        - using ATIS, optimal routing, efficient fleet operations
+
+[^1]: See "Notes on EEMS - SMART Mobility CAVs 2019 Pre Kickoff Meeting DOE20180918.md"
 
 ## Scope; LD CAVs 
 - Up until this point CAVESIM has been looking at the impact of LD CAVs
@@ -29,13 +35,20 @@ CAVESIM overview presentation for E. Boyd DOE
 
 ## Alternative Funding
 
-- Quad chart originally called for $200K
-- Currently listed in combination with other ORNL task for $320k
-  - 1/2 is $160k
+- Quad chart originally called for $200K - 220K
+- Currently listed in combination with other ORNL task for $330k
+  - 1/2 (split w/ MA3T task) is $165k for FY19
 - what could be accomplished with a 
   - $200k funding level
   - $250k funding level
     - "If this funding level is restrictive, I’d rather a scenario where freight is put on hold and effort is focused on LD rather than doing a rough job on freight and LD."
- 
- 
 
+## Current Plans for FY19
+- See [FY2019 CAVs_2B QuadChart](FY2019_SMART_CAVs_2B QuadChart_draft_20180823_zl_CAVESIMhighlighted.pptx)
+  - "Generate ... national Impacts and MEP"
+      - LDV, shared mobility (ride hailing/sharing) _initial_ HD/freight components
+  - Benchmark to results and scenarios performed by other SMART program projects/models, in keeping with overall SMART Workflow"
+  - ...
+  - [help] "Update Bounding study"
+
+## SMART Mobility Workflow Scenario Values
