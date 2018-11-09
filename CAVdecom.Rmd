@@ -447,7 +447,13 @@ DemParam         : DemParamNote
 ElasVKT          : Elas of travel w.r.t generalized cost,
 InsurCostRed     : Reduction in insurance premiums (fraction) (superceded by DemScenCostChange)
 ExclVehCapCost   : Exclude Veh Capital Cost (wear & ownership costs) (Choose 0 or 1),
-C_deltaCAV       : Incr vehicle capital cost (fraction) from automation (wear and ownership cost/mi),
+C_deltaMaint     : Fractional Incr cost from automation (Maintenance, cost/mi),
+C_deltaInsur     : Fractional Incr cost from automation (Insurance, cost/mi),
+C_deltaCapCost   : Fractional Incr cost from automation (vehicle Capital Cost, wear and ownership cost/mi),
+C_deltaTolls     : Fractional Incr cost from automation (Tolls, cost/mi),
+C_deltaPrkng     : Fractional Incr cost from automation (Parking, cost/mi),
+C_deltaRegis     : Fractional Incr cost from automation (Registration, cost/mi),
+C_deltaVoTT      : Fractional Incr cost from automation (VoTT cost/hr),
 ShrECostInt      : Share of energy effic cost gains internalized (visible) to driver (fraction, 0 to 1),
 I_deltaCAV       : Fuel energy cost reduction (from effic, fraction, computed from intensity mechanisms)
 "),header=TRUE,sep=":",strip.white=TRUE)
@@ -457,13 +463,23 @@ DemRespParams<-read.delim(textConnection("
 LDV.ElasVKT           -1      -1      -1
 LDV.InsurCostRed      0.6     0.7     0.8
 LDV.ExclVehCapCost    0       0       0
-LDV.C_deltaCAV        0       0       0
+LDV.C_deltaMaint      0       0       0
+LDV.C_deltaInsur      0       0       0
+LDV.C_deltaCapCost    0       0       0
+LDV.C_deltaTolls      0       0       0
+LDV.C_deltaPrkng      0       0       0
+LDV.C_deltaRegis      0       0       0
 LDV.ShrECostInt       1       1       1
 LDV.I_deltaCAV        -.7186  -.7186  -.7186
 HDV.ElasVKT           -0.97   -0.97   -2
 HDV.InsurCostRed      0.4     0.6     0.8
 HDV.ExclVehCapCost    0       0       0
-HDV.C_deltaCAV        0       0       0  
+HDV.C_deltaMaint      0       0       0  
+HDV.C_deltaInsur      0       0       0
+HDV.C_deltaCapCost    0       0       0
+HDV.C_deltaTolls      0       0       0
+HDV.C_deltaPrkng      0       0       0
+HDV.C_deltaRegis      0       0       0
 HDV.ShrECostInt       1       1       1
 HDV.I_deltaCAV        -.2815  -.2815  -.2815
 "),header=TRUE,sep="",strip.white=TRUE) #;
@@ -856,15 +872,16 @@ at number `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name
 # Note that this is perceived/internalized cost (may not include all energy gains)
 # **ToDo**: generalize to include potential shifts on _all_ cost components
 VTCShrAlt = VTCShrAlt %>% mutate(
-  Fuel = Fuel*(1 + I_deltaCAV*ShrECostInt), # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
+  Fuel         = Fuel        * (1.0 + I_deltaCAV*ShrECostInt), 
+  # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
   # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
-  Maintenance  = Maintenance * 1.0,
-  AccAndIns    = AccAndIns * (1 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
-  VehCapCost   = VehCapCost * (1.0 + C_deltaCAV),  # (1+CapitalCostChange)
-  TollsFees    = TollsFees * 1.0,
-  Parking      = Parking   * 1.0,
-  Time         = Time      * (1 + C_deltaVoTT), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
-  Registration = Registration * 1.0
+  Maintenance  = Maintenance * (1.0 + C_deltaMaint),
+  AccAndIns    = AccAndIns   * (1.0 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
+  VehCapCost   = VehCapCost  * (1.0 + C_deltaCapCost  ),  # (1+CapitalCostChange)
+  TollsFees    = TollsFees   * (1.0 + C_deltaTolls),
+  Parking      = Parking     * (1.0 + C_deltaPrkng),
+  Time         = Time        * (1.0 + C_deltaVoTT ), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
+  Registration = Registration* (1.0 + C_deltaRegis)
 # Total = CostMult weighted by base CostFraction
 )
 VTCShrAlt$Total = 0
