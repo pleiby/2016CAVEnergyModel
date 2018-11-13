@@ -1017,25 +1017,27 @@ plotStackedBarCostCompons(VTCostAlt, "DS4")
 
 Compute fractional increases in VMT from the changes in total generalized travel costs that result from automation.
 
-For Demand Scenario *d*, Vehicle Type *v*, and Elasticity Case *c* (Low and High elasticity)
+For Vehicle Type *v*, Time *t*, Demand Scenario *d*, Technology Scenario *j*, and Elasticity Case *c* (Low and High elasticity)
 [??? is elasticity case to be governed by demand scenario *d*, or separate index *c*?]
 
 Define
 
 - $c_{rel,vtdj}$ = Relative Total Cost for vehicle travel [unitless, vehicle travel cost $/veh-km]
-- $m_{vtdj}(c_{rel,vtdj}$ = fractional increase in VKT [unitless, VKT is in km/vehicle-yr]
+- $m_{vtdj}(c_{rel,vtdj})$ = fractional increase in VKT [unitless, VKT is in km/vehicle-yr]
 
 $$c_{rel,vtdj} = RelTotalCost_{vtdj} \equiv \frac {C_{tot,vtdj}} {C_{tot,vt}^B}$$
 
 
-$$fractionalVKTIncr_{dvc} = (RelTotalCost_{vtdj})^{ElasVKT_{cv}}-1$$
+$$m_{vtdj}(c_{rel,vtdj}) ~=~fractionalVKTIncr_{dvc} ~=~ (RelTotalCost_{vtdj})^{ElasVKT_{cv}}-1$$
 
-Note: The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. Does this include mode switching, and longer-run locational choices, etc. as well the costs considered here (travel-time, vehicle capital and operation costs, including fuel, insuarance, maintenance, etc.)?
-Sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
+The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. This elasticity reflects the long-run response of road travel to travel cost changes, but is not meant to include the demand response of new/underserved uswer groups, or the VMT effects of ride hailing/pooling. Based on how they were generated, the parameter values selected may or may not include mode substitution/switching effects, and longer-run locational choices. The generalize vehicle travel costs considered here and in the cost-measure associated with this elasticity include vehicle capital and operation costs, including fuel, insurance, maintenance, fees, and travel-time costs.
+
+Current sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
 
 
-Note: Additional adjustments to the fractional change in VKT for LDV travel, beyond those from the elastic demand response to changing full generalized cost, follow from:
+In the CAVSIM framework, additional adjustments to the fractional change in VKT for LDV travel, beyond those from the elastic demand response to changing full generalized travel cost, follow from:
 
+XXX
 - multiplier factors on VMT to include larger travel by underserved population (elderly, youth, physically challenged)
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$39:$K$44
 - multiplier factors on VMT to account for VKT increase or decline in response to ride-hailing/ride-pooling, for the same level of PKT.
