@@ -1040,7 +1040,6 @@ Current sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and
 
 
 In the CAVSIM framework, additional adjustments to the fractional change in VKT for LDV travel, beyond those from the elastic demand response to changing full generalized travel cost, follow from:
-XXX
 
 - multiplier factors on VMT to include larger travel by underserved population (elderly, youth, physically challenged)
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$39:$K$44
@@ -1061,9 +1060,11 @@ RelTotCost = RelTotCost %>% mutate(
 # Pct increase HDV vehicles VMTdemand: low elasticity
 
 # New Calculated Values: % increase LD personal vehicles in VMTdemand from cost-elastic response (averaging LDV Sedans and LtTrucks)
-VMTIncrease = RelTotCost %>% filter(Case=="Low") %>%
+VMTIncrease = RelTotCost %>% 
+  #filter(Case=="Low") %>%
   select(-VehType) %>%
-  group_by(VC, DemScen) %>%
+  rename(ElasCase = Case) %>%
+  group_by(VC, DemScen, ElasCase) %>%
   summarise(fracVMTIncr = mean(fracVMTIncr)) # this is an unweighted mean for Sedans and LtTrucks
 ```
 
@@ -1076,10 +1077,10 @@ VMTIncrease = RelTotCost %>% filter(Case=="Low") %>%
 #   These are values _before_ multiplicative shifts to demand from underserved population, and ride hailing/pooling. 
 VMTIncreaseTest <- read.delim(textConnection("
 VC  :varName    :ElasCase           :DS1             :DS2            :DS3            :DS4
-LDV :VMTdemand  :lowElas            :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
-LDV :VMTdemand  :highElas           :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
-HDV :VMTdemand  :lowElas            :0.133159862		 :0.156008958		 :0.428904653		 :0.682936788
-HDV :VMTdemand  :highElas           :0.294018792		 :0.348394295		 :1.087345456		 :1.924954964
+LDV :VMTdemand  :Low                :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
+LDV :VMTdemand  :High               :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
+HDV :VMTdemand  :Low                :0.133159862		 :0.156008958		 :0.428904653		 :0.682936788
+HDV :VMTdemand  :High               :0.294018792		 :0.348394295		 :1.087345456		 :1.924954964
 "),header=TRUE,sep=":",strip.white=TRUE)
 # Test data From "increase in vehicle travel" at
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$C$36:$N$37
@@ -1091,20 +1092,22 @@ HDV :VMTdemand  :highElas           :0.294018792		 :0.348394295		 :1.087345456		
 # Check- Compare calculated VMT Increase (from cost-elastic response) with Test Values
 # VMTIncreaseTest 
 x = VMTIncreaseTest %>% select(-varName) %>%
-  gather(key = DemScen, value = fracVMTIncr, DS1:DS4) %>%
+  gather(key = DemScen, value = fracVMTIncrTest, DS1:DS4) %>%
+  mutate_at(.vars = c("VC", "ElasCase", "DemScen"), .funs = as.character) %>%
 #   mutate(fracVMTIncr = as.numeric(fracVMTIncr)) %>%
-  spread(key = ElasCase, value = fracVMTIncr) %>%
-  left_join(VMTIncrease, by= c("VC", "DemScen"))
+  # spread(key = ElasCase, value = fracVMTIncr) %>%
+  left_join(VMTIncrease, by= c("VC", "DemScen", "ElasCase"))
 
 # Check that input tables (VTVCostBase and TravelTimeCostBasePars) are consistent with regard to time cost per mile,
 #   for 2 LDV categories (Lt Truck and Car) and one HDV categopry
-ChkErrorDiff = sum(abs(x$lowElas - x$fracVMTIncr))
+ChkErrorDiff = sum(abs(x$fracVMTIncrTest - x$fracVMTIncr))
 ```
+
 ```{r reportTestVMTIncreaseFromCostElas, echo=echoWorking, include=echoTests}
 cat("Check: Calculated VMTIncrease from cost-elastic response matches Test values to within",
     paste(ChkErrorDiff), "(fractional change).")
 ```
-
+XXX
 ### Effects on VMT Demand from Underserved Population, and Ride Hailing & Pooling
 The fractional change in VMT demand due to the cost-elastic response is augmented by adjustments reflecting:
 
