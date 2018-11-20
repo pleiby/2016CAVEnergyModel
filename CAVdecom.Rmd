@@ -1120,7 +1120,7 @@ The fractional change in VMT demand due to the cost-elastic response is augmente
 
 # UnderServed Optional (USOption) multipliers
 UnderservedVMTmult <- read.delim(textConnection("
-USOption  :multiplier    :description
+USOption  :USDmult       :description
 0         :1.0           :no explicit effect of CAVs on underserved/elderly driving
 1         :1.023375114   :driving has a natural decay after 60
 2         :1.051206047   :driving remains same as 60, after 60
@@ -1130,60 +1130,98 @@ USOption  :multiplier    :description
 # Note: Test results from ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$39:$K$44
 
 # multiplier factors on VMT to account for VMT decline in response to ridepooling
-rideHailingPoolingMult = 0.8 # multiplier is for total LDV VMT. This is the high-end estimate. (Mult for HDV=1.0)
+baseRideHailingPoolingAdj = -0.2 # fractional change for total LDV VMT. This is the high-end estimate.
+# Only applies for CombScen and VC with flag for non-zero RidePoolAdj (Mult for HDV=1.0).
 # Note: Test results from ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$46:$K$48
 ```
+Specify Combined Scenarios. A combined scenario $CS_i$ associates each Demand Scenario $DS_i$ with and Underserved Multiplier Option `USOption` and possible further VMT adjustment for ride hailing/pooling (`baseRideHailingPoolingAdj`). Note that all of these demand adjustments, for cost-response $m_{vtdj}(c_{rel,vtdj})$, underserved-demand multiplier \gamma_{USD}, and ride hailing/pooling demand shift $\rho_{HailPool}$, are applied multiplicatively to the base demand level:
+
+$$c_{rel,vtdj} ~=~ RelTotalCost_{vtdj}$$
+
+$$\begin {align}
+m_{vtdj}(c_{rel,vtdj}) &~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1\\
+M_{jsdt} &~=~ \left ( 1 + m_{vtdj}(c_{rel,vtdj}) \right ) \gamma_{USD} (1+\rho_{HailPool}) 
+\end {align}
+$$
+
+And the proportional change in VMT for the combined scenario is
+$$\Delta M_{jsdt} = 1 - M_{jsdt}$$
 
 ```{r VMTAdjustments, echo=echoWorking}
 # extends logic in "calcul Dem_LDV" and "calcul Dem_HDV"
-# XXX
-# Danger! Following assumes a particular ordering of rows
-VMTIncrease$USOption = c(0, 0, 0, 0, 0, 1, 3, 4)  # UnderservedOption for augmented DemScens
-VMTIncrease = VMTIncrease %>%
-    left_join(select(UnderservedVMTmult, -description), by=c("USOption"))     # combines base cost shares and Demand Reponse Parameters for their adjustment
-VMTIncrease = VMTIncrease %>% mutate(fracVMTIncr = (1+fracVMTIncr)*multiplier - 1)
 
-#  bind_rows(select(UnderservedVMTmult, description), )
+# This table defines Combined Scenarios ComScen in terms of a Demand Scenario with
+#  Underserved Demand Multiplier Option and a possible Ride Hailing/Pooling Adjustment of VMT
+
+DemScenAdjustments <- read.delim(textConnection("
+VC      :CombScen:DemScen :USOption:RidePoolAdj : Comments
+LDV     :CS1     :DS1     :0       :0           : Cost-base response (with ElasVKT) only
+LDV     :CS2     :DS2     :1       :0           : Cost-base response (with ElasVKT) with Underserved mult effect option 1
+LDV     :CS3     :DS3     :3       :0           : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :CS4     :DS4     :4       :0           : Cost-base response (with ElasVKT) with Underserved mult effect option 4
+LDV     :CS5     :DS4     :4       :0           : scenario 4 with higher elasticity
+LDV     :CS6     :DS4     :4       :1           : scenario 5 with shift to carsharing (ride hailing/pooling)
+LDV     :CS7     :DS3     :3       :1           : scenario 3 with shift to carsharing (ride hailing/pooling)
+HDV     :CS1     :DS1     :0       :0           :
+HDV     :CS2     :DS2     :0       :0           :
+HDV     :CS3     :DS3     :0       :0           :
+HDV     :CS4     :DS4     :0       :0           :
+HDV     :CS5     :DS4     :0       :0           :
+HDV     :CS6     :DS4     :0       :0           :
+HDV     :CS7     :DS3     :0       :0           :
+"),header=TRUE,sep=":",strip.white=TRUE) #
+
+DemScenAdjustments = DemScenAdjustments %>% 
+  mutate_at(.vars = c("VC", "CombScen", "DemScen"), .funs = as.character) %>%
+  # Use ride Hailing/Pooling multiplicative adjustment factor for all Combined Scenarios with RidePoolAdj = 1
+  mutate(RidePoolAdj = RidePoolAdj * baseRideHailingPoolingAdj)
+
+DemScenAdjustments  = DemScenAdjustments  %>%
+    left_join(select(UnderservedVMTmult, -description), by=c("USOption"))     # combines base cost shares and Demand Reponse Parameters for their adjustment
+
+VMTIncrease = VMTIncrease  %>%
+    left_join(select(DemScenAdjustments, -Comments), by=c("VC","DemScen"))     # combines base cost shares and Demand
+VMTIncrease = VMTIncrease %>% mutate(fracVMTIncr = (1+fracVMTIncr) * USDmult * (1+RidePoolAdj) - 1)
 ```
-XXX
+
 ```{r checkVMTAdjustments, echo=echoWorking}
 # Internal Test of values calculated here vs prior calcs.
 
 # OUTPUT TO KAYA CALCULATION:
-# Fractional Increase in VMT for HDVs, for Demand Scenarios
+# Fractional Increase in VMT for HDVs, for Combined Scenarios (Tech Scenario, Demand Scenario, and Demand Adjustments)
 FracVMTIncreaseExample <- read.delim(textConnection("
-DemScen  :VC   :y2023       :y2050       :Notes
-DS1      :HDV  :0.13315986  :0.13315986  :Cost-base response (with ElasVKT) only
-DS2      :HDV  :0.15600896  :0.15600896  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
-DS3      :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
-DS4      :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
-DS5      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
-DS6      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
-DS7      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
-DS1      :LDV  :0.15900210  :0.15900210  :Cost-base response (with ElasVKT) only
-DS2      :LDV  :0.21410345  :0.21410345  :Cost-base response (with ElasVKT) only
-DS3      :LDV  :0.64978123  :0.64978123  :Cost-base response (with ElasVKT) only
-DS4      :LDV  :1.08895536  :1.08895536  :Cost-base response (with ElasVKT) only
-DS5      :LDV  :1.08895536  :1.08895536  :scenario 4 with higher elasticity
-DS6      :LDV  :0.67116428  :0.67116428  :scenario 5 with shift to ridehailing_ridepooling
-DS7      :LDV  :0.31982499  :0.31982499  :scenario 3 with shift to ridehailing_ridepooling
+CombScen :VC   :y2023       :y2050       :Notes
+CS1      :HDV  :0.13315986  :0.13315986  :Cost-base response (with ElasVKT) only
+CS2      :HDV  :0.15600896  :0.15600896  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
+CS3      :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
+CS4      :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
+CS5      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
+CS6      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
+CS7      :HDV  :0.42890465	:0.42890465  :HDV Same as DemScen 3
+CS1      :LDV  :0.15900210  :0.15900210  :Cost-base response (with ElasVKT) only
+CS2      :LDV  :0.21410345  :0.21410345  :Cost-base response (with ElasVKT) only
+CS3      :LDV  :0.64978123  :0.64978123  :Cost-base response (with ElasVKT) only
+CS4      :LDV  :1.08895536  :1.08895536  :Cost-base response (with ElasVKT) only
+CS5      :LDV  :1.08895536  :1.08895536  :scenario 4 with higher LDV elasticity
+CS6      :LDV  :0.67116428  :0.67116428  :scenario 5 with shift to ridehailing_ridepooling
+CS7      :LDV  :0.31982499  :0.31982499  :scenario 3 with shift to ridehailing_ridepooling
 "),header=TRUE,sep=":",strip.white=TRUE) #
 # From 'calcul Dem_LDV' and 'calcul Dem_HDV' sheets
 # Source of test resultsL ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$A$54:$E$63
 FracVMTIncreaseExample = FracVMTIncreaseExample %>% 
-  mutate_at(.vars = c("DemScen", "VC"), .funs = as.character)
+  mutate_at(.vars = c("CombScen", "VC"), .funs = as.character)
   
 VMTIncreaseCurrCase = VMTIncrease %>% filter(ElasCase=="Low")
 
 # Check some calcs
-demScenWanted = c("DS1","DS2","DS3")
-FracVMTIncreaseExample = FracVMTIncreaseExample %>% select(DemScen, VC, y2050)  %>% 
-  filter(DemScen %in% demScenWanted) %>%
-  left_join(VMTIncreaseCurrCase, by=c("VC", "DemScen"))
+combScenWanted = c("CS1","CS2","CS3","CS4","CS5","CS6","CS7")
+FracVMTIncreaseExample = FracVMTIncreaseExample %>% select(CombScen, VC, y2050)  %>% 
+  filter(CombScen %in% combScenWanted) %>%
+  left_join(VMTIncreaseCurrCase, by=c("VC", "CombScen"))
 ```
 ```{r reportCheckVMTAdjustments, echo=echoWorking, include=echoTests}
-cat("Check: Test output to Kaya (VMTIncrease table) matches example for DemScen in",
-    demScenWanted, "to within", 
+cat("Check: Test output to Kaya (VMTIncrease table) matches example for CombScen in",
+    combScenWanted, "to within", 
     sum(abs(FracVMTIncreaseExample$y2050 - FracVMTIncreaseExample$fracVMTIncr)) )
 ```
 
