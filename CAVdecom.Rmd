@@ -1228,13 +1228,83 @@ cat("Check: Test output to Kaya (VMTIncrease table) matches example for CombScen
 5. Policy and Scenario Calculations
 =======================
 
-VMT Demand Response: pick up chosen Demand and Technology Scenario, and value for chosen scenario, for years 2035 & 2050
+Seeking to generate bar graphs of fractional changes in energy intensity, travel demand, energy use (each by LDV/HDV), and Total Energy Use (both sectors).
+(As in Policy + Scenario sheet)
 
-LDV Demand impact (depends on scenario choice in B3)
-HDV Demand impact (depends on scenario choice in B3)
-Year                                    2035    2050
-LDV penetration: automated/total stock  0.40    1.00
-HDV penetration: automated/total stock  0.40    1.00
+XXX
+
+Create dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios
+```{r}
+
+```
+
+Calculate fractional change in Energy Use by sector.
+```{r}
+
+```
+
+
+Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
+```{r}
+
+```
+
+VMT Demand Response: pick up chosen Demand and Technology Scenario, and values for chosen scenario, for years 2035 & 2050
+
+Select Combined Scenario
+
+```{r singleCombScenarioSelect, echo=echoWorking}
+CurrTechScen = 4
+CurrYear     = 2050
+
+CurrDemScen = "DS1"
+CurrCombScen = "CS6"
+```
+
+
+```{r exogCAVPenetrationShare, echo=echoWorking}
+# fully automated vehicles/total stock
+ExogCAVPenetrationShare <- read.delim(textConnection("
+Year  :LDV    :HDV
+2020  :0.00   :0.00   
+2035  :0.40	  :0.40
+2050  :1.00   :1.00
+"),header=TRUE,sep=":",strip.white=TRUE) #
+# Temporarily assume same HDV penetration as LDV.
+# linearly increases to 2035 and 2050 value input by user
+
+rownames(ExogCAVPenetrationShare) = ExogCAVPenetrationShare$Year
+
+# compute the PolicyScen projection table
+PolicyScen = tibble(Year = 2007:2050)
+
+# Exogenous CAV penetration (assumed Highly-automated)
+#  based on interpolation of specified points in 
+PolicyScen$LDV_Penetration = 0
+PolicyScen$LDV_Penetration[(2020:2035)-2007+1] = 
+  seq(ExogCAVPenetrationShare[['2020','LDV']], ExogCAVPenetrationShare[['2035','LDV']], length.out = 2035-2020+1)
+PolicyScen$LDV_Penetration[(2035:2050)-2007+1] = 
+  seq(ExogCAVPenetrationShare[['2035','LDV']], ExogCAVPenetrationShare[['2050','LDV']], length.out = 2050-2035+1)
+  
+PolicyScen$HDV_Penetration = 0
+PolicyScen$HDV_Penetration[(2020:2035)-2007+1] = 
+  seq(ExogCAVPenetrationShare[['2020','LDV']], ExogCAVPenetrationShare[['2035','LDV']], length.out = 2035-2020+1)
+PolicyScen$HDV_Penetration[(2035:2050)-2007+1] = 
+  seq(ExogCAVPenetrationShare[['2035','LDV']], ExogCAVPenetrationShare[['2050','LDV']], length.out = 2050-2035+1)
+
+```
+
+
+```{r readPolicyScen_Testdata}
+Years = 2007:2050
+PolicyScen_Test_filename = "PolicyAndScenarioData_Test20161014.csv"
+ScenAndPolicyProj_Test = read_csv(paste0("./Data/",PolicyScen_Test_filename), comment = "#")
+```
+
+VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050				
+	Dmnd Scenario	2035	2050		Notes
+LDV Demand impact (depends on scenario choice in B3)	6	0.671	0.671		Dmnd change Per CAV, or at total demand impact at full penetration
+HDV Demand impact (depends on scenario choice in B3)	6	0.683	0.683		Dmnd change Per CAV, or at total demand impact at full penetration
 
 LDV Demand impact (depends on scenario choice in B3) (not year t dependent)
 HDV Demand impact (depends on scenario choice in B3) (not year t dependent)
@@ -1294,7 +1364,7 @@ kable(summaryScenarioResultsTableExample)
 5.2 Bar Chart Representation of Results
 ------------------
 
-XXX
+
 
 ```{r policyAndScenarioCalcs2, echo=echoWorking}
 
