@@ -233,6 +233,7 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(ggplot2)
+library(stringr)
 ```
 
 
@@ -342,8 +343,8 @@ This determines the appropriate intensity multiplier for each mechanism in the t
 # Load the descriptions of the scenarios
 mechScenAssumps = read_csv(paste0("./Data/","CAV_Scenario_Master.csv"), comment = "#")
 # This table contains: scenario number and demand scenario number;
-# resulting multipliers for LDV and HDV in 2 years;
-# scenario name and description; and setting levels (Zero, Low, Mid, High) for each mechanism 
+# scenario name and description; and assumptions re setting levels (Zero, Low, Mid, High) for each mechanism .
+# Also includes Check Values: resulting energy intensity fractional change Multipliers for LDV and HDV in 2 years;
 
 mechScenDescriptors = mechScenAssumps %>% 
   select(Scenario_Number, Demand_Scenario, Scenario_Name, Scenario_Description)
@@ -396,7 +397,9 @@ EnergyIntensityChanges = msa %>%
 # Mechanism Impacts by Mechanism, EffectCase-level, Year (2035, 2050), and vehicle type (LDV, HDV) are in
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170709.xlsx]Energy Intensity Impacts'!$A$1:$Q$26
 EnergyIntensityChanges = arrange(EnergyIntensityChanges, Scenario_Number, VC, Year)
+```
 
+```{r displayNetIntensityChangeByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # Confirm: Following matches table "Net Energy Intensity Change by Scenario"
 #  in workbook "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170809.xlsx]Scenario Master'!$A$1:$F$11"
 # Note: small diff in results for LDV 2035 Scenario 2 only in spreadsheet V20161024.
@@ -416,6 +419,7 @@ This table is the fractional change in vehicle energy use per mile-travelled, as
 
 ```{r testIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # CHECK: This table should match NetEnergyIntensityChangeTable
+#   Extract test/check values from the input mechanism Scenario Assumptions
 NEIC_test = mechScenAssumps %>% 
   select(c(Scenario_Number:Scenario_Name)) %>%
   select(-c(Demand_Scenario,Scenario_Name))
@@ -1077,10 +1081,10 @@ VMTIncrease = RelTotCost %>%
 #   These are values _before_ multiplicative shifts to demand from underserved population, and ride hailing/pooling. 
 VMTIncreaseTest <- read.delim(textConnection("
 VC  :varName    :ElasCase           :DS1             :DS2            :DS3            :DS4
-LDV :VMTdemand  :Low                :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
-LDV :VMTdemand  :High               :0.159002099		 :0.186371875		 :0.538838618		 :0.888586295
-HDV :VMTdemand  :Low                :0.133159862		 :0.156008958		 :0.428904653		 :0.682936788
-HDV :VMTdemand  :High               :0.294018792		 :0.348394295		 :1.087345456		 :1.924954964
+LDV :VMTdemand  :Low                :0.159002099     :0.186371875    :0.538838618    :0.888586295
+LDV :VMTdemand  :High               :0.159002099     :0.186371875    :0.538838618    :0.888586295
+HDV :VMTdemand  :Low                :0.133159862     :0.156008958    :0.428904653    :0.682936788
+HDV :VMTdemand  :High               :0.294018792     :0.348394295    :1.087345456    :1.924954964
 "),header=TRUE,sep=":",strip.white=TRUE)
 # Test data From "increase in vehicle travel" at
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$C$36:$N$37
@@ -1089,7 +1093,7 @@ HDV :VMTdemand  :High               :0.294018792		 :0.348394295		 :1.087345456		
 
 #% increase LD personal vehicles VMTdemand :highElasticity    :-0.55% :1.46%  :26.23% :48.88%
 
-# Check- Compare calculated VMT Increase (from cost-elastic response) with Test Values
+# Check- Compare calculated VMT Increase (from cost-elastic response) with Test/Check Values
 # VMTIncreaseTest 
 x = VMTIncreaseTest %>% select(-varName) %>%
   gather(key = DemScen, value = fracVMTIncrTest, DS1:DS4) %>%
@@ -1197,7 +1201,7 @@ CS3      :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) with
 CS4      :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
 CS5      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
 CS6      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
-CS7      :HDV  :0.42890465	:0.42890465  :HDV Same as DemScen 3
+CS7      :HDV  :0.42890465  :0.42890465  :HDV Same as DemScen 3
 CS1      :LDV  :0.15900210  :0.15900210  :Cost-base response (with ElasVKT) only
 CS2      :LDV  :0.21410345  :0.21410345  :Cost-base response (with ElasVKT) only
 CS3      :LDV  :0.64978123  :0.64978123  :Cost-base response (with ElasVKT) only
@@ -1210,7 +1214,8 @@ CS7      :LDV  :0.31982499  :0.31982499  :scenario 3 with shift to ridehailing_r
 # Source of test resultsL ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$A$54:$E$63
 FracVMTIncreaseExample = FracVMTIncreaseExample %>% 
   mutate_at(.vars = c("CombScen", "VC"), .funs = as.character)
-  
+
+# select comparable cases from our computed results  
 VMTIncreaseCurrCase = VMTIncrease %>% filter(ElasCase=="Low")
 
 # Check some calcs
@@ -1220,7 +1225,7 @@ FracVMTIncreaseExample = FracVMTIncreaseExample %>% select(CombScen, VC, y2050) 
   left_join(VMTIncreaseCurrCase, by=c("VC", "CombScen"))
 ```
 ```{r reportCheckVMTAdjustments, echo=echoWorking, include=echoTests}
-cat("Check: Test output to Kaya (VMTIncrease table) matches example for CombScen in",
+cat("Check: Test output to Kaya (VMTIncrease table) matches examples for CombScen in",
     combScenWanted, "to within", 
     sum(abs(FracVMTIncreaseExample$y2050 - FracVMTIncreaseExample$fracVMTIncr)) )
 ```
@@ -1231,12 +1236,34 @@ cat("Check: Test output to Kaya (VMTIncrease table) matches example for CombScen
 Seeking to generate bar graphs of fractional changes in energy intensity, travel demand, energy use (each by LDV/HDV), and Total Energy Use (both sectors).
 (As in Policy + Scenario sheet)
 
-XXX
+Create a dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios.
 
-Create dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios
+Energy intensity changes (net, accounting for the influence of all identified mechanisms) in `EnergyIntensityChanges` 
+have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j*:
+$$\Delta I_{tkv} = 1 - \mu_{jtv}$$
+Travel demand or VMT fractional changes in `VMTIncrease` have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j*
+$$m_{vtdj}(c_{rel,vtdj}) ~=~fractionalVKTIncr_{dvc} ~=~ (RelTotalCost_{vtdj})^{ElasVKT_{cv}}-1$$
+
 ```{r}
 
+CaseEffects <- EnergyIntensityChanges %>% ungroup %>% 
+  select(Scenario_Number, Year, VC, NIE)
+
+# Note that the following VMT Increase calculation table in "VMTIncrease" is for a range of Demand Scenarios, but a _single_ tech scenario.
+# Thus they do not match the spreadsheet model results, which implicitly loops overall all TechScen values with "TBL" command.
+
+# The VMT results need to be recalulated here for each TechScen and matching DmndScen assumptions
+#   in the full combined scenario.
+
+CaseEffectsB <- VMTIncrease %>% ungroup %>% 
+  select(CombScen, DemScen, VC, ElasCase, fracVMTIncr) %>% 
+  mutate(Scenario_Number = as.integer(str_sub(CombScen,-1,-1)))
+
+CaseEffects <- left_join(CaseEffects, y = CaseEffectsB, by = c("Scenario_Number", "VC"))
+CaseEffects <- CaseEffects %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
+
 ```
+XXX
 
 Calculate fractional change in Energy Use by sector.
 ```{r}
@@ -1267,7 +1294,7 @@ CurrCombScen = "CS6"
 ExogCAVPenetrationShare <- read.delim(textConnection("
 Year  :LDV    :HDV
 2020  :0.00   :0.00   
-2035  :0.40	  :0.40
+2035  :0.40   :0.40
 2050  :1.00   :1.00
 "),header=TRUE,sep=":",strip.white=TRUE) #
 # Temporarily assume same HDV penetration as LDV.
@@ -1301,10 +1328,10 @@ PolicyScen_Test_filename = "PolicyAndScenarioData_Test20161014.csv"
 ScenAndPolicyProj_Test = read_csv(paste0("./Data/",PolicyScen_Test_filename), comment = "#")
 ```
 
-VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050				
-	Dmnd Scenario	2035	2050		Notes
-LDV Demand impact (depends on scenario choice in B3)	6	0.671	0.671		Dmnd change Per CAV, or at total demand impact at full penetration
-HDV Demand impact (depends on scenario choice in B3)	6	0.683	0.683		Dmnd change Per CAV, or at total demand impact at full penetration
+VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050        
+  Dmnd Scenario  2035  2050    Notes
+LDV Demand impact (depends on scenario choice in B3)  6  0.671  0.671    Dmnd change Per CAV, or at total demand impact at full penetration
+HDV Demand impact (depends on scenario choice in B3)  6  0.683  0.683    Dmnd change Per CAV, or at total demand impact at full penetration
 
 LDV Demand impact (depends on scenario choice in B3) (not year t dependent)
 HDV Demand impact (depends on scenario choice in B3) (not year t dependent)
@@ -1346,16 +1373,31 @@ $$TranspEnergyUse_{AVScenario} =
 ```{r specifyScenarioSummary, echo=echoWorking}
 # Scenario Summary 2050 Energy Intensity, VMP and Energy Use Changes at Full Adoption
 summaryScenarioResultsTableExample <- read.delim(textConnection("
-TechScen :LDV.EIntens :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse :HDV.EUse :Tot.EUse :ScenarioName
-2        :-76.93%     :-28.15%     :66.73%      :42.89%      :-61.54%  : 2.67%   :-44.71%  :Have our cake & eat it too
-7        :-18.68%     :-17.50%     :11.91%      :11.00%      : -9.00%  :-8.43%   : -8.85%  :Stuck in the middle at Level 2
-4        :-71.86%     :-28.15%     :67.12%      :68.29%      :-52.97%  :20.92%   :-33.60%  :Strong responses
-3        : 34.20%     :  0.00%     :64.67%      :44.94%      :120.99%  :44.94%   :101.05%  :Dystopian nightmare
-1        :-32.68%     :-19.23%     :14.26%      :11.72%      :-23.08%  :-9.76%   :-19.59%  :Cautiously optimistic
-5        :  9.92%     :-10.00%     : 7.39%      : 7.98%      : 18.05%  :-2.82%   : 12.57   :Driver assist, limited other benefits
+TechScen :LDV.EIntens  :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse     :HDV.EUse     :Tot.EUse     :ScenarioName
+2        :-0.769347291 :-0.2815     :0.667260556 :0.428904653 :-0.615441836 : 0.026667993 :-0.447064047 :Have our cake & eat it too
+7        :-0.1868      :-0.175      :0.119096619 :0.109988946 :-0.089950629 :-0.08425912  :-0.088458169 :Stuck in the middle at Level 2
+4        :-0.718603695 :-0.2815     :0.671164285 :0.682936788 :-0.529740545 : 0.209190082 :-0.33597384  :Strong responses
+3        : 0.342       : 0.0        :0.646717246 :0.449406    : 1.209894545 : 0.449406    : 1.010474797 :Dystopian nightmare
+1        :-0.326813226 :-0.192325   :0.14263231  :0.117220316 :-0.230795041 :-0.097649081 :-0.19588073  :Cautiously optimistic
+5        : 0.0992      :-0.1        :0.073921709 :0.07975024  : 0.180454742 :-0.028224784 : 0.125733578 :Driver assist, limited other benefits
 "),header=TRUE,sep=":",strip.white=TRUE)
 # As in '[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170914r1.xlsx]Policy+Scenario'!$A$97:$I$105
 ```
+    TechScen :LDV.EIntens  :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse     :HDV.EUse     :Tot.EUse     :ScenarioName
+    2        :-0.769347291 :-0.2815     :0.667260556 :0.428904653 :-0.615441836 : 0.026667993 :-0.447064047 :
+    7        :-0.1868      :-0.175      :0.119096619 :0.109988946 :-0.089950629 :-0.08425912  :-0.088458169 :
+    4        :-0.718603695 :-0.2815     :0.671164285 :0.682936788 :-0.529740545 : 0.209190082 :-0.33597384  :
+    3        : 0.342       : 0.0        :0.646717246 :0.449406    : 1.209894545 : 0.449406    : 1.010474797 :
+    1        :-0.326813226 :-0.192325   :0.14263231  :0.117220316 :-0.230795041 :-0.097649081 :-0.19588073  :
+    5        : 0.0992      :-0.1        :0.073921709 :0.07975024  : 0.180454742 :-0.028224784 : 0.125733578 :
+    TechScen :LDV.EIntens :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse :HDV.EUse :Tot.EUse :ScenarioName
+    2        :-76.93%     :-28.15%     :66.73%      :42.89%      :-61.54%  : 2.67%   :-44.71%  :Have our cake & eat it too
+    7        :-18.68%     :-17.50%     :11.91%      :11.00%      : -9.00%  :-8.43%   : -8.85%  :Stuck in the middle at Level 2
+    4        :-71.86%     :-28.15%     :67.12%      :68.29%      :-52.97%  :20.92%   :-33.60%  :Strong responses
+    3        : 34.20%     :  0.00%     :64.67%      :44.94%      :120.99%  :44.94%   :101.05%  :Dystopian nightmare
+    1        :-32.68%     :-19.23%     :14.26%      :11.72%      :-23.08%  :-9.76%   :-19.59%  :Cautiously optimistic
+    5        :  9.92%     :-10.00%     : 7.39%      : 7.98%      : 18.05%  :-2.82%   : 12.57   :Driver assist, limited other benefits
+
 ```{r mirrorExtSummaryScenarioResults, echo=echoWorking}
 kable(summaryScenarioResultsTableExample)
 ```
