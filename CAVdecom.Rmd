@@ -543,6 +543,7 @@ nie = EnergyIntensityChanges  %>% ungroup() %>%
   filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
   select(VC, NIE) # leaves a small df with net intensity changes for each vehicle class
 
+# Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
 # Transcribe current (computed) net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
 
 # This assignment is awkward, due to non-ideal organization of data tables.
@@ -811,7 +812,11 @@ DS1     :0           :-0.60        :Driver assistance, but no self-driving. Litt
 DS2     :-0.05       :-0.60        :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
 DS3     :-0.50       :-0.80        :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
 DS4     :-0.80       :-0.80        :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
+DS5     :-0.80       :-0.80        :Same as DemScen 4
+DS6     :-0.80       :-0.80        :Same as DemScen 4
+DS7     :-0.50       :-0.80        :Same as DemScen 3
 "),header=TRUE,sep=":",strip.white=TRUE)
+# DS0     :0           : 0.0         :Base
 DemScenCostChange$DemScen = as.character(DemScenCostChange$DemScen)
 # Source: Insurance cost reductions from Celent
 # Source: VoTT cost reductions hypothetical
@@ -820,10 +825,14 @@ rownames(DemScenCostChange) = DemScenCostChange$DemScen  # needed only to refere
 
 # DemScenParamSens <- read.delim(textConnection("
 # DemScen :C_deltaVoTT :C_deltaInsur:ElasVKT   :Description
+# DS0     :Zero        :Zero        :
 # DS1     :Zero        :Med         :
 # DS2     :Low         :Med         :
 # DS3     :Med         :High        :
 # DS4     :High        :High        :
+# DS5     :High        :High        :
+# DS6     :High        :High        :
+# DS7     :Med         :High        :
 # "),header=TRUE,sep=":",strip.white=TRUE)
 # "
 #                   Low     Med     High
@@ -866,11 +875,14 @@ VTCShrAlt = VTCShrBase %>% mutate(
   DS2 = VTCost_shr,
   DS3 = VTCost_shr,
   DS4 = VTCost_shr,
+  DS5 = VTCost_shr,
+  DS6 = VTCost_shr,
+  DS7 = VTCost_shr,
   VC = substr(as.character(VehType), 1, 3)
 )
 # Reshape for column variables to be component cost-shares, and separate V_Class from VehType
 #  (latter differentiates between Lt Truck and Car within LDV)
-x = VTCShrAlt %>% select(-VTCost_shr) %>% gather(key = DemScen, value = VCRel, DS1:DS4)
+x = VTCShrAlt %>% select(-VTCost_shr) %>% gather(key = DemScen, value = VCRel, DS1:DS7)
 x = x %>% spread(key=CostCat, value = VCRel)
 
 # Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases and append to
@@ -1100,7 +1112,9 @@ x = VMTIncreaseTest %>% select(-varName) %>%
   mutate_at(.vars = c("VC", "ElasCase", "DemScen"), .funs = as.character) %>%
 #   mutate(fracVMTIncr = as.numeric(fracVMTIncr)) %>%
   # spread(key = ElasCase, value = fracVMTIncr) %>%
-  left_join(VMTIncrease, by= c("VC", "DemScen", "ElasCase"))
+  # Join and test only the subset of DemScen in VMTIncreaseTest
+  left_join(dplyr::filter(VMTIncrease, DemScen %in% c("DS1", "DS2", "DS3", "DS4")),
+            by = c("VC", "DemScen", "ElasCase"))
 
 # Check that input tables (VTVCostBase and TravelTimeCostBasePars) are consistent with regard to time cost per mile,
 #   for 2 LDV categories (Lt Truck and Car) and one HDV categopry
@@ -1163,16 +1177,16 @@ LDV     :CS1     :DS1     :0       :0           : Cost-base response (with ElasV
 LDV     :CS2     :DS2     :1       :0           : Cost-base response (with ElasVKT) with Underserved mult effect option 1
 LDV     :CS3     :DS3     :3       :0           : Cost-base response (with ElasVKT) with Underserved mult effect option 3
 LDV     :CS4     :DS4     :4       :0           : Cost-base response (with ElasVKT) with Underserved mult effect option 4
-LDV     :CS5     :DS4     :4       :0           : scenario 4 with higher elasticity
-LDV     :CS6     :DS4     :4       :1           : scenario 5 with shift to carsharing (ride hailing/pooling)
-LDV     :CS7     :DS3     :3       :1           : scenario 3 with shift to carsharing (ride hailing/pooling)
+LDV     :CS5     :DS5     :4       :0           : scenario 4 with higher elasticity
+LDV     :CS6     :DS6     :4       :1           : scenario 5 with shift to carsharing (ride hailing/pooling)
+LDV     :CS7     :DS7     :3       :1           : scenario 3 with shift to carsharing (ride hailing/pooling)
 HDV     :CS1     :DS1     :0       :0           :
 HDV     :CS2     :DS2     :0       :0           :
 HDV     :CS3     :DS3     :0       :0           :
 HDV     :CS4     :DS4     :0       :0           :
-HDV     :CS5     :DS4     :0       :0           :
-HDV     :CS6     :DS4     :0       :0           :
-HDV     :CS7     :DS3     :0       :0           :
+HDV     :CS5     :DS5     :0       :0           :
+HDV     :CS6     :DS6     :0       :0           :
+HDV     :CS7     :DS7     :0       :0           :
 "),header=TRUE,sep=":",strip.white=TRUE) #
 
 DemScenAdjustments = DemScenAdjustments %>% 
