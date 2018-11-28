@@ -345,9 +345,11 @@ mechScenAssumps = read_csv(paste0("./Data/","CAV_Scenario_Master.csv"), comment 
 # This table contains: scenario number and demand scenario number;
 # scenario name and description; and assumptions re setting levels (Zero, Low, Mid, High) for each mechanism .
 # Also includes Check Values: resulting energy intensity fractional change Multipliers for LDV and HDV in 2 years;
+mechScenAssumps = mechScenAssumps %>%
+    rename(TechScen = Scenario_Number)  # scenario number in this data set is referring to technology scenario
 
-mechScenDescriptors = mechScenAssumps %>% 
-  select(Scenario_Number, Demand_Scenario, Scenario_Name, Scenario_Description)
+mechScenDescriptors = mechScenAssumps %>%
+  select(TechScen, Demand_Scenario, Scenario_Name, Scenario_Description)
 
 msa = mechScenAssumps %>% 
   select(-c(LDV_Multipliers.2035:Scenario_Description)) %>%  # drop aggregatred result for scenario and Name, Description
@@ -369,8 +371,8 @@ msa = left_join(msa, IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
 
 ```{r reportScenarioAssumps, echo=echoWorking, warning=FALSE, message=FALSE}
 scenAssumps = msa %>% select(-IM) %>%
-  # scenAssumps = scenAssumps[,c("Scenario_Number", "VC", "Year", "Mech", "EffectCase")] # re-order cols
-  spread(key = Scenario_Number, value = EffectCase) %>% 
+  # scenAssumps = scenAssumps[,c("TechScen", "VC", "Year", "Mech", "EffectCase")] # re-order cols
+  spread(key = TechScen, value = EffectCase) %>% 
   arrange(Year, desc(VC))
 kable(x = scenAssumps, 
       caption= "Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario")
@@ -390,13 +392,13 @@ $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 ```{r constructIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # Overall energy intensity for the scenario is the product of mechanism multipliers
 EnergyIntensityChanges = msa %>%
-  group_by(Year, VC, Scenario_Number) %>%
+  group_by(Year, VC, TechScen) %>%
   summarize(NIE = prod(IM)-1)  # product of multipliers across all Mech(anisms)
 # minus 1 for net change
 
 # Mechanism Impacts by Mechanism, EffectCase-level, Year (2035, 2050), and vehicle type (LDV, HDV) are in
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170709.xlsx]Energy Intensity Impacts'!$A$1:$Q$26
-EnergyIntensityChanges = arrange(EnergyIntensityChanges, Scenario_Number, VC, Year)
+EnergyIntensityChanges = arrange(EnergyIntensityChanges, TechScen, VC, Year)
 ```
 
 ```{r displayNetIntensityChangeByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
@@ -421,7 +423,7 @@ This table is the fractional change in vehicle energy use per mile-travelled, as
 # CHECK: This table should match NetEnergyIntensityChangeTable
 #   Extract test/check values from the input mechanism Scenario Assumptions
 NEIC_test = mechScenAssumps %>% 
-  select(c(Scenario_Number:Scenario_Name)) %>%
+  select(c(TechScen:Scenario_Name)) %>%
   select(-c(Demand_Scenario,Scenario_Name))
 names(NEIC_test) = sub("_Multipliers.", replacement="_", names(NEIC_test))
 NEIC_test = NEIC_test[,names(NetEnergyIntensityChangeTable)] # make column orders match
@@ -540,7 +542,7 @@ Demand response is a function of full (generalized) travel cost, and energy inte
 # Select energy intensity changes and other cost and demand response parameters for the current Technology and Demand Scenario
 
 nie = EnergyIntensityChanges  %>% ungroup() %>% 
-  filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
+  filter(TechScen == CurrTechScen, Year == CurrYear) %>% 
   select(VC, NIE) # leaves a small df with net intensity changes for each vehicle class
 
 # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
@@ -1180,13 +1182,13 @@ LDV     :CS4     :DS4     :4       :0           : Cost-base response (with ElasV
 LDV     :CS5     :DS5     :4       :0           : scenario 4 with higher elasticity
 LDV     :CS6     :DS6     :4       :1           : scenario 5 with shift to carsharing (ride hailing/pooling)
 LDV     :CS7     :DS7     :3       :1           : scenario 3 with shift to carsharing (ride hailing/pooling)
-HDV     :CS1     :DS1     :0       :0           :
-HDV     :CS2     :DS2     :0       :0           :
-HDV     :CS3     :DS3     :0       :0           :
-HDV     :CS4     :DS4     :0       :0           :
-HDV     :CS5     :DS5     :0       :0           :
-HDV     :CS6     :DS6     :0       :0           :
-HDV     :CS7     :DS7     :0       :0           :
+HDV     :CS1     :DS1     :0       :0           : Cost-base response (with ElasVKT) only
+HDV     :CS2     :DS2     :0       :0           : Cost-base response (with ElasVKT) only
+HDV     :CS3     :DS3     :0       :0           : Cost-base response (with ElasVKT) only
+HDV     :CS4     :DS4     :0       :0           : Cost-base response (with ElasVKT) only
+HDV     :CS5     :DS5     :0       :0           : Cost-base response (with ElasVKT) only
+HDV     :CS6     :DS6     :0       :0           : Cost-base response (with ElasVKT) only
+HDV     :CS7     :DS7     :0       :0           : Cost-base response (with ElasVKT) only
 "),header=TRUE,sep=":",strip.white=TRUE) #
 
 DemScenAdjustments = DemScenAdjustments %>% 
@@ -1210,16 +1212,16 @@ VMTIncrease = VMTIncrease %>% mutate(fracVMTIncr = (1+fracVMTIncr) * USDmult * (
 FracVMTIncreaseExample <- read.delim(textConnection("
 CombScen :VC   :y2023       :y2050       :Notes
 CS1      :HDV  :0.13315986  :0.13315986  :Cost-base response (with ElasVKT) only
-CS2      :HDV  :0.15600896  :0.15600896  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
-CS3      :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
-CS4      :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
+CS2      :HDV  :0.15600896  :0.15600896  :Cost-base response (with ElasVKT) only
+CS3      :HDV  :0.42890465  :0.42890465  :Cost-base response (with ElasVKT) only
+CS4      :HDV  :0.68293679  :0.68293679  :Cost-base response (with ElasVKT) only
 CS5      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
 CS6      :HDV  :0.68293679  :0.68293679  :HDV Same as DemScen 4
 CS7      :HDV  :0.42890465  :0.42890465  :HDV Same as DemScen 3
 CS1      :LDV  :0.15900210  :0.15900210  :Cost-base response (with ElasVKT) only
-CS2      :LDV  :0.21410345  :0.21410345  :Cost-base response (with ElasVKT) only
-CS3      :LDV  :0.64978123  :0.64978123  :Cost-base response (with ElasVKT) only
-CS4      :LDV  :1.08895536  :1.08895536  :Cost-base response (with ElasVKT) only
+CS2      :LDV  :0.21410345  :0.21410345  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
+CS3      :LDV  :0.64978123  :0.64978123  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
+CS4      :LDV  :1.08895536  :1.08895536  :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
 CS5      :LDV  :1.08895536  :1.08895536  :scenario 4 with higher LDV elasticity
 CS6      :LDV  :0.67116428  :0.67116428  :scenario 5 with shift to ridehailing_ridepooling
 CS7      :LDV  :0.31982499  :0.31982499  :scenario 3 with shift to ridehailing_ridepooling
@@ -1262,18 +1264,10 @@ $$m_{vtdj}(c_{rel,vtdj}) ~=~fractionalVKTIncr_{dvc} ~=~ (RelTotalCost_{vtdj})^{E
 
 # This is all vehicle energy intensity changes for all values of TechScen, Year, and Vehicle Class
 CaseEffectsEI <- EnergyIntensityChanges %>% ungroup %>% 
-  select(Scenario_Number, Year, VC, NIE)
+  select(TechScen, Year, VC, NIE)
 ```
 
 Select Combined Scenario
-
-```{r singleCombScenarioSelect, echo=echoWorking}
-CurrTechScen = 1
-CurrYear     = 2050
-
-CurrDemScen = "DS1"
-CurrCombScen = "CS6"
-```
 
 
 ```{r}
@@ -1283,126 +1277,168 @@ CurrCombScen = "CS6"
 # The VMT results need to be recalulated here for each TechScen and matching DemScen assumptions
 #   in the full combined scenario.
 
-# Update I_DeltaCAV in DemRespParams
-
-# Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
-nie = EnergyIntensityChanges  %>% ungroup() %>% 
-  filter(Scenario_Number == CurrTechScen, Year == CurrYear) %>% 
-  select(VC, NIE) # leaves a small df with net intensity changes for each vehicle class
-
-# Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
-# Transcribe current (computed) net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
-# This assignment is awkward, due to non-ideal organization of data tables.
-#DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
-DemRespParams %>% gather(key = Sens, value = value, -c(VC, Parameter)) %>%  # following assigns the same 
-  mutate(value = ifelse((VC=="LDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="LDV",]$NIE, value),
-         value = ifelse((VC=="HDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="HDV",]$NIE, value)) %>%
-  spread(key=Sens, value=value) ->
-  DemRespParams
-
-DemRespParams = DemRespParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns after gather/spread
-
-# Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases
-y = DemRespParams %>% select(-c(Zero, Med)) %>% 
-  gather(key=Case, value=value, Low:High) %>%      # for two cases (Low and High)
-  spread(key = Parameter, value=value)
-# select(-InsurCostRed)  # UGLY: **Unused** Insurance cost reduction determined by Demand Scenario
-
-# VTCShrAlt
-
-# Start with dataframe replicates the Base Vehicle Travel Cost Shares for each Demand Scenario
-VTCShrAlt = VTCShrBase %>% 
-  mutate(
-    DS1 = VTCost_shr,  # initialize to base cost shares (4 Demand Scenarios)
-    DS2 = VTCost_shr,
-    DS3 = VTCost_shr,
-    DS4 = VTCost_shr,
-    DS5 = VTCost_shr,
-    DS6 = VTCost_shr,
-    DS7 = VTCost_shr,
-    VC = substr(as.character(VehType), 1, 3)
-  ) %>%
-  select(-VTCost_shr) # could also keep as Base case, DS0
+CombScenResultsForOneTechScen <- function(CurrTS, CurrYr){
   
-# Reshape for column variables to be component cost-shares, and separate V_Class from VehType
-#  (latter differentiates between Lt Truck and Car within LDV)
-x = VTCShrAlt %>% 
-  gather(key = DemScen, value = VCRel, DS1:DS7) %>% 
-  spread(key = CostCat, value = VCRel)
+  # Update I_DeltaCAV in DemRespParams
+  
+  # Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
+  nie = EnergyIntensityChanges  %>% ungroup() %>% 
+    filter(TechScen == CurrTS, Year == CurrYr) %>% 
+    select(VC, NIE) # leaves a small df with net intensity changes for each vehicle class
 
-# combine base cost shares in x and Demand Reponse Parameters (Fractional Adjustments) in y for their adjustment
-x = left_join(x, y, by=c("VC"))  # note this also duplicates x (base shares) rows by Sensitivity Case in y
-# append correct Dem Scen multipliers for other vars (VoTT and Insurance) 
-x = left_join(x, select(DemScenCostChange, -Description), by=c("DemScen")) # currently _not_ Sensitivity Case-dependent
-# x %>% select(VehType, VC, DemScen, Case, ElasVKT, C_deltaInsur, C_deltaInsurX, C_deltaVoTT, C_deltaVoTTX)
-VTCShrAlt = x
+  # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
+  # Transcribe current (computed) net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
+  # This assignment is awkward, due to non-ideal organization of data tables.
+  #DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
+  DemRespParams %>% gather(key = Sens, value = value, -c(VC, Parameter)) %>%  # following assigns the same 
+    mutate(value = ifelse((VC=="LDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="LDV",]$NIE, value),
+           value = ifelse((VC=="HDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="HDV",]$NIE, value)) %>%
+    spread(key=Sens, value=value) ->
+    DemRespParams
+  
+  DemRespParams = DemRespParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns after gather/spread
+  
+  # Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases
+  y = DemRespParams %>% select(-c(Zero, Med)) %>% 
+    gather(key=Case, value=value, Low:High) %>%      # for two cases (Low and High)
+    spread(key = Parameter, value=value)
+  # select(-InsurCostRed)  # UGLY: **Unused** Insurance cost reduction determined by Demand Scenario
+  
+  # VTCShrAlt
+  
+  # Start with dataframe replicates the Base Vehicle Travel Cost Shares for each Demand Scenario
+  VTCShrAlt = VTCShrBase %>% 
+    mutate(
+      DS1 = VTCost_shr,  # initialize to base cost shares (4 Demand Scenarios)
+      DS2 = VTCost_shr,
+      DS3 = VTCost_shr,
+      DS4 = VTCost_shr,
+      DS5 = VTCost_shr,
+      DS6 = VTCost_shr,
+      DS7 = VTCost_shr,
+      VC = substr(as.character(VehType), 1, 3)
+    ) %>%
+    select(-VTCost_shr) # could also keep as Base case, DS0
+    
+  # Reshape for column variables to be component cost-shares, and separate V_Class from VehType
+  #  (latter differentiates between Lt Truck and Car within LDV)
+  x = VTCShrAlt %>% 
+    gather(key = DemScen, value = VCRel, DS1:DS7) %>% 
+    spread(key = CostCat, value = VCRel)
+  
+  # combine base cost shares in x and Demand Reponse Parameters (Fractional Adjustments) in y for their adjustment
+  x = left_join(x, y, by=c("VC"))  # note this also duplicates x (base shares) rows by Sensitivity Case in y
+  # append correct Dem Scen multipliers for other vars (VoTT and Insurance) 
+  x = left_join(x, select(DemScenCostChange, -Description), by=c("DemScen")) # currently _not_ Sensitivity Case-dependent
+  # x %>% select(VehType, VC, DemScen, Case, ElasVKT, C_deltaInsur, C_deltaInsurX, C_deltaVoTT, C_deltaVoTTX)
+  VTCShrAlt = x
+  
+  # Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
+  # Note that this is perceived/internalized cost (may not include all energy gains)
+  # **ToDo**: generalize to include potential shifts on _all_ cost components
+  VTCShrAlt = VTCShrAlt %>% mutate(
+    Fuel         = Fuel        * (1.0 + I_deltaCAV*ShrECostInt), 
+    # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
+    # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
+    Maintenance  = Maintenance * (1.0 + C_deltaMaint),
+    AccAndIns    = AccAndIns   * (1.0 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
+    VehCapCost   = VehCapCost  * (1.0 + C_deltaCapCost),  # (1+CapitalCostChange)
+    TollsFees    = TollsFees   * (1.0 + C_deltaTolls),
+    Parking      = Parking     * (1.0 + C_deltaPrkng),
+    Time         = Time        * (1.0 + C_deltaVoTT ), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
+    Registration = Registration* (1.0 + C_deltaRegis)
+  # Total = CostMult weighted by base CostFraction
+  )
+  VTCShrAlt$Total = 0
+  # note this summing operation relies on component cost share columns being in this alphabetic order, and Total = 0
+  VTCShrAlt %>% select(AccAndIns:VehCapCost) %>% rowSums(na.rm=TRUE) -> VTCShrAlt$Total
+  
+  # RelTotCost
+  # Get main result (total relative cost) for all Demand scenarios, VehType, Cases, and elasticity of VKT
+  RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
+  
+  RelTotCost = RelTotCost %>% mutate(
+    fracVMTIncr = Total^ElasVKT-1.0  # fractional VMT increase base on elastic response to Total cost
+  )
+  
+  # VMTIncrease
+  # New Calculated Values: % increase LD personal vehicles in VMTdemand from cost-elastic response (averaging LDV Sedans and LtTrucks)
+  VMTIncrease = RelTotCost %>% 
+    #filter(Case=="Low") %>%
+    select(-VehType) %>%
+    rename(ElasCase = Case) %>%     # actually, this Case could reflect sensitivity Case variations in other cost compons
+    group_by(VC, DemScen, ElasCase) %>%
+    summarise(fracVMTIncr = mean(fracVMTIncr)) # this is an unweighted mean for Sedans and LtTrucks
+  
+  # Make additional (exog) adjustments in VMT demand based on shifts from Underserved population and Ride Hail/Pooling
+  VMTIncrease = VMTIncrease  %>%
+      left_join(select(DemScenAdjustments, -Comments), by=c("VC","DemScen"))     # combines cost-based VMT change with shift factors
+  VMTIncrease = VMTIncrease %>% 
+    mutate(fracVMTIncr = (1+fracVMTIncr) * USDmult * (1+RidePoolAdj) - 1)  # apply demand shifts
+  
+  # Select other cost and demand response parameters for the current Technology and Demand Scenario and Year
+  
+  # Case Effects on Demand (single Year, TechScen, multiple VC, DemScen, ElasCase)
+  EffectsD <- VMTIncrease %>% ungroup %>% 
+    select(CombScen, DemScen, VC, ElasCase, fracVMTIncr) %>% 
+    mutate(CombScen_Number = as.integer(str_sub(CombScen,-1,-1)))
+  # add labels for year and TechScen, and associated Energy Intensity NIE
+  EffectsD <- left_join(x = EffectsD, filter(CaseEffectsEI, TechScen == CurrTS, Year == CurrYr), by = c("VC"))
 
-# Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
-# Note that this is perceived/internalized cost (may not include all energy gains)
-# **ToDo**: generalize to include potential shifts on _all_ cost components
-VTCShrAlt = VTCShrAlt %>% mutate(
-  Fuel         = Fuel        * (1.0 + I_deltaCAV*ShrECostInt), 
-  # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
-  # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
-  Maintenance  = Maintenance * (1.0 + C_deltaMaint),
-  AccAndIns    = AccAndIns   * (1.0 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
-  VehCapCost   = VehCapCost  * (1.0 + C_deltaCapCost),  # (1+CapitalCostChange)
-  TollsFees    = TollsFees   * (1.0 + C_deltaTolls),
-  Parking      = Parking     * (1.0 + C_deltaPrkng),
-  Time         = Time        * (1.0 + C_deltaVoTT ), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
-  Registration = Registration* (1.0 + C_deltaRegis)
-# Total = CostMult weighted by base CostFraction
-)
-VTCShrAlt$Total = 0
-# note this summing operation relies on component cost share columns being in this alphabetic order, and Total = 0
-VTCShrAlt %>% select(AccAndIns:VehCapCost) %>% rowSums(na.rm=TRUE) -> VTCShrAlt$Total
+  return(EffectsD)
+} # end CombScenResultsForOneTechScen()
 
-# RelTotCost
-# Get main result (total relative cost) for all Demand scenarios, VehType, Cases, and elasticity of VKT
-RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
+# This completes the calculation of VMT fractional change for one TechScen and the set of DemScen
+```
 
-RelTotCost = RelTotCost %>% mutate(
-  fracVMTIncr = Total^ElasVKT-1.0  # fractional VMT increase base on elastic response to Total cost
-)
+Loop over all Tech Scenarios (TechScen) and develop table of all combinations of Tech Scenarios and Demand Scenarios
 
-# VMTIncrease
-# New Calculated Values: % increase LD personal vehicles in VMTdemand from cost-elastic response (averaging LDV Sedans and LtTrucks)
-VMTIncrease = RelTotCost %>% 
-  #filter(Case=="Low") %>%
-  select(-VehType) %>%
-  rename(ElasCase = Case) %>%     # actually, this Case could reflect sensitivity Case variations in other cost compons
-  group_by(VC, DemScen, ElasCase) %>%
-  summarise(fracVMTIncr = mean(fracVMTIncr)) # this is an unweighted mean for Sedans and LtTrucks
+```{r multCombScenarioLoop, echo=echoWorking}
+CurrYear     = 2050
+# CurrTechScen = 1
+# CurrDemScen = "DS1"
+# CurrCombScen = "CS6"
 
-# Make additional (exog) adjustments in VMT demand based on shifts from Underserved population and Ride Hail/Pooling
-VMTIncrease = VMTIncrease  %>%
-    left_join(select(DemScenAdjustments, -Comments), by=c("VC","DemScen"))     # combines cost-based VMT change with shift factors
-VMTIncrease = VMTIncrease %>% 
-  mutate(fracVMTIncr = (1+fracVMTIncr) * USDmult * (1+RidePoolAdj) - 1)  # apply demand shifts
+CaseEffects = data.frame() 
 
-# Select other cost and demand response parameters for the current Technology and Demand Scenario and Year
+for (CurrTechScen in 1:7) {
+  CaseEffects = rbind(CaseEffects, CombScenResultsForOneTechScen(CurrTechScen, CurrYear))
+}
 
-# Case Effects on Demand 
-CaseEffectsD <- VMTIncrease %>% ungroup %>% 
-  select(CombScen, DemScen, VC, ElasCase, fracVMTIncr) %>% 
-  mutate(Scenario_Number = as.integer(str_sub(CombScen,-1,-1)))
+```
 
-# This completes the calculation of VMT fractional for one TechScen and DemScen
+Calculate fractional change in Energy Use by sector.
 
-# Join Energy Effects (by Year) and Demand Effects (by ElasCase) and compute Energy Use
+```{r}
+# Join Energy Effects (by Year) and Demand Effects (by ElasCase) and 
+# compute  fractional change in Energy Use
 #  by Year, VC, CombScen, DemScen, Scenario_Number, ElasCase 
-# Note: this is actually only valid for CurrTechScen
-CaseEffects <- left_join(CaseEffectsEI, y = CaseEffectsD, by = c("Scenario_Number", "VC")) %>%
-  mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
+# Note: these Demand results are actually only valid for the Currently select TechScen
+# Compute Energy Use impact
+CaseEffects <- CaseEffects %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
 
 ```
 XXX
 
-Calculate fractional change in Energy Use by sector.
 ```{r}
-
+CombScen_Combinations <- read.delim(textConnection("
+CombScen :VC   :TechScen :DemScen :Notes
+CS1      :HDV  :1        :2       :Cost-base response (with ElasVKT) only
+CS2      :HDV  :2        :3       :Cost-base response (with ElasVKT) only
+CS3      :HDV  :3        :5       :Cost-base response (with ElasVKT) only
+CS4      :HDV  :4        :6       :Cost-base response (with ElasVKT) only
+CS5      :HDV  :5        :2       :HDV Same as DemScen 4
+CS6      :HDV  :6        :0       :HDV Same as DemScen 4
+CS7      :HDV  :7        :2       :HDV Same as DemScen 3
+CS1      :LDV  :1        :2       :Cost-base response (with ElasVKT) only
+CS2      :LDV  :2        :3       :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
+CS3      :LDV  :3        :5       :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
+CS4      :LDV  :4        :6       :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
+CS5      :LDV  :5        :2       :scenario 4 with higher LDV elasticity
+CS6      :LDV  :6        :0       :scenario 5 with shift to ridehailing_ridepooling
+CS7      :LDV  :7        :2       :scenario 3 with shift to ridehailing_ridepooling
+"),header=TRUE,sep=":",strip.white=TRUE) #
 ```
-
 
 Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
 ```{r}
