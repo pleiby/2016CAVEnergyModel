@@ -1381,7 +1381,8 @@ CombScenResultsForOneTechScen <- function(CurrTS, CurrYr){
   # Case Effects on Demand (single Year, TechScen, multiple VC, DemScen, ElasCase)
   EffectsD <- VMTIncrease %>% ungroup %>% 
     select(CombScen, DemScen, VC, ElasCase, fracVMTIncr) %>% 
-    mutate(CombScen_Number = as.integer(str_sub(CombScen,-1,-1)))
+    mutate(CombScen_Num = as.integer(str_sub(CombScen,-1,-1))) %>%
+    mutate(DemScen_Num  = as.integer(str_sub(DemScen, -1,-1)))
   # add labels for year and TechScen, and associated Energy Intensity NIE
   EffectsD <- left_join(x = EffectsD, filter(CaseEffectsEI, TechScen == CurrTS, Year == CurrYr), by = c("VC"))
 
@@ -1395,11 +1396,12 @@ Loop over all Tech Scenarios (TechScen) and develop table of all combinations of
 
 ```{r multCombScenarioLoop, echo=echoWorking}
 CurrYear     = 2050
+CurrElasCase = "Low"
 # CurrTechScen = 1
 # CurrDemScen = "DS1"
 # CurrCombScen = "CS6"
 
-CaseEffects = data.frame() 
+CaseEffects = data.frame() # simplest empty dataframe
 
 for (CurrTechScen in 1:7) {
   CaseEffects = rbind(CaseEffects, CombScenResultsForOneTechScen(CurrTechScen, CurrYear))
@@ -1418,29 +1420,44 @@ Calculate fractional change in Energy Use by sector.
 CaseEffects <- CaseEffects %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
 
 ```
-XXX
 
 ```{r}
 CombScen_Combinations <- read.delim(textConnection("
-CombScen :VC   :TechScen :DemScen :Notes
-CS1      :HDV  :1        :2       :Cost-base response (with ElasVKT) only
-CS2      :HDV  :2        :3       :Cost-base response (with ElasVKT) only
-CS3      :HDV  :3        :5       :Cost-base response (with ElasVKT) only
-CS4      :HDV  :4        :6       :Cost-base response (with ElasVKT) only
-CS5      :HDV  :5        :2       :HDV Same as DemScen 4
-CS6      :HDV  :6        :0       :HDV Same as DemScen 4
-CS7      :HDV  :7        :2       :HDV Same as DemScen 3
-CS1      :LDV  :1        :2       :Cost-base response (with ElasVKT) only
-CS2      :LDV  :2        :3       :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
-CS3      :LDV  :3        :5       :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
-CS4      :LDV  :4        :6       :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
-CS5      :LDV  :5        :2       :scenario 4 with higher LDV elasticity
-CS6      :LDV  :6        :0       :scenario 5 with shift to ridehailing_ridepooling
-CS7      :LDV  :7        :2       :scenario 3 with shift to ridehailing_ridepooling
+CombScen :Year  :ElasCase :VC   :TechScen     :DemScen_Num :Notes
+CS1      :2050  :Low      :HDV  :1            :2           :Cost-base response (with ElasVKT) only
+CS2      :2050  :Low      :HDV  :2            :3           :Cost-base response (with ElasVKT) only
+CS3      :2050  :Low      :HDV  :3            :5           :Cost-base response (with ElasVKT) only
+CS4      :2050  :Low      :HDV  :4            :6           :Cost-base response (with ElasVKT) only
+CS5      :2050  :Low      :HDV  :5            :2           :HDV Same as DemScen 4
+CS6      :2050  :Low      :HDV  :6            :0           :HDV Same as DemScen 4
+CS7      :2050  :Low      :HDV  :7            :2           :HDV Same as DemScen 3
+CS1      :2050  :Low      :LDV  :1            :2           :Cost-base response (with ElasVKT) only
+CS2      :2050  :Low      :LDV  :2            :3           :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
+CS3      :2050  :Low      :LDV  :3            :5           :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
+CS4      :2050  :Low      :LDV  :4            :6           :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
+CS5      :2050  :Low      :LDV  :5            :2           :scenario 4 with higher LDV elasticity
+CS6      :2050  :Low      :LDV  :6            :0           :scenario 5 with shift to ridehailing_ridepooling
+CS7      :2050  :Low      :LDV  :7            :2           :scenario 3 with shift to ridehailing_ridepooling
 "),header=TRUE,sep=":",strip.white=TRUE) #
+CombScen_Combinations$VC = as.character(CombScen_Combinations$VC)
 ```
 
+Select Predefined combionations of Tech and Demand scenarios from the full set of cross-combinations
+
+```{r}
+# Note: semi_join(df1, df2) #keep only observations in df1 that match in df2 (inner_join without keeping df2).
+# Note: anti_join(df1, df2) #drops all observations in df1 that match in df2.
+CaseWantedEffects = CaseEffects %>% 
+  # filter(Year==CurrYear) %>%
+  semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen_Num"))
+
+```
+XXX
+
 Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
+
+Formula: SUM(LDV Total Energy, CLT Total Energy, HDV Total Energy)/SUM(LDV Total Energy Ref, CLT Total Energy Ref, HDV Total Energy Ref)-1
+
 ```{r}
 
 ```
@@ -1556,6 +1573,37 @@ TechScen :LDV.EIntens  :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse     :HDV
     3        : 34.20%     :  0.00%     :64.67%      :44.94%      :120.99%  :44.94%   :101.05%  :Dystopian nightmare
     1        :-32.68%     :-19.23%     :14.26%      :11.72%      :-23.08%  :-9.76%   :-19.59%  :Cautiously optimistic
     5        :  9.92%     :-10.00%     : 7.39%      : 7.98%      : 18.05%  :-2.82%   : 12.57   :Driver assist, limited other benefits
+
+```{r gatherTestValueForScenarios}
+# rotate example test results, and split out vehicle class distinction
+SR_test = summaryScenarioResultsTableExample %>%
+  select(-ScenarioName) %>%
+  gather(key=varname, value=value, -TechScen) %>% 
+  # separate(data, col, into, sep = "[^[:alnum:]]+", remove = TRUE, convert = FALSE, extra = "warn", fill = "warn", ...)
+  separate(varname, into=c("VC", "varname")) #, sep="[^[:alnum:]]+", remove = TRUE, convert = FALSE, extra = "warn", fill = "warn", ...)
+
+SR_test = SR_test %>%
+  spread(key = varname, value = value) %>%
+  rename(
+    fracVMTIncr = VMTpveh,
+    NIE = EIntens,
+    EnergyUse = EUse
+  )
+
+```
+
+```{r testCalcVsRefScenarios}
+testVars = c("fracVMTIncr", "NIE", "EnergyUse")
+SR_test = SR_test %>% gather(key=varname, value = testValue, testVars) %>%
+  filter(VC != "Tot") # ignore Tot case for new
+CWE_test = CaseWantedEffects %>% 
+  gather(key=varname, value = calcValue, testVars) %>%
+#  gather(key=varname, value = calcValue, fracVMTIncr, NIE, EnergyUse) 
+  right_join(SR_test, by=c("VC", "TechScen", "varname")) %>%
+  mutate(testDiff = calcValue - testValue)
+
+cat("Calculated values match Scenario test values to within total absolute error ",sum(abs(CWE_test$testDiff)), ".\n")
+```
 
 ```{r mirrorExtSummaryScenarioResults, echo=echoWorking}
 kable(summaryScenarioResultsTableExample)
