@@ -7,6 +7,7 @@ output:
     colortheme: dolphin
     fonttheme: structurebold
     theme: AnnArbor
+    toc: true
   html:
     number_sections: yes
     toc: yes
@@ -32,6 +33,8 @@ library(tidyverse)
 library(knitr)
 ```
 
+# Status
+
 ## CAVESIM Status at End FY18
 
 - Q3: Preliminary design of HDV & shared mobility model components (ORNL)
@@ -45,6 +48,78 @@ library(knitr)
 		- Following the "Workflow" development to understand and ID major features 
 	- FY18 Product paper (in draft)
     - Feeds Quad Chart item "Annual: Reports on national aggregate energy and travel impacts depending on incentives and economic drivers""
+
+## CAVESIM Top-Down Conceptual Approach Complements Bottom-up National Aggregation and  Detailed Regional Analyses
+
+![CAVESIM Top Down Conceptual Approach Diagram](./data/CAVESIM_Top_Down_Conceptual_Approach_Diagram_V1.png)
+
+## National-level impacts (Top-down), Formulation
+
+- Use economic (producer/consumer behavior) modeling to estimate demand, efficiency, ride sharing, congestion, energy use [other outcomes?]
+- Utility-maximizing agent
+  - Utility, $U{ij}$, depends on costs (vehicle, fuel, time)
+  - Social costs also considered (emissions, congestion, accidents)
+  - Analytic form allows exploring ranges of imposed costs with constraints under different combinations of inputs to find combinations producing maximum benefit
+
+$$U_{ij} ~=~ u(\psi(C_i, M_{ij}, T_{ij}, G), N) - \phi(P_{ij}(F,M)) - \delta(A_i)$$
+for *i*: AV or MV; *j*: urban or non-urban
+
+## Variable Definitions
+
+- $C_i$,    quantity of goods consumed
+- $M_{ij}$, vehicle-miles traveled
+- $T_{ij}$, time spent driving
+- $G$,      government spending
+- $N$,      leisure
+- $P_{ij}$, quantity of pollution
+- $A_i$,    severity-adjusted traffic accidents
+- $L$,      labor supply
+- $I =  (1 - t_L)L$, after-tax income
+- $F_i$,    fuel consumption
+- $P_F$,    fuel price, including taxes
+- $H_i$,    vehicle and other driving costs
+
+## Conceptual Approach in Words: Main Potential Impacts of Connectivity & Automation Represented, Estimated, and Interacted
+1. **Summarize Effects on Vehicle Energy Intensity**
+  - ~8 Identified technological mechanisms
+2. **Summarize/Estimate Effects on Costs, Travel “Costs”**
+  - Vehicle capital and operating costs, (including energy)
+  - Time costs: VoTT/hr and speed, congestion
+3. **Estimate Effects on Road Travel Demand** (VKT, PKT)
+  - Total Demand (PMT) response to $\Delta$ cost/convenience
+  - Shifts in Demand (apart from cost response)
+    - New/underserved rider groups
+    - Ride-hailing/Ride-pooling
+    - Mode shifts (from transit, rail/bus, air)
+4. **Model interactive/equilibrating effects** among (some) energy intensity, costs, and demand impacts
+
+## High-level inputs/assumptions and outputs
+
+- Summarize technological and operational “mechanisms” by which CAVs alter energy use and demand
+    - CACC/Platooning
+    - Eco-driving
+    - Congestion mitigation (incl. traffic-flow control)
+    - Altered highway speeds*
+    - De-emphasized performance
+    - Improved crash avoidance (light-weighting)
+    - Increased feature load (incl. sensors/controls)
+  	- Vehicle size & “Right-sizing”
+    - _Ride "hailing“ and “pooling”_*
+    - _Electrification_
+    - Demand from New user groups
+    - Demand response (mode shifts/induced demand)
+
+## Analysis Steps
+- Establish estimated base energy intensity and demand impacts for mechanisms
+    - At different levels of CAV penetration
+- Summarize known cost information
+- Summarize Key Response relationships*  [Rebound, VoTT, congestion effects]
+- Account for equilibrium interactions (through costs/benefits): demand/congestion/speed/safety/energy-intensity & cost
+- Define and Model alternative scenarios: (defines exogenous assumptions and endogenous)
+- **Explore implications of alternative conditions/costs on outcomes**
+
+
+# Connections to Other SMART Project Assumptions & Results
 
 ## Base inputs from "Scenario Generation" - Technology Info
 - [ToDo: reconcile with SMART Workflow Scenario Parameters]
@@ -79,42 +154,41 @@ library(knitr)
 - Update additional cost and economic conditions (response elasticities) based on Lit review (share insights and conclusions re parameters with others)
 - XXX Bullet 3
 
-
+# CAVESIM Inputs to be Drawn From/Benchmarked to Detailed SMART Models/Studies
 
 ## CAVESIM Table Main Inputs (1)
-CAVESIM Main Inputs	|Units
+1. Ref/Exog Conditions                        |Units
 -------------------------------------------|---------------------
 Reference VKT by year(1), sector(2), Region(6) |	veh-km/yr
 Reference PKT by year	                       | pass-km/yr
-Energy consumption by fuel type(3) by year, sector(2)	|quad or EJ/yr
+Energy consumption by veh/fuel type(3) year, sector(2)	|quad or EJ/yr
 Vehicle stock by year, by powertrain(4), control-type(5) | share
-Efficiency gains for key technology/mechanisms(7), by powertrain | % reduction in energy intensity, mJ/v-km per % adoption (a constant, or a function)
-
-
-## CAVESIM Table Main Inputs (2)
-CAVESIM Main Inputs	|Units
-----------------------------------------------|---------------------
-Effect of (regional) congestion on ave speed	| % reduction in speed ave speed, (km/hr) as fn of VKT
-Effect of (regional) congestion on energy use	| % increase in energy intensity, (mJ/v-km) as fn of VKT
-VoTT by sector, Control-type, and trip purpose| \$/pass-hr
 Incentives & Costs: vehicle						        | \$/veh or \$/veh-km
 Incentives & Costs: fuel						          | \$/mJ or \$/gge
 Incentives & Costs: road use (by region)		  | \$/veh-km
 Incentives & Costs: ride pooling				      | \$/pass-km
 
+
+## CAVESIM Table Main Inputs (2)
+2. Technical Results, Response Functions      |Units
+----------------------------------------------|---------------------
+Efficiency gains for key technology/mechanisms(7), by powertrain | % reduction in energy intensity, mJ/v-km per % adoption (constant, or a function)
+Effect of CAVs on (regional) congestion/ ave speed | % reduction in ave speed (km/hr) as fn of VKT
+Effect of (regional) congestion/ave speed on energy use	| % increase in energy intensity, (mJ/v-km) as fn of VKT
+VoTT by sector, Control-type, and trip purpose| \$/pass-hr
+
 ## CAVESIM Table Main Inputs (3)
-CAVESIM Main Inputs	|Units
+3. Behavioral and Cost Responses              |Units
 ----------------------------------------------|---------------------
 Costs of TNC operation by control-type		  	| \$/veh-km
 User-cost (disutility) of ride-pooling			  | \$/pass-km pooled with stranger
 Ref Extent of ride-pooling by yr, region	    | % of PKT
 Deadhead km from car hailing			            | ave % incr. VKT/trip
 Incr. veh km (reduction) from ride pooling	  | ave % decr. VKT/trip
-Incr. passenger km travel from ride pooling	| ave % incr. PKTtrip
-Cost responses:                               |  
+Incr. passenger km travel from ride pooling	  | ave % incr. PKTtrip
 Elasticities of travel w.r.t. full cost	      | unitless
 Elasticities of veh fuel economy to fuel cost	| unitless
-Traveler Utility functions (trading off trip attributes, and travel vs other activities)	| [functional form, or marginal utilities for various attributes]
+Traveler Utility functions (trading off trip attributes, and travel vs other activities)	| [functional form, or marginal utilities]
 
 ## CAVESIM Table Main Inputs (Notes)
 
@@ -145,18 +219,20 @@ Average travel speed by region(6)	| km/hr
 	- How accurate a representation is "good enough to be useful"?
 	- What can be learned with such a compact/aggregate system that is hard to learn with the full representation?
 		- What about the NREL "Scenario Generation" model (YASDM)
-- Q: How t=do we best support/contribute to the MEP measure?
+- Q: How do we best support/contribute to the MEP measure?
 
+# Example Data
 
 ## Static Estimates of Energy Intensity Effects Updated and Made Dynamic
 
 ```{r showMechanismMultiplers, echo = F}
 
 load(file="CAVdecom.sav")
-IM %>% filter(Year==2050) %>%
+IM %>% filter(Year==2050 & VC=="LDV") %>%
   kable(caption= "Intensity Multipliers by Vehicle-type, Year, and Case")
 ```
 
+# Overview of Analytical Approach
 
 ## Vehicle Energy Intensity Results from a Combination of Technological and Operational Mechanisms
 
@@ -166,11 +242,12 @@ IM %>% filter(Year==2050) %>%
 
 Each of these incremental energy intensity and travel demand effects may depend on costs *c*.
 
+Energy use is the product of energy intensity *I* (Mj/km) and travel VMT *M* (km/yr):
 $$E_{vij} ~=~ \prod_k \left ( 1 + \Delta \mu_{kvi}(c) \right ) \cdot I_{Ev0} \cdot \prod_m \left ( 1 + \Delta \delta_{mvj}(c) \right ) \cdot M_{Ev0}$$
 
 ## Unifying Demand Framework
 
-Based on utility maximization, with time and budget constraints.
+Travel demand is based on utility maximization, with time and budget constraints.
 
 $$
 \begin {aligned}
@@ -178,10 +255,10 @@ max ~U ~&= ~u(M, T, C, G, X) - D_F(P(\bar F)) - D_M(A(\bar M))\\
 s.t. ~& L + T + X \le \underline L \\
 & (\tau_f+P_f) F + \tau_M M + H + C ~\le~ I \\
 & I = (1-\tau_L) L \\
-& M = f(F, H)
+& M = m(F, H)
 \end {aligned}
 $$
-
+Note we also include some consideration (tracking) of societal (non-market) costs associated with fuel use *F* and VMT *M*. These include, e.g. air emissions, accidents, and congestion.
 
 ## Aside
 
@@ -190,3 +267,27 @@ $$u(M, T, C, G, X) = u(\phi(M, T, C, G), X)$$
 It may be useful to separate out travel miles production by vehicle type, where vehicle have different energy and non-energy (capital) cost requirements.
 $$M_v ~=~ f_v(F_v, H_v)$$
 
+## Consider and Account How Automation Technologies Change Travel Costs, For a Range of Cost Components (incl. Energy)
+
+(Important point is that fuel/energy is generally only a limited share of total travel costs.)
+
+## Results: Explore how Economic Costs and Technology Changes Can Influence Behavior & Outcomes re Energy and VKT
+
+Fig: Fuel Use vs. Fuel Incr. Cost
+
+Fig: VMT vs. VMT Incr. Cost
+
+## CAVESIM Connections to Task 2B and SMART Workflow
+
+- **Connections to CAV 2B tasks**
+    - Take aggregated National, or regional VMT and Energy (from given cases) as benchmark
+    - Use Veh Tech Penetration cases from MA3T
+        - and offer relations for use by MA3T
+    - Contribute to updated Bounds report 
+        - [provides background info/params, and an integrating framework]
+- **Connections to SMART Workflow (data and assumptions)**
+    - Employ common base Scenario assumption set (under dev.)
+    - Benchmark to POLARIS and BEAM results/behaviors
+        - IDed detailed list of inputs to use, [Contribute to national ests]
+- **Aggregate outputs can provide comparison & inputs**:
+    - comparison to detailed models, inputs to benefits (MEB) measures, additional cases
