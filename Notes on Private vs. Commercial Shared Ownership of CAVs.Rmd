@@ -1,0 +1,119 @@
+---
+title: "Notes on Private vs. Commercial Ownership of CAVs"
+author: "Paul Leiby, Andrew Duvall, and Zhenhong Lin"
+date: "11/29/2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dimensions of the Issue
+
+In full, this parameter assumption could be differentiated across many dimensions:
+
+1. Shared (Commercial) vs. Private (Household) Ownership^[1]
+2. Manual/Conventional Vehicle vs. "CAV"
+3. Level of Automation for "CAV"
+4. CAV Adoption (Fraction of Sales or stock that is CAV)
+5. Near/Mid-term vs. Long-term
+6. High vs. Low vs. Reference case
+
+[^1]: A complication is the potential use of private (household) vehicles in shared mobility application when not needed by the household. Will this overlap be considered, and how?
+
+[^2]: Here we recognize that the SAE Levels may not be the best characterization. It may be helpful to think of early levels (1-3) as safety features that will be gradually adopted in MVs (Manual or human-driven vehicles), and Levels 4-5 in “CAV”, forms of highly automated vehicles. This can be clarified as the SMART Mobility Workflow Taskforce defines the vehicle technology scenarios.
+
+Here we restrict our attention to only dimensions 1, 2, and 6, implying the need for 2 x 2 x 3 or 12 parameters. Thus we start with three scenarios for 2 shares variables:
+
+  - Fraction of CAVs which is private (household) vs. shared (commercial)
+  - Fraction of Manual Vehicles which is private (household) vs. shared (commercial)
+
+## Proposal
+
+**Fraction of CAVs which is private (household) vs. shared (commercial)**
+
+Case        | Shared CAV Fraction| Private CAV Fraction| Notes
+------------|----------------|-----------------|---------
+Reference   | 0%             | 100%            | Per AEO2018, CAEVs are 1% of LDV sales by 2050
+Low Shared  | 16%            | 84%             | Per AEO2018, for CAEVs or CAHEVs 31% of LDV sales by 2050
+High Shared | 90%            | 10%             | Virtual elimination of private vehs except for rich/rural
+
+**Fraction of Manual Vehicles which is private (household) vs. shared (commercial)**
+
+Case        | Shared MV Fraction| Private MV Fraction| Notes
+------------|----------------|-----------------|---------
+Reference   | 1%             | 99%               | Uber has 750k active drivers in US, Lyft 1400k
+Low Shared  | TBD%            | 100-TDB%             | XXX
+High        | TBD%            | 100-TBD%             | XXX
+
+## Considerations For Shared (commercial) vs. Private (Household) Ownership of CAVs
+
+- Costs:
+  - An argument for shared ownership is the high capital cost (and potentially low operating cost) of CAVs, especially CAEVs.
+    - This is believed to be among the strongest arguments for a shift toward higher shared and lower private CA(E)V adoption
+    - There may be a threshold of penetration within the population for which people are willing to bear higher costs. This may be limited to those at the thin end of the early adoption group. The WholeTraveler survey asked respondents about interest in emerging technologies (including semiautomated and automated vehicles). There was much higher interest than there was actual experience (adoption) for many recent transportation innovations (e.g. EVs and AVs). This is likely in part due to the economic barrier of access currently in play regarding the ability to purchase these types of vehicles. (See the related graphs and discussion at the bottom of this document.)
+
+  - On other hand, (some) private households seem willing to bear high fixed costs of vehicles
+    - Boesch et al. 2018 conclude, after a review of costs: "Moreover, the results suggest that a substantial share of vehicles may remain in private possession and use due to their low variable costs. Even more than today, high fixed costs of private vehicles will continue to be accepted, given the various benefits of a private mobility robot."
+    - However, willingness of private households to bear the high fixed costs of CA(E)Vs arguably only pertains to the wealthier portion of the population who can afford more expensive vehicles. A majority may find CAEVs make private vehicle ownership increasingly out of reach, while making shared mobility options more affordable.
+-	Possible secular trend away from vehicle ownership
+    -	There seems to be reduced interest in owning vehicles among younger generations that, coupled with higher initial CAEV costs could accelerate shared/commercial vehicle ownership.
+    - The potential trend among younger population away from vehicle ownership may intensify with CAEVs, as taking care of parking, maintenance, and other needs of a vehicle may become less attractive if other options are more convenient. 
+    - A precursor of this may be seen in the rapid proliferation of alternative modes (e-scooters and bike share) in dense urban settings, where car ownership is a burden, and perhaps regarded as a needless expense. 
+    - A proliferation of shared CAEVs may actually enable greater mobility among low-income populations and other groups that currently have few mobility options.
+- Timing/maturity: Many anticipate that the fraction of shared/commercial ownership will at least be higher initially, given 
+  - the need to heavily utilize the CAVs, to amortize their higher initial capital cost
+  - uncertainty and technical challenges to user in early technology may deter private adoption
+  - rapid technology change may may early CAVs obsolete quickly, deterring private adoption and suiting shared fleets who utilize and wear out (amortize) vehicles more quickly
+    - Using the EV market as an indicator (and informed by behavior with other tech trends), older products rapidly lose value with the advent of new tech, much like smartphones and computers
+- EV Operating Costs and Recharging Needs
+    - If Electrified (EV, or CAEV), arguments on ownership cut both ways .
+        -	EV vehicles have lower operating (fuel and maintenance costs), which is appealing for extensively-driven (high utilization factor) shared vehicles.
+        -	However, shorter EV ranges increase the need for time-consuming recharging that takes the vehicle out of use, with greater opportunity costs for a commercially owned vehicle. These tradeoffs are still being explored.
+        - At the same time, the lower operating costs of EVs, and CAEVs, could reduce the cost of ownership to an extent that also appeals to private vehicle owners, depending on the associated change in capital costs.
+
+## Considerations For Shared (commercial) vs. Private (Household) Ownership of Conventional Vehicles
+
+- [To be expanded?]
+
+## Extant Estimates/Scenarios
+
+1. In EIA/Chase et al. 2018, an "Issue in Focus from the Annual Energy Outlook 2018" on Autonomous vehicles:
+  - Reference: The AEO 2018 Reference case seems a good starting point for a SMART Mobility Reference Case
+
+  - Autonomous vehicles enter fleet light-duty vehicles
+    - 1% of new light-duty passenger vehicles sales by 2050
+    - 100% are fleet sales
+
+  - "Scenarios assume that purchasing an autonomous vehicle is favorable for both households and fleet operators."
+  - Assumptions: AEV (Autonomous Electric Vehicles) and AHEV Scenarios both assume:
+    - 31% of new light-duty passenger vehicle sales by 2050
+    - 16% of these are new fleet sales and 84% are new household sales by 2050
+
+## References
+* Patrick M.Bösch, Felix Becker, Henrik Becker, Kay W.Axhausen 2018. "Cost-based analysis of autonomous mobility services," _Transport Policy_ 64:76-91, May.
+
+* Chase, Nicholas, 2018. "Autonomous Vehicles: Uncertainties and Energy
+Implications" For 2018 EIA Energy Conference, June 5, 2018, Washington, DC
+https://www.eia.gov/conference/2018/pdf/presentations/nicholas_chase.pdf
+
+* Chase, Nicholas, John Maples, and Mark Shipper 2018. Autonomous Vehicles:
+Uncertainties and Energy Implications, Issue in Focus from the Annual Energy Outlook 2018,
+May 2018, U.S. Department of Energy, https://www.eia.gov/outlooks/aeo/pdf/AV.pdf
+
+* Pofuk, Tin 2017. Autonomous Vehicles and the Future of Private Vehicle Ownership,
+http://www.hippocampus.si/ISBN/978-961-7023-71-8/175.pdf
+University of Primorska, Faculty of Management, Slovenia, tin.pofuk@fm-kp.si
+
+* Patrícia S. Lavieri, Venu M. Garikapati, Chandra R. Bhat (corresponding author), 
+Ram M. Pendyala, Sebastian Astroza, Felipe F. Dias, 2018. MODELING INDIVIDUAL PREFERENCES FOR OWNERSHIP AND SHARING OF AUTONOMOUS VEHICLE TECHNOLOGIES 
+http://www.caee.utexas.edu/prof/bhat/ABSTRACTS/AV_paper.pdf
+
+* UC Davis 2018. Paper Scenarios
+* Seba, Tony 2017. Rethinking Transportation 2020-2030, The Disruption of Transportation and the Collapse
+of the Internal-Combustion Vehicle and Oil Industries, RethinkX Report, May. https://static1.squarespace.com/static/585c3439be65942f022bbf9b/t/59f279b3652deaab9520fba6/1509063126843/RethinkX+Report_102517.pdf
+
+* Barnard, M. 2017 "What Will Car Ownership Look Like In The Future," Forbes/Quora, https://www.forbes.com/sites/quora/2017/06/22/what-will-car-ownership-look-like-in-the-future/
+
+* 2018 "Why driverless cars will mostly be shared, not owned" _The Economist_. https://www.economist.com/the-economist-explains/2018/03/05/why-driverless-cars-will-mostly-be-shared-not-owned
