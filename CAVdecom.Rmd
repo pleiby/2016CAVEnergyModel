@@ -1456,6 +1456,25 @@ XXX
 
 Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
 
+Transportation Energy Use - Estimated Reference Scenario  (trillions BTU)
+Drawing from AEO Table 45.  Transportation Sector Energy Use by Mode and Type
+
+Transportation Energy Use Estimated Automated Vehicle Scenario = RefEnergyUse*((1+Modal Efficiency Factors)^Rebound Elasticities)*(1+Fuel Carbon Intensities)*(1+Modal Shares/Activity Factors)
+
+LDV Total Energy = LDV Total Energy Ref*((1+Light-Duty Vehicle)^Light-Duty Vehicle)*(1+ Jet Fuel)*(1+Light-Duty Vehicle)
+
+Commercial Light Trucks Motor Gasoline =  Motor Gasoline*((1+Commercial Light Trucks 1/)^Commercial Light Trucks 1/)*(1+ Motor Gasoline)*(1+Commercial Light Trucks 1/)
+Commercial Light Trucks Motor Gasoline =  Motor Gasoline*((1+Commercial Light Trucks 1/)^Commercial Light Trucks 1/)*(1+ Motor Gasoline)*(1+Commercial Light Trucks 1/)
+Commercial Light Trucks Distillate Fuel Oil (diesel) =  Distillate Fuel Oil (diesel)*((1+Commercial Light Trucks 1/)^Commercial Light Trucks 1/)*(1+ Ethanol)*(1+Commercial Light Trucks 1/)
+CLT Total Energy =  Motor Gasoline+ Distillate Fuel Oil (diesel)
+
+Freight Trucks Motor Gasoline =  Motor Gasoline*((1+Freight Trucks)^Freight Trucks)*(1+ Motor Gasoline)*(1+Freight Trucks)
+Freight Trucks Distillate Fuel Oil (diesel) =  Distillate Fuel Oil (diesel)*((1+Freight Trucks)^Freight Trucks)*(1+ Ethanol)*(1+Freight Trucks)
+Freight Trucks Compressed Natural Gas =  Compressed Natural Gas*((1+Freight Trucks)^Freight Trucks)*(1+ Compressed Natural Gas)*(1+Freight Trucks)
+Freight Trucks Liquefied Petroleum Gases =  Liquefied Petroleum Gases*((1+Freight Trucks)^Freight Trucks)*(1+ Liquefied Petroleum Gases)*(1+Freight Trucks)
+HDV Total Energy =  Motor Gasoline+ Distillate Fuel Oil (diesel)+ Compressed Natural Gas+ Liquefied Petroleum Gases
+
+
 Formula: SUM(LDV Total Energy, CLT Total Energy, HDV Total Energy)/SUM(LDV Total Energy Ref, CLT Total Energy Ref, HDV Total Energy Ref)-1
 
 ```{r}
