@@ -9,6 +9,9 @@ output: word_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### ToDo: "Revise the Private ownership/Commercial ownership and automated or human driving slide and complete high/low factors"
+- Y19 scenario input factors for description and values around private ownership vs shared [fleet commercial] ownership. 
+
 ## Dimensions of the Issue
 
 In full, this parameter assumption could be differentiated across many dimensions:
@@ -20,7 +23,7 @@ In full, this parameter assumption could be differentiated across many dimension
 5. Near/Mid-term vs. Long-term
 6. High vs. Low vs. Reference case
 
-[^1]: A complication is the potential use of private (household) vehicles in shared mobility application when not needed by the household. Will this overlap be considered, and how?
+[^1]: A complication is the potential use of private (household) vehicles in shared mobility application when not needed by the household. We omit this issue for now. The EIA 2018 study notes four main CAV ownership models that may be considered: "1) full ownership, 2) partial ownership, 3) 'own and share', and 4) fleet ownership."
 
 [^2]: Here we recognize that the SAE Levels may not be the best characterization. It may be helpful to think of early levels (1-3) as safety features that will be gradually adopted in MVs (Manual or human-driven vehicles), and Levels 4-5 in “CAV”, forms of highly automated vehicles. This can be clarified as the SMART Mobility Workflow Taskforce defines the vehicle technology scenarios.
 
@@ -29,23 +32,55 @@ Here we restrict our attention to only dimensions 1, 2, and 6, implying the need
   - Fraction of CAVs which is private (household) vs. shared (commercial)
   - Fraction of Manual Vehicles which is private (household) vs. shared (commercial)
 
+#### Number of Currently Shared (Active TNC) vehicles (drivers)
+* See [How Many Uber Drivers are There?](https://www.ridester.com/how-many-uber-drivers-are-there/)
+    * Estimates 2 million Uber drivers globally as of 2017
+    * Estimates half are in the US
+    * In fact, Uber co-founder Garrett Camp, put the figure at exactly 2 million in the middle of last year (2017).  In a blog post, he said:
+
+> In a highly competitive market it is easy to become obsessed with growth, instead of taking the time to ensure you’re on the right path. Now is that time… to pause for a moment and think about what really matters here: providing 65 million riders transportation when they need it, giving 2 million drivers flexible work options, and creating a company culture we are proud of.
+
+* [AEO2018 Total Light Duty Vehicle Stock](https://www.eia.gov/outlooks/aeo/data/browser/#/?id=49-AEO2018&cases=ref2018&sourcekey=0)
+  * 126.8 million LDV Cars in 2018
+  * 117.0 million LDV Lt Trucks in 2018
+  * 243.8 million total LDV stock in 2018
+  * Thus 1-2 million TNC vehildes is 1-2%
+
 ## Proposal
 
-**Fraction of CAVs which is private (household) vs. shared (commercial)**
+**Fraction of CAVs which is Shared (commercial) vs. Private (household) **
 
-Case        | Shared CAV Fraction| Private CAV Fraction| Notes
+Case        |Shared Fraction of CAVs |Private CAV Fraction| Notes
 ------------|----------------|-----------------|---------
 Reference   | 0%             | 100%            | Per AEO2018, CAEVs are 1% of LDV sales by 2050
 Low Shared  | 16%            | 84%             | Per AEO2018, for CAEVs or CAHEVs 31% of LDV sales by 2050
 High Shared | 90%            | 10%             | Virtual elimination of private vehs except for rich/rural
 
-**Fraction of Manual Vehicles which is private (household) vs. shared (commercial)**
+**Fraction of Manual Driven Vehicles Shared (commercial) vs. Private (household) **
 
-Case        | Shared MV Fraction| Private MV Fraction| Notes
+Case        |Shared Fraction of MV |Private Fraction of MV| Notes
+------------|----------------|-----------------|---------
+Reference   | 1%             | 99%               | Uber currently has .75 - 1 million active drivers in US, Lyft says 1.4 million
+Low Shared  | TBD%            | 100-TDB%             | XXX
+High Shared | TBD%            | 100-TBD%             | XXX
+
+## Proposal in Transposed Dimensions
+
+**Fraction of Private (Household) Vehicles which is CAV vs Manually Driven (MDV)**
+
+Case        |CAV Fraction of Private Veh |MDV Fraction of Private Veh |Notes
+------------|----------------|-----------------|---------
+Reference   | 0%             | 100%            | Per AEO2018, CAEVs are 1% of LDV sales by 2050
+Low-Shared  | 16%            | 84%             | Per AEO2018, for CAEVs or CAHEVs 31% of LDV sales by 2050
+High-Shared | 90%            | 10%             | Virtual elimination of private vehs except for rich/rural
+
+**Fraction of Shared (Commercial) Vehicles which is CAV vs Manually Driven**
+ 
+Case        |CAV Fraction of Private Veh |MDV Fraction of Private Veh |Notes
 ------------|----------------|-----------------|---------
 Reference   | 1%             | 99%               | Uber has 750k active drivers in US, Lyft 1400k
-Low Shared  | TBD%            | 100-TDB%             | XXX
-High        | TBD%            | 100-TBD%             | XXX
+Low-Shared  | TBD%            | 100-TDB%             | XXX
+High-Shared | TBD%            | 100-TBD%             | XXX
 
 ## Considerations For Shared (commercial) vs. Private (Household) Ownership of CAVs
 
@@ -62,6 +97,20 @@ High        | TBD%            | 100-TBD%             | XXX
     - The potential trend among younger population away from vehicle ownership may intensify with CAEVs, as taking care of parking, maintenance, and other needs of a vehicle may become less attractive if other options are more convenient. 
     - A precursor of this may be seen in the rapid proliferation of alternative modes (e-scooters and bike share) in dense urban settings, where car ownership is a burden, and perhaps regarded as a needless expense. 
     - A proliferation of shared CAEVs may actually enable greater mobility among low-income populations and other groups that currently have few mobility options.
+    - Skeptical perspective:
+        - observations of millennials reduced driving/travel, reduced vehicle ownership, delayed licenses, increased transit use are the result of
+            - circumstantial economic conditions and
+            - delayed achievement of adult lifecycle milestones
+    - Investigated by Lavieri et al. (2017, 2017a)
+        - used Who’s on Board 2014 Mobility Attitudes Survey, considered heterogeneity, life stage
+        - find:
+            - "Older millennials are more car-oriented: attitudes and observed behavior"
+
+            - "Millennials may become more auto-oriented as they age and gain economic resources"
+            - yet "Parenthood does not reduce millennials’ use of transit in transit-rich cities"
+            - Lifestyle preferences matter for shared vehicle vs. private ownership, but millennials are heterogenous and preferences alone do not explain the outcomes observed so far.
+            - Options, and the availability of convenient shared options, rather than inherently different preferences alone, drive choices. This is observed even after accounting for different lifestyle preferences (Lavieri et al 2017a). I.e.: "key to environmentally friendly mobility choices is modal options and proximity to destinations" 
+            
 - Timing/maturity: Many anticipate that the fraction of shared/commercial ownership will at least be higher initially, given 
   - the need to heavily utilize the CAVs, to amortize their higher initial capital cost
   - uncertainty and technical challenges to user in early technology may deter private adoption
@@ -75,6 +124,7 @@ High        | TBD%            | 100-TBD%             | XXX
 
 ## Considerations For Shared (commercial) vs. Private (Household) Ownership of Conventional Vehicles
 
+- Most discussions/analyses conflate the potential trends for shared ownership with the trends toward automation 
 - [To be expanded?]
 
 ## Extant Estimates/Scenarios
@@ -109,6 +159,11 @@ University of Primorska, Faculty of Management, Slovenia, tin.pofuk@fm-kp.si
 * Patrícia S. Lavieri, Venu M. Garikapati, Chandra R. Bhat (corresponding author), 
 Ram M. Pendyala, Sebastian Astroza, Felipe F. Dias, 2018. MODELING INDIVIDUAL PREFERENCES FOR OWNERSHIP AND SHARING OF AUTONOMOUS VEHICLE TECHNOLOGIES 
 http://www.caee.utexas.edu/prof/bhat/ABSTRACTS/AV_paper.pdf
+
+* Lavieri, P. S., Garikapati, V. M., Bhat, C. R., & Pendyala, R. M. (2016). An Investigation of Heterogeneity in Vehicle Ownership and Usage for the Millennial Generation. In TRB 2017 Annual Meeting.
+* Lavieri, P., Garikapati, V., Bhat, C., & Pendyala, R. (2017). An investigation of heterogeneity in vehicle ownership and usage for the millennial generation - Presentation.
+
+* Nazari, F., Noruzoliaee, M., & Mohammadian, A. (Kouros). (2018). Shared Mobility vs. Private Car Ownership: A Multivariate Analysis of Public Interest in Autonomous Vehicles. In Paper number 18-04289 (Extended Abstract) 97th Annual Meeting of the Transportation Research Board (TRB) (Vol. 04289, pp. 1–7).
 
 * UC Davis 2018. Paper Scenarios
 * Seba, Tony 2017. Rethinking Transportation 2020-2030, The Disruption of Transportation and the Collapse
