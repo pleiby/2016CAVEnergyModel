@@ -66,17 +66,17 @@ echoTests   = TRUE  # set TRUE to see printed test values ("Check: ...")
 * approximate influence of some factors not yet in detailed ABM/Microsimulation models
 * simulate effect of changing costs from technological advances through vehicle automation, electrification, and sharing. 
 
-#### Important driving factors have an economic dimension
+#### Important factors driving energy and travel outcomes have an economic dimension
 * Demand response to automation and shared mobility
     * consumer behavior model drives demand response
     * particularly, following Small & Verhoef, others, consumer behavior model determines choice of travel VKT, vehicle efficiency, and travel time
-    * Utility derives from travel, goods, leisure.
-    * Utility maximization subject to joint constraints on budget and time
+    * In our formulation, consumer utility derives from travel, goods, leisure.
+    * Utility maximization is subject to joint constraints on budget and time.
 * Endogenous interactions (identified, in development)
     * Speed - (highway free-flow) endogenous to trade-off between energy cost, time and safety costs
     * Congestion – (determines average achieved speed in traffic) endogenous to vehicle mix, VKT, automation
     * Travel demand - endogenous to costs, including energy, congestion and safety, as well as travel time utility (VTT)
-    * Distinguish between VKT and PKT, given ride-hailing and ride-pooling
+    * Ride-hailing and pooling - Distinguish between VKT and PKT, given ride-hailing and ride-pooling
         * Compact representation of ride pooling choice
 * CAV fuel efficiency follows one of three models
     * The technically feasible case
@@ -110,13 +110,13 @@ This paper describes a new aggregated framework, building on established travel 
 
 #### Limitations
 - An incomplete consideration of role of AV safety and its endogenous effect on travel costs and travel behavior.
-- The abstraction of potentially important detail, discussed above. It includes only an approximate representation of the effects of AV technologies and systems on vehicle energy use for specific drivetrains, roadway network, traffic conditions, and drivecycles, such as can be modeled in more detailed vehicle and spatial models such as Autonomie, FASTSim, BEAM/POLARIS, etc.
+- One necessary limitation is the abstraction and aggregation of potentially important detail, as discussed above. The approach here includes only an approximate aggregate representation of the effects of particular AV technologies and systems on vehicle energy use for specific drivetrains, roadway networks, traffic conditions, and drivecycles. These particular and specific results can be modeled in more detailed vehicle and spatial models such as Autonomie, FASTSim, BEAM/POLARIS, etc. Consumer heterogeneity is not explicitly represented. Local/spatially-explicit outcomes and interactions modeled elsewhere must be subsumed within aggregate, regional outcomes. 
 
 
 2. Decomposition of Energy and GHG Impacts of CAVs
 =========================
 
-The energy and GHG emissions of CAV transportation result from the interaction of a wide range of mechanisms, including the impact of vehicle technologies and vehicle design changes on vehicle operations and efficiency; system-level changes in infrastructure that alter traffic coordination, speeds, and patterns; and consumer behavioral responses that determine the number, length, and nature of trips demanded. The composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_, as used in transportation emissions by (McCollum & Yang, 2009, Greene and Plotkin, 2011) or equivalently the _Schipper ASIF framework_ (Schipper et al. 2000, 2011). Mechanistic and scenario-base approaches of this type have been used to explore CAV impacts by Wadud, MacKenzie and Leiby (2016) and by Stephens et al. 2016. While this approch assumes a degree of separability in the impact of certain identified mechanisms on energy use, e.g. weight reduction versus aerodynamic load reduction through platooning, this is supported in some cases by more detailed models and experimental data [cite XXX].
+The energy and GHG emissions of CAV transportation result from the interaction of a wide range of mechanisms, including the impact of vehicle technologies and vehicle design changes on vehicle operations and efficiency; system-level changes in infrastructure that alter traffic coordination, speeds, and patterns; and consumer behavioral responses that determine the number, length, and nature of trips demanded. An aggregate representation of the composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_, as used in transportation emissions by (McCollum & Yang, 2009, Greene and Plotkin, 2011) or equivalently the _Schipper ASIF framework_ (Schipper et al. 2000, 2011). Mechanistic and scenario-base approaches of this type have been used to explore CAV impacts by Wadud, MacKenzie and Leiby (2016) and by Stephens et al. 2016. While this approch assumes a degree of separability in the impact of certain identified mechanisms on energy use, e.g. weight reduction versus aerodynamic load reduction through platooning, this is supported in some cases by more detailed models and experimental data [cite XXX].
 
 From this so-called *ASIF* approach the total GHG emissions are the product of
 
@@ -125,15 +125,14 @@ From this so-called *ASIF* approach the total GHG emissions are the product of
 3. the energy **I**ntensity of the mode and vehicle type (e.g., energy use per vehicle mile), and 
 4. the **F**uel carbon intensity (ghg emission mass per unit energy)
 
-Transportation GHG emissions are then the sum over all transportation modes, vehicle types, and fuels of the product of {Transportation Services Activity^[We differentiate between transportation services (PKT) and vehicle travel (VKT).]} x {Shares of each mode-vehicle-fuel type} x {Energy Intensity} x {Fuel GHG Intensity}.
-
-$$G_t = \Sigma_{m,v} (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I(\vec x_{tmv}) ~\Sigma_f g_{tf} \phi_{tmvf}$$
-
 Energy use for particular vehicle type is given by total activity (travel demand) level $A_{tv}$, 
 the share of travel on mode *m* and the average share-weighted energy intensity of travel by vehicle type and mode.
 $$E_{tvf} = (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I({\vec x}_{tmv}) \phi_{tmvf}$$
-
 Vehicle energy intensity *I* is a function of a vector $\vec x_{tmv}$ of CAV mechanism/technology levels.
+
+Transportation GHG emissions are then the sum over all transportation modes, vehicle types, and fuels of the product of {Transportation Services Activity^[We differentiate between transportation services (PKT) and vehicle travel (VKT).]} x {Shares of each mode-vehicle-fuel type} x {Energy Intensity} x {Fuel GHG Intensity}.
+
+$$G_t = \Sigma_{m,v} (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I(\vec x_{tmv}) ~\Sigma_f g_{tf} \phi_{tmvf}$$
 
 Defining indices
 
@@ -194,7 +193,7 @@ Mechanisms by Which CAVs Can Alter Energy Use and Emissiona
 We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicle automation, each $k \in K$ of which has an effect represented by multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. In general, a mechanism can affect travel activity levels *A*, vehicle energy intensities *I*, or mode and fuel shares $\sigma, \phi$. 
 Furthermore, a mechanism could also effect vehicle class shares or occupancy, but we do not yet consider such effects. 
 
-Taking a Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. For each scenario values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Technology/Demand scenario *s*, i.e. $\mu_{tvks}$???.
+Taking a Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. For each scenario values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Combined Technology/Demand scenario *s*, i.e. $\mu_{tvks}$???.
 
 ``` {r defineIndexSets, echo=echoWorking}
 # [Aside: how to bold E in equation?](https://tex.stackexchange.com/questions/595/how-can-i-get-bold-math-symbols)  \mathbf for bold non-italic \boldsymbol for bold_italic
@@ -225,7 +224,7 @@ SetS_Sense = c(               # Sensitivity cases s for mechanism effects
 
 ```
 
-The set of mechanisms *k* represented include: `r paste(SetK_Mechs, collapse=', ')`.  We consider vehicle classes *v* in `r paste(SetV_Class, collapse=', ')`. The model is explored over time for years *t* from `r min(SetT_Years)` to `r max(SetT_Years)`.
+The current set of mechanisms *k* represented include: `r paste(SetK_Mechs, collapse=', ')`.  We consider vehicle classes *v* in `r paste(SetV_Class, collapse=', ')`. The model is explored over time for years *t* from `r min(SetT_Years)` to `r max(SetT_Years)`.
 
 
 ```{r loadLibraries, eval=TRUE, include=echoMaximal, warning=F}
@@ -330,14 +329,14 @@ kable(x = IM,
 
 ### 3.2 Energy Intensity by Vehicle Type and Technology Scenario, by Composing Mechanism Effects
 
-We construct Scenario Multipliers $\mu_{jtv}$ (supressing subscripts *m, f*) for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v* based on the combined the effect of all the mechanisms.
+We construct Scenario Multipliers $\mu_{jtv}$ (supressing subscripts *m, f*) for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v*. These overeall intensity multipliers for technology scenario *j* reflect the combined the effect of all the mechanisms on vehicle energy intensity.
 
-For each technology scenario *j*, year *t*, vehicle class *v* and mechanism *k*, the "EffectCase" or effect sensitivity case *s* is specified, i.e. 
+For each technology scenario *j*, year *t*, vehicle class *v*, the estimated "EffectCase" or effect sensitivity case *s* is specified for each mechanism *k*, i.e. 
 
 $s_{jtvk}$ for 
 $s \in \{Zero, Low, Mid, High\}$.
 
-This determines the appropriate intensity multiplier for each mechanism in the technology scenario.
+This Effect Sensitivity case *s* determines the appropriate intensity multiplier for each mechanism in the technology scenario.
 
 ```{r constructIntensityByScenMech, echo=echoWorking, warning=FALSE, message=FALSE}
 # Load the descriptions of the scenarios
@@ -378,9 +377,9 @@ kable(x = scenAssumps,
       caption= "Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario")
 ```
 
-*??? Specify VoTT assumptions for LDV and HDV by Tech Scenario here? Or leave specification to the Demand Scenario*
+*Alternatively, could Specify VoTT assumptions for LDV and HDV by Tech Scenario here??? Or leave VoTT specification to the Demand Scenario*
 
-The total energy intensity multiplier for each technology scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially fixed and suppressed, i.e. *m* = road_vehicle and *f* = petro.] 
+The total energy intensity multiplier for each technology scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially fixed and suppressed, i.e. *m* = road_vehicle and *f* = petroleum.] 
 $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 
 $s_{jtvk}$ is the sensitivity case value for mechanism *k* on vehicle class *v* in technology scenario *j* and year *t*.
@@ -444,8 +443,10 @@ In addition to the changes in energy intensity we account for a travel demand re
 4.1 Key parameters for Demand scenarios
 -----------------------
 
-The following are the default parameter values.  (Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "DemScenCostChange" vs "DemRespParams" tables. 
-The "Low, Med, High" cases in DemdRespParams table are separate from the Demand Scenario cases in DemScenCostChange table (section 4.3 below)).
+The following are the default parameter values that influence scenarios for the cost-based demand response. They include exogenous fractional shifts for multiple vehicle travel cost components other than energy, e.g. insurance costs, vehicle capital costs, and time costs ("Value of Travel Time", or `VoTT`). They also include alternative values for the elasticity of travel demand with respect to full generalized cost per mile, `ElasVKT`.
+
+(Aside Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "`DemScenCostChange`" vs "`DemRespParams`" tables. 
+The "Low, Med, High" cases in `DemRespParams` table are separate from the Demand Scenario cases in `DemScenCostChange` table (section 4.3 below)).
 
 ```{r demandScenParams, echo=echoWorking}
 
@@ -861,14 +862,14 @@ kable(x = DemScenCostChange, row.names=F, digits=3,
 
 Costs are adjusted relative to Base for the cost-related assumptions of each Demand Scenario and for the Energy Intensity change associated with the current Technology Scenario. Energy intensity drives the travel energy cost, but this component is typically less than 15% of total travel costs for LDVs, and less than 35% of total costs for HDVs.
 
-Base cost component shares $\sigma_{ivt}^B$ are normalized and add to 1.0. Demand Scenario *relative* costs for each cost component *i* are relative to the Base (Manual Vehicle) level. The total relative cost can be greater than or less than 1.0. Denoted $\sigma_{ivtdj}$, the scenario travel cost component shares depend on cost component *i*, Vehicle class *v*, Year *t* and Demand Scenario *d*, and TechScenario *j*.
+Base cost component shares $\sigma_{ivt}^B$ are normalized and add to 1.0. Demand Scenario *relative* costs for each cost component *i* are relative to the Base (Manual Vehicle) level. The total relative cost for all components can be greater than or less than 1.0. Denoted $\sigma_{ivtdj}$, the scenario travel cost component shares depend on cost component *i*, Vehicle class *v*, Year *t* and Demand Scenario *d*, and TechScenario *j*.
 
-Fuel costs per mile are adjusted by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. The perceived change in fuel cost effects for consumers/riders also depends on the fraction $f_{fuelvis,v})$ of fuel costs that are assumed visible to or perceived by them. That is, for cost component $i = fuel$:
-$$\sigma_{ivtdj} = \sigma_{fuel,vt}^B \cdot (1+\mu_{jtv} \cdot f_{fuelvis,v})$$
+Fuel costs per mile are adjusted from the base level $\sigma_{fuel,vt}^B$ by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. The perceived change in fuel cost effects for consumers/riders also depends on the fraction $f_{fuelvis,v})$ of fuel costs that are assumed visible to or perceived by them. That is, for cost component $i = fuel$:
+$$\sigma_{fuel,vtdj} = \sigma_{fuel,vt}^B \cdot (1+\mu_{jtv} \cdot f_{fuelvis,v})$$
 
-Other travel cost components *i* have similar scenario-based adjustments, some directly specified by assumption:
-$$\sigma_{fuel,vtdj} = \sigma_{ivt}^B \cdot (1+\gamma_{dtv})$$
-
+Other travel cost components *i* have similar scenario-based adjustments, some directly specified by assumption $\gamma_{dtv}$ for demand scenario *d*, year *t* and vehicle class *v*:
+$$\sigma_{ivtdj} = \sigma_{ivt}^B \cdot (1+\gamma_{dtv})$$
+Note that adjusted travel cost components are all determined relative to the reference level. Thus the adjusted component "shares" are not technically shares, and can total greater or less than 1.0, if the total adjusted costs are greater or less than total base costs.
 
 ```{r calcCostSharesbyComponentCAV, echo=echoWorking}
 # Start with dataframe replicates the Base Vehicle Travel Cost Shares for each Demand Scenario
