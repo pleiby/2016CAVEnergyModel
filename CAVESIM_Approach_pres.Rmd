@@ -36,13 +36,13 @@ library(tidyverse)
 library(knitr)
 ```
 
-# Status
+# 1. Status
 
 ## CAVESIM Status at End FY18
 
 - Q3: Preliminary design of HDV & shared mobility model components (ORNL)
 - Q4: Model implementation and runs including multiyear dynamics and new components for LDVs (ORNL)
-	- include TNC (ride sharing) to distinguish PKT from VKT
+	- include initial TNC (ride sharing) to distinguish PKT from VKT
 	- link the model from a static annual to simple dynamic
 		- Seek penetration scenario from MA3T or ADOPT/Workflow Taskforce
 - FY19 Q1-Q2
@@ -89,7 +89,7 @@ for *i*: AV or MV; *j*: urban or non-urban
   - Vehicle capital and operating costs, (including energy)
   - Time costs: VoTT/hr and speed, congestion
 3. **Estimate Effects on Road Travel Demand** (VKT, PKT)
-  - Total Demand (PMT) response to $\Delta$ cost/convenience
+  - Total Demand (PKT) response to $\Delta$ cost/convenience
   - Shifts in Demand (apart from cost response)
     - New/underserved rider groups
     - Ride-hailing/Ride-pooling
@@ -122,7 +122,7 @@ for *i*: AV or MV; *j*: urban or non-urban
 - **Explore implications of alternative conditions/costs on outcomes**
 
 
-# Connections to Other SMART Project Assumptions & Results
+# 2. Connections to Other SMART Project Assumptions & Results
 
 ## Base inputs from "Scenario Generation" - Technology Info
 - [ToDo: reconcile with SMART Workflow Scenario Parameters]
@@ -157,7 +157,7 @@ for *i*: AV or MV; *j*: urban or non-urban
 - Update additional cost and economic conditions (response elasticities) based on Lit review (share insights and conclusions re parameters with others)
 - XXX Bullet 3
 
-# CAVESIM Inputs to be Drawn From/Benchmarked to Detailed SMART Models/Studies
+# 3. CAVESIM Inputs to be Drawn From/Benchmarked to Detailed SMART Models/Studies
 
 ## CAVESIM Table Main Inputs (1)
 1. Ref/Exog Conditions                        |Units
@@ -224,7 +224,7 @@ Average travel speed by region(6)	| km/hr
 		- What about the NREL "Scenario Generation" model (YASDM)
 - Q: How do we best support/contribute to the MEP measure?
 
-# Example Data
+# 4. Example Data
 
 ## Static Estimates of Energy Intensity Effects Updated and Made Dynamic
 
@@ -235,17 +235,17 @@ IM %>% filter(Year==2050 & VC=="LDV") %>%
   kable(caption= "Intensity Multipliers by Vehicle-type, Year, and Case")
 ```
 
-# Overview of Analytical Approach
+# 5. Overview of Analytical Approach
 
 ## Vehicle Energy Intensity Results from a Combination of Technological and Operational Mechanisms
 
 * Note: Time and regions subscripts *t* and *r* are implicit throughout.
 * $\Delta \mu_{kvi}$ is the incremental effect on energy intensity of mechanism *k* in technology scenario *i*, for vehicle type *v*
-* $\Delta \delta_{kvi}$ is the incremental effect on demand (VMT) for effect *m* in demand scenario *j*, for vehicle type *v*
+* $\Delta \delta_{kvi}$ is the incremental effect on demand (VKT) for effect *m* in demand scenario *j*, for vehicle type *v*
 
 Each of these incremental energy intensity and travel demand effects may depend on costs *c*.
 
-Energy use is the product of energy intensity *I* (Mj/km) and travel VMT *M* (km/yr):
+Energy use is the product of energy intensity *I* (Mj/km) and travel VKT *M* (km/yr):
 $$E_{vij} ~=~ \prod_k \left ( 1 + \Delta \mu_{kvi}(c) \right ) \cdot I_{Ev0} \cdot \prod_m \left ( 1 + \Delta \delta_{mvj}(c) \right ) \cdot M_{Ev0}$$
 
 ## Unifying Demand Framework
@@ -261,7 +261,7 @@ s.t. ~& L + T + X \le \underline L \\
 & M = m(F, H)
 \end {aligned}
 $$
-Note we also include some consideration (tracking) of societal (non-market) costs associated with fuel use *F* and VMT *M*. These include, e.g. air emissions, accidents, and congestion.
+Note we also include some consideration (tracking) of societal (non-market) costs associated with fuel use *F* and VKT *M*. These include, e.g. air emissions, accidents, and congestion.
 
 ## Aside
 
@@ -278,12 +278,12 @@ $$M_v ~=~ f_v(F_v, H_v)$$
 
 Fig: Fuel Use vs. Fuel Incr. Cost
 
-Fig: VMT vs. VMT Incr. Cost
+Fig: VKT vs. VKT Incr. Cost
 
 ## CAVESIM Connections to Task 2B and SMART Workflow
 
 - **Connections to CAV 2B tasks**
-    - Take aggregated National, or regional VMT and Energy (from given cases) as benchmark
+    - Take aggregated National, or regional VKT and Energy (from given cases) as benchmark
     - Use Veh Tech Penetration cases from MA3T
         - and offer relations for use by MA3T
     - Contribute to updated Bounds report 
@@ -294,3 +294,6 @@ Fig: VMT vs. VMT Incr. Cost
         - IDed detailed list of inputs to use, [Contribute to national ests]
 - **Aggregate outputs can provide comparison & inputs**:
     - comparison to detailed models, inputs to benefits (MEB) measures, additional cases
+
+# 6. Preliminary Results
+
