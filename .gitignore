@@ -2,6 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+*.pdf
+*.sav
 Old*.zip
 Data/PrimaryDataFiles/*
 Data/NHTS
