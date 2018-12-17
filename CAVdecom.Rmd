@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "Nov. 07, 2018"
+date: "Dec. 15, 2018"
 
 author:
   - name: Paul N. Leiby
@@ -188,7 +188,7 @@ $$G_t = \vec {G_{t}} \cdot \boldsymbol {1}$$
 In the work here, road travel demand $A_{tv}$ is divided into LDV and HDV (passenger and freight), at the minimum, 
 and can be further decomposed into vehicle size classes, and drivetrain classes.
 
-Mechanisms by Which CAVs Can Alter Energy Use and Emissiona
+Mechanisms by Which CAVs Can Alter Energy Use and Emissions
 ---------------------------
 We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicle automation, each $k \in K$ of which has an effect represented by multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. In general, a mechanism can affect travel activity levels *A*, vehicle energy intensities *I*, or mode and fuel shares $\sigma, \phi$. 
 Furthermore, a mechanism could also effect vehicle class shares or occupancy, but we do not yet consider such effects. 
@@ -869,7 +869,10 @@ $$\sigma_{fuel,vtdj} = \sigma_{fuel,vt}^B \cdot (1+\mu_{jtv} \cdot f_{fuelvis,v}
 
 Other travel cost components *i* have similar scenario-based adjustments, some directly specified by assumption $\gamma_{dtv}$ for demand scenario *d*, year *t* and vehicle class *v*:
 $$\sigma_{ivtdj} = \sigma_{ivt}^B \cdot (1+\gamma_{dtv})$$
-Note that adjusted travel cost components are all determined relative to the reference level. Thus the adjusted component "shares" are not technically shares, and can total greater or less than 1.0, if the total adjusted costs are greater or less than total base costs.
+Note that adjusted travel cost components are all determined relative to the reference level. Thus the adjusted component "shares" are not technically shares, and can total greater or less than 1.0, if the total adjusted costs are greater or less than total base costs. 
+Their sum indicates the relative travel cost for the combined demand-technology scenario *dj*""
+$$c_{rel,vtdj} ~=~ \frac {\sum_i \sigma_{ivtdj}} { \sum_i \sigma_{ivt}^B } ~=~ {\sum_i \sigma_{ivtdj}} $$
+
 
 ```{r calcCostSharesbyComponentCAV, echo=echoWorking}
 # Start with dataframe replicates the Base Vehicle Travel Cost Shares for each Demand Scenario
@@ -1255,11 +1258,11 @@ Seeking to generate bar graphs of fractional changes in energy intensity, travel
 
 Create a dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios.
 
-Energy intensity changes (net, accounting for the influence of all identified mechanisms) in `EnergyIntensityChanges` 
-have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j*:
+Energy intensity changes (net, accounting for the influence of all identified mechanisms)  
+have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `EnergyIntensityChanges`:
 $$\Delta I_{tkv} = 1 - \mu_{jtv}$$
-Travel demand or VMT fractional changes in `VMTIncrease` have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j*
-$$m_{vtdj}(c_{rel,vtdj}) ~=~fractionalVKTIncr_{dvc} ~=~ (RelTotalCost_{vtdj})^{ElasVKT_{cv}}-1$$
+Travel demand or VMT fractional changes have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `VMTIncrease`
+$$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1$$
 
 ```{r }
 
@@ -1443,7 +1446,7 @@ CS7      :2050  :Low      :LDV  :7            :2           :scenario 3 with shif
 CombScen_Combinations$VC = as.character(CombScen_Combinations$VC)
 ```
 
-Select Predefined combionations of Tech and Demand scenarios from the full set of cross-combinations
+Select Predefined combinations of Tech and Demand scenarios from the full set of cross-combinations
 
 ```{r}
 # Note: semi_join(df1, df2) #keep only observations in df1 that match in df2 (inner_join without keeping df2).
