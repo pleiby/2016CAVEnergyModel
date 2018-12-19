@@ -35,9 +35,9 @@ library(knitr)
 2. Decomposition of Energy and GHG Impacts of CAVs
 =========================
 
-The energy and GHG emissions of CAV transportation result from the interaction of a wide range of mechanisms, including the impact of vehicle technologies and vehicle design changes on vehicle operations and efficiency; system-level changes in infrastructure that alter traffic coordination, speeds, and patterns; and consumer behavioral responses that determine the number, length, and nature of trips demanded. An aggregate representation of the composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_, as used in transportation emissions by (McCollum & Yang, 2009, Greene and Plotkin, 2011) or equivalently the _Schipper ASIF framework_ (Schipper et al. 2000, 2011). Mechanistic and scenario-base approaches of this type have been used to explore CAV impacts by Wadud, MacKenzie and Leiby (2016) and by Stephens et al. 2016. While this approch assumes a degree of separability in the impact of certain identified mechanisms on energy use, e.g. weight reduction versus aerodynamic load reduction through platooning, this is supported in some cases by more detailed models and experimental data [cite XXX].
+The composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_
 
-From this so-called *ASIF* approach the total GHG emissions are the product of
+From this *Kaya* or *ASIF* approach the total GHG emissions are the product of
 
 1. the level of **A**ctivity (e.g., passenger miles of travel), 
 2. the **S**hare of activity for each mode, vehicle, and fuel type, 
