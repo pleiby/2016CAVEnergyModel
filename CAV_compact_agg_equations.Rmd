@@ -32,8 +32,8 @@ library(knitr)
 #opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 ```
 
-2. Decomposition of Energy and GHG Impacts of CAVs
-=========================
+# 2. Decomposition of Energy and GHG Impacts of CAVs
+
 
 The composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_
 
@@ -46,6 +46,7 @@ From this *Kaya* or *ASIF* approach the total GHG emissions are the product of
 
 Energy use for particular vehicle type is given by total activity (travel demand) level $A_{tv}$, 
 the share of travel on mode *m* and the average share-weighted energy intensity of travel by vehicle type and mode.
+
 $$E_{tvf} = (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I({\vec x}_{tmv}) \phi_{tmvf}$$
 Vehicle energy intensity *I* is a function of a vector $\vec x_{tmv}$ of CAV mechanism/technology levels.
 
@@ -81,14 +82,18 @@ The variables are
 - $G_{tv}$ = GHGs emitted in year t by type v [MT CO2e/y]
 
 Focusing on passenger travel, we can write energy use $E_{tvf}$ as
+
 $$E_{tvf} = A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \sigma_{tvm} \phi_{tvmf} I_{tvmf}$$
 with units
+
 $$[EJ/yr] = [bill~ pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm]$$
 
 Total Emissions are
+
 $$G_{tv} = \Sigma_f E_{tvf} g_{tf}$$
 
 Combining, overall total emissions per year are
+
 $$G_{t} = \Sigma_v \Sigma_f \left [ 
 A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \left ( \sigma_{tvm} \phi_{tvmf} I_{tvmf} \right ) \right ] g_{tf}$$
 
@@ -99,8 +104,7 @@ Furthermore, a mechanism could also effect vehicle class shares or occupancy, bu
 
 Taking a Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. For each scenario values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Combined Technology/Demand scenario *s*, i.e. $\mu_{tvks}$???.
 
-3. Estimating Energy Impacts
-===========================
+# 3. Estimating Energy Impacts
 
 We define the effects of automation on vehicle energy intensity (energy per vehicle km traveled) through a set of identified technological and operational "mechanisms." 
 
@@ -131,10 +135,10 @@ $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 $s_{jtvk}$ is the sensitivity case value for mechanism *k* on vehicle class *v* in technology scenario *j* and year *t*.
 
 The Net Energy Intensity change for the technology scenario *j* is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
+
 $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
-4. Demand Response to CAVs
-=========================
+# 4. Demand Response to CAVs
 
 In addition to the changes in energy intensity we account for a travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
 
@@ -161,12 +165,15 @@ Costs are adjusted relative to Base for the cost-related assumptions of each Dem
 Base cost component shares $\sigma_{ivt}^B$ are normalized and add to 1.0. Demand Scenario *relative* costs for each cost component *i* are relative to the Base (Manual Vehicle) level. The total relative cost for all components can be greater than or less than 1.0. Denoted $\sigma_{ivtdj}$, the scenario travel cost component shares depend on cost component *i*, Vehicle class *v*, Year *t* and Demand Scenario *d*, and TechScenario *j*.
 
 Base fuel costs per mile $\sigma_{fuel,vt}^B$ are adjusted by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. The perceived change in fuel cost effects for consumers/riders also depends on the fraction $f_{fuelvis,v})$ of fuel costs that are assumed visible to or perceived by them. That is, for cost component $i = fuel$:
+
 $$\sigma_{fuel,vtdj} = \sigma_{fuel,vt}^B \cdot (1+\mu_{jtv} \cdot f_{fuelvis,v})$$
 
 Other travel cost components *i* have similar scenario-based adjustments, some directly specified by assumption $\gamma_{dtv}$ for demand scenario *d*, year *t* and vehicle class *v*:
+
 $$\sigma_{ivtdj} = \sigma_{ivt}^B \cdot (1+\gamma_{dtv})$$
 Note that adjusted travel cost components are all determined relative to the reference level. Thus the adjusted component "shares" are not technically shares, and can total greater or less than 1.0, if the total adjusted costs are greater or less than total base costs.
 Their sum indicates the relative travel cost for the combined demand-technology scenario *dj*:
+
 $$c_{rel,vtdj} ~=~ \frac {\sum_i \sigma_{ivtdj}} { \sum_i \sigma_{ivt}^B } ~=~ {\sum_i \sigma_{ivtdj}} $$
 
 
@@ -188,6 +195,7 @@ Define
 
 $$c_{rel,vtdj} \equiv \frac {C_{tot,vtdj}} {C_{tot,vt}^B}$$
 The fractional increase in VKT
+
 $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj} )^{ElasVKT_{dv}}-1$$
 
 ### Effects on VMT Demand from Underserved Population, and Ride Hailing & Pooling
@@ -200,23 +208,22 @@ Specify Combined Scenarios. A combined scenario $CS_i$ associates each Demand Sc
 
 $$c_{rel,vtdj} ~=~ RelTotalCost_{vtdj}$$
 
-$$\begin {align}
-m_{vtdj}(c_{rel,vtdj}) &~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1\\
+$$\begin {align} m_{vtdj}(c_{rel,vtdj}) &~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1 \\ 
 M_{jsdt} &~=~ \left ( 1 + m_{vtdj}(c_{rel,vtdj}) \right ) \gamma_{USD} (1+\rho_{HailPool}) 
 \end {align}
 $$
 
-
-
 And the proportional change in VMT for the combined scenario is
+
 $$\Delta M_{jsdt} = 1 - M_{jsdt}$$
 
-5. Policy and Scenario Calculations
-=======================
+# 5. Policy and Scenario Calculations
 
 Energy intensity changes (net, accounting for the influence of all identified mechanisms) 
 have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `EnergyIntensityChanges`:
+
 $$\Delta I_{tkv} = 1 - \mu_{jtv}$$
 Travel demand or VMT fractional changes have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `VMTIncrease`
+
 $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1$$
 
