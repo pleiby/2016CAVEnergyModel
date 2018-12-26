@@ -56,8 +56,7 @@ echoTests   = TRUE  # set TRUE to see printed test values ("Check: ...")
 ```
 
 
-1. Introduction, Main Points, Key Factors
-====================
+# 1. Introduction, Main Points, Key Factors
 
 #### Goals for and Potential value of compact/aggregate model: 
 * explore affects of costs and tecnological progress on outcomes
@@ -113,12 +112,11 @@ This paper describes a new aggregated framework, building on established travel 
 - One necessary limitation is the abstraction and aggregation of potentially important detail, as discussed above. The approach here includes only an approximate aggregate representation of the effects of particular AV technologies and systems on vehicle energy use for specific drivetrains, roadway networks, traffic conditions, and drivecycles. These particular and specific results can be modeled in more detailed vehicle and spatial models such as Autonomie, FASTSim, BEAM/POLARIS, etc. Consumer heterogeneity is not explicitly represented. Local/spatially-explicit outcomes and interactions modeled elsewhere must be subsumed within aggregate, regional outcomes. 
 
 
-2. Decomposition of Energy and GHG Impacts of CAVs
-=========================
+# 2. Decomposition of Energy and GHG Impacts of CAVs
 
 The energy and GHG emissions of CAV transportation result from the interaction of a wide range of mechanisms, including the impact of vehicle technologies and vehicle design changes on vehicle operations and efficiency; system-level changes in infrastructure that alter traffic coordination, speeds, and patterns; and consumer behavioral responses that determine the number, length, and nature of trips demanded. An aggregate representation of the composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_, as used in transportation emissions by (McCollum & Yang, 2009, Greene and Plotkin, 2011) or equivalently the _Schipper ASIF framework_ (Schipper et al. 2000, 2011). Mechanistic and scenario-base approaches of this type have been used to explore CAV impacts by Wadud, MacKenzie and Leiby (2016) and by Stephens et al. 2016. While this approch assumes a degree of separability in the impact of certain identified mechanisms on energy use, e.g. weight reduction versus aerodynamic load reduction through platooning, this is supported in some cases by more detailed models and experimental data [cite XXX].
 
-From this so-called *ASIF* approach the total GHG emissions are the product of
+From this *Kaya* or *ASIF* approach the total GHG emissions are the product of
 
 1. the level of **A**ctivity (e.g., passenger miles of travel), 
 2. the **S**hare of activity for each mode, vehicle, and fuel type, 
@@ -127,6 +125,7 @@ From this so-called *ASIF* approach the total GHG emissions are the product of
 
 Energy use for particular vehicle type is given by total activity (travel demand) level $A_{tv}$, 
 the share of travel on mode *m* and the average share-weighted energy intensity of travel by vehicle type and mode.
+
 $$E_{tvf} = (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I({\vec x}_{tmv}) \phi_{tmvf}$$
 Vehicle energy intensity *I* is a function of a vector $\vec x_{tmv}$ of CAV mechanism/technology levels.
 
@@ -162,11 +161,14 @@ The variables are
 - $G_{tv}$ = GHGs emitted in year t by type v [MT CO2e/y]
 
 Focusing on passenger travel, we can write energy use $E_{tvf}$ as
+
 $$E_{tvf} = A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \sigma_{tvm} \phi_{tvmf} I_{tvmf}$$
 with units
+
 $$[EJ/yr] = [bill~ pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm]$$
 
 Total Emissions are
+
 $$G_{tv} = \Sigma_f E_{tvf} g_{tf}$$
 
 $$\begin{aligned}
@@ -175,6 +177,7 @@ $$\begin{aligned}
 \end{aligned}
 $$
 Combining, overall total emissions per year are
+
 $$G_{t} = \Sigma_v \Sigma_f \left [ 
 A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \left ( \sigma_{tvm} \phi_{tvmf} I_{tvmf} \right ) \right ] g_{tf}$$
 
@@ -236,8 +239,7 @@ library(stringr)
 ```
 
 
-3. Estimating Energy Impacts
-===========================
+# 3. Estimating Energy Impacts
 
 We define the effects of automation on vehicle energy intensity (energy per vehicle km traveled) through a set of identified technological and operational "mechanisms." 
 
@@ -385,6 +387,7 @@ $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 $s_{jtvk}$ is the sensitivity case value for mechanism *k* on vehicle class *v* in technology scenario *j* and year *t*.
 
 The Net Energy Intensity change for the technology scenario *j* is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
+
 $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
 
@@ -435,8 +438,7 @@ cat("Note/Aside: Constructed Net Energy Intensity Changes match old workbook to 
 ```
 
 
-4. Demand Response to CAVs
-=========================
+# 4. Demand Response to CAVs
 
 In addition to the changes in energy intensity we account for a travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
 
@@ -864,13 +866,16 @@ Costs are adjusted relative to Base for the cost-related assumptions of each Dem
 
 Base cost component shares $\sigma_{ivt}^B$ are normalized and add to 1.0. Demand Scenario *relative* costs for each cost component *i* are relative to the Base (Manual Vehicle) level. The total relative cost for all components can be greater than or less than 1.0. Denoted $\sigma_{ivtdj}$, the scenario travel cost component shares depend on cost component *i*, Vehicle class *v*, Year *t* and Demand Scenario *d*, and TechScenario *j*.
 
-Fuel costs per mile are adjusted from the base level $\sigma_{fuel,vt}^B$ by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. The perceived change in fuel cost effects for consumers/riders also depends on the fraction $f_{fuelvis,v})$ of fuel costs that are assumed visible to or perceived by them. That is, for cost component $i = fuel$:
+Base fuel costs per mile $\sigma_{fuel,vt}^B$ are adjusted by the Scenario Multipliers for energy intensity, $\mu_{jtv}$ for TechScenario *j*, Year *t*, Vehicle class *v*. The perceived change in fuel cost effects for consumers/riders also depends on the fraction $f_{fuelvis,v})$ of fuel costs that are assumed visible to or perceived by them. That is, for cost component $i = fuel$:
+
 $$\sigma_{fuel,vtdj} = \sigma_{fuel,vt}^B \cdot (1+\mu_{jtv} \cdot f_{fuelvis,v})$$
 
 Other travel cost components *i* have similar scenario-based adjustments, some directly specified by assumption $\gamma_{dtv}$ for demand scenario *d*, year *t* and vehicle class *v*:
+
 $$\sigma_{ivtdj} = \sigma_{ivt}^B \cdot (1+\gamma_{dtv})$$
-Note that adjusted travel cost components are all determined relative to the reference level. Thus the adjusted component "shares" are not technically shares, and can total greater or less than 1.0, if the total adjusted costs are greater or less than total base costs. 
-Their sum indicates the relative travel cost for the combined demand-technology scenario *dj*""
+Note that adjusted travel cost components are all determined relative to the reference level. Thus the adjusted component "shares" are not technically shares, and can total greater or less than 1.0, if the total adjusted costs are greater or less than total base costs.
+Their sum indicates the relative travel cost for the combined demand-technology scenario *dj*:
+
 $$c_{rel,vtdj} ~=~ \frac {\sum_i \sigma_{ivtdj}} { \sum_i \sigma_{ivt}^B } ~=~ {\sum_i \sigma_{ivtdj}} $$
 
 
@@ -1041,7 +1046,7 @@ plotStackedBarCostCompons(VTCostAlt, "DS4")
 4.5 Fractional VMT Changes in CAV Scenario
 -------------------
 
-Compute fractional increases in VMT from the changes in total generalized travel costs that result from automation.
+Compute fractional increases in VKT from the changes in total generalized travel costs that result from automation.
 
 For Vehicle Type *v*, Time *t*, Demand Scenario *d*, Technology Scenario *j*, and Elasticity Case *c* (Low and High elasticity)
 [??? is elasticity case to be governed by demand scenario *d*, or separate index *c*?]
@@ -1051,10 +1056,10 @@ Define
 - $c_{rel,vtdj}$ = Relative Total Cost for vehicle travel [unitless, vehicle travel cost $/veh-km]
 - $m_{vtdj}(c_{rel,vtdj})$ = fractional increase in VKT [unitless, VKT is in km/vehicle-yr]
 
-$$c_{rel,vtdj} = RelTotalCost_{vtdj} \equiv \frac {C_{tot,vtdj}} {C_{tot,vt}^B}$$
+$$c_{rel,vtdj} \equiv \frac {C_{tot,vtdj}} {C_{tot,vt}^B}$$
+The fractional increase in VKT
 
-
-$$m_{vtdj}(c_{rel,vtdj}) ~=~fractionalVKTIncr_{dvc} ~=~ (RelTotalCost_{vtdj})^{ElasVKT_{cv}}-1$$
+$$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj} )^{ElasVKT_{dv}}-1$$
 
 The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. This elasticity reflects the long-run response of road travel to travel cost changes, but is not meant to include the demand response of new/underserved uswer groups, or the VMT effects of ride hailing/pooling. Based on how they were generated, the parameter values selected may or may not include mode substitution/switching effects, and longer-run locational choices. The generalize vehicle travel costs considered here and in the cost-measure associated with this elasticity include vehicle capital and operation costs, including fuel, insurance, maintenance, fees, and travel-time costs.
 
@@ -1169,6 +1174,7 @@ M_{jsdt} &~=~ \left ( 1 + m_{vtdj}(c_{rel,vtdj}) \right ) \gamma_{USD} (1+\rho_{
 $$
 
 And the proportional change in VMT for the combined scenario is
+
 $$\Delta M_{jsdt} = 1 - M_{jsdt}$$
 
 ```{r VMTAdjustments, echo=echoWorking}
@@ -1250,8 +1256,7 @@ cat("Check: Test output to Kaya (VMTIncrease table) matches examples for CombSce
     sum(abs(FracVMTIncreaseExample$y2050 - FracVMTIncreaseExample$fracVMTIncr)) )
 ```
 
-5. Policy and Scenario Calculations
-=======================
+# 5. Policy and Scenario Calculations
 
 Seeking to generate bar graphs of fractional changes in energy intensity, travel demand, energy use (each by LDV/HDV), and Total Energy Use (both sectors).
 (As in Policy + Scenario sheet)
@@ -1260,8 +1265,10 @@ Create a dataframe of changes in Energy Intensity and Travel Demand, for all Com
 
 Energy intensity changes (net, accounting for the influence of all identified mechanisms)  
 have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `EnergyIntensityChanges`:
+
 $$\Delta I_{tkv} = 1 - \mu_{jtv}$$
 Travel demand or VMT fractional changes have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `VMTIncrease`
+
 $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1$$
 
 ```{r }
@@ -1710,8 +1717,7 @@ LDVFuelUsePerYear_L
 ```
 
 
-6. Simple functions for MPG as a function of highway speed
-=============================
+# 6. Simple functions for MPG as a function of highway speed
 
 6.1 Fuel Consumption vs. Speed - Thomas et al. Approach
 ----------------------
@@ -1840,8 +1846,7 @@ timeCostRange_dph = 10.0 * seq(from=0.1, to=2.0, by = 0.1) # $/hr
 fuelCostRange_dpg = 2.0  * seq(from=0.1, to=2.0, by = 0.1) # $/gal
 ```
 
-7. Safety Costs Associated with Speed
-======================
+# 7. Safety Costs Associated with Speed
 
 * [Road safety - Speed](http://www.who.int/violence_injury_prevention/publications/road_traffic/world_report/speed_en.pdf) World Health Organization, 2004
   - An increase in average speed of 1 km/h typically results in a 3% higher risk of a crash involving injury, with a 4-5% increase for crashes that result in fatalities.
@@ -1979,8 +1984,8 @@ $$A_2 = A_1 \left ( \frac{V_2}{V_1} \right )^2$$
 
   > In words: the number of injury accidents after the change in speed (A2) equals the number of accidents before the change (A1) multiplied by the new average speed (v2) divided by the former average speed (v1), raised to the square power.
 
-References
-========================
+# References
+
 * Bösch, P. M., Becker, F., Becker, H., & Axhausen, K. W. (2017). Cost-based analysis of autonomous mobility services. _Transport Policy_, (October). http://doi.org/10.1016/j.tranpol.2017.09.005
 * Brown, A., Gonder, J., & Repac, B. (2014). An Analysis of Possible Energy Impacts of Automated Vehicle. In G. Meyer & S. Beiker (Eds.), Road Vehicle Automation (pp. 61-70). Springer. Retrieved from http://link.springer.com/book/10.1007%2F978-3-319-05990-
 * European Road Safety Observatory 2018 [Speed and Accident Risk](https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_accident_risk_en) (last revised 06/07/2018).
