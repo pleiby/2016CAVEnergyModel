@@ -9,3 +9,7 @@ Data/PrimaryDataFiles/*
 Data/NHTS
 Literature/
 BackupAndTests/
+CAVdecom_20181107.docx
+*.txt
+Data/Shared*.xlsx
+Example*
