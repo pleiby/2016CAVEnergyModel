@@ -31,6 +31,10 @@ file: CAV_compact_agg_equations.Rmd
 library(knitr)
 #opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 ```
+# 1. Objective
+
+We describe the combination of a technology-based decomposition of energy use and travel 
+demand effects of vehicle automation with a utility-maximizing travel demand framework.
 
 # 2. Decomposition of Energy and GHG Impacts of CAVs
 
@@ -256,3 +260,8 @@ $$M ~=~ \sum_v M_v$$
 $$F ~=~ \sum_v F_v$$
 
 Vehicle monetary costs $H_v$ per km include the cost categories: {Capital, Ins, Maint, ParkingAndFees, [internal accident and congestion costs]}; but exclude the cost of travel time.
+
+# 8. Initial Integration of Approaches
+
+# 9. Extensions for Initial Representation of Ride Hailing and Pooling
+
