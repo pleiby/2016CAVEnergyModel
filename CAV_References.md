@@ -3,6 +3,13 @@
 Abstract:
 A scratch file with evolving list of new references on CAV energy and travel implications, for possible future use.
 
+* Linda Lim and Aly M. Tawfik 2018. Estimating Future Travel Costs for Autonomous Vehicles (AVs) and Shared Autonomous Vehicles (SAVs)
+November 2018
+DOI: 10.1109/ITSC.2018.8569715
+Conference: 2018 IEEE International Conference on Intelligent Transportation Systems (ITSC)
+https://www.researchgate.net/publication/329619302_Estimating_Future_Travel_Costs_for_Autonomous_Vehicles_AVs_and_Shared_Autonomous_Vehicles_SAVs/references
+
+
 * Sharing Mobility: Lane Accommodation in Urban Road Networks with Automated Vehicles
 November 2018
 DOI: 10.1109/ITSC.2018.8569551
