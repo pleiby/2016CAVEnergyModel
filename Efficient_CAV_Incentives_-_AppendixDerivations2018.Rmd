@@ -1,10 +1,10 @@
 ---
-title: "Efficient CAV Taxation - Appendix - Derivations"
+title: "Efficient CAV Incentives - Appendix - Derivations"
 author: "Paul Leiby and Jonathan Rubin"
-date: "June 19, 2018"
+date: "January 06, 2018"
 output:
   word_document:
-    reference_docx: Efficient_CAV_Taxation_-_Template.docx
+    reference_docx: Efficient_CAV_Incentives_-_Template.docx
   pdf_document: default
 ---
 
@@ -16,27 +16,29 @@ To design our system, we build on the model of Parry and Small (2005) using thei
 
 Define indirect utility V as the (private) utility maximum given fuel and labor taxes $t_F, t_L$, fuel price $q_F$, pollution *P*, accident risk *A*, average travel speed $1/\pi$, fixed time (labor-hours) supply $\bar L$, and government budget $\bar G$, all of which are taken as exogenous by the private agent:
 $$V(t_F, t_L, q_F, P, A, \pi, \bar L,\bar G) = \max_{C,M,F,H,N} U$$
-$$U(C,M,F,H,N) \equiv u(\psi(C,M,T,\bar G), N) - \phi(P) - \delta(A)$$
+$$U(C,o \cdot M,F,H,N) \equiv u(\psi(C,o \cdot M,T,\bar G), N) - \phi(P) - \delta(A)$$
 $$\begin{aligned}
-s.t. ~&M = m(H, F) ~~~~~~~~~~~~~~~~~~&~~\text{Miles traveled production [mi/cap-yr]}\\
-     & T = \pi(\bar M) \cdot M       &~~\text{Travel Time [hrs/cap-yr]}\\
+s.t. ~&M = m(H, F) ~~~~~~~~~~~~~~~~~~&~~\text{Vehicle Miles traveled production [mi/cap-yr]}\\
+     & T = \pi(\bar M) \cdot o \cdot M       &~~\text{Passenger Travel Time [hrs/cap-yr]}\\
      & P = P_F(\bar F) + P_M(\bar M) &~~\text{Pollution from fuel use and miles traveled}\\
-     & A = a(\bar M) \bar M          &~~\text{Accident risk, with per-mile risk based on average driving}
+     & A = a(\bar M) \bar M          &~~\text{Ext. Accident risk, per-mile risk based on average driving}
 \end{aligned}
 \label{privateOptEq}
 $$
+
 Choice vars (all per-capita-year):
 
 * *F*: fuel consumption [gal/capita-yr]
 * *H*: non-fuel driving costs [$/capita-yr] (vehicle costs including fuel efficiency and automation technology)
 * *N*: leisure consumption [hrs/capita-yr]
-* *M*: Miles traveled [mi/capita-yr]
+* *M*: Vehicle Miles traveled [mi/capita-yr]
 * *C*: Consumption of (non-travel) goods [$/capita-yr]
+* *o*: average vehicle Occupancy (take as fixed, initially)
 
 Subject to the individual budget constraint (for wage *w* = 1.0, numeraire), total time constraint, and government budget constraint:
-$$\text{budget constr [\$/yr]: } C + (q_F+t_F) F + H ~=~ I ~=~ (1-t_L) L$$
+$$\text{budget constr [\$/yr]: } C + (q_F+t_F) F + H + t_M M ~=~ I ~=~ (1-t_L) w L$$
 $$\text{time constr [hrs/yr]: } L +N + T ~=~ \bar L$$
-$$\text{govt budget constr [\$/yr]: } t_L L + t_F F ~=~ \bar G$$
+$$\text{govt budget constr [\$/yr]: } t_L L + t_F F + t_M M ~=~ \bar G$$
 (gen equilibrium closure constraint)
 
 **Substituting** the expression for Travel Time *T* in terms of average pace $\pi$ (1/speed) and miles driven, combining the budget constraint and time constraint to solve for labor *L*, all constraints combine into 2. These are the constraints reuiring VMT production to equal VMT demand, and the household budget constraint. Solving the Lagrangian maximization for private households yields the indirect utility function $V$.
@@ -622,5 +624,5 @@ $$a_{FM} \equiv \frac {dF}{dM}$$
 $$b_M \equiv \frac {\frac{dM}{dt_F} \frac{P_F}{M}} {\frac{dF}{dt_F} \frac{P_F}{F}} = \frac{dM}{dF} \frac{F}{M}$$
 
 
-* _File: "Efficient_CAV_Taxation_-_AppendixDerivations 2016MMDD.Rmd"_
+* _File: "Efficient_CAV_Taxation_-_AppendixDerivations2018.Rmd"_
 * _Printed: `r format(Sys.time(), "%d %B, %Y")`_
