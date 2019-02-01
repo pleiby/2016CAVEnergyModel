@@ -1,0 +1,626 @@
+---
+title: "Efficient CAV Taxation - Appendix - Derivations"
+author: "Paul Leiby and Jonathan Rubin"
+date: "June 19, 2018"
+output:
+  word_document:
+    reference_docx: Efficient_CAV_Taxation_-_Template.docx
+  pdf_document: default
+---
+
+
+Appendix: Derivation of Key Results
+==========================
+
+To design our system, we build on the model of Parry and Small (2005) using their notation, but expanding it significantly to account for factors related to vehicle automation [as well as fiscal incentives related to road use and vehicle choice].
+
+Define indirect utility V as the (private) utility maximum given fuel and labor taxes $t_F, t_L$, fuel price $q_F$, pollution *P*, accident risk *A*, average travel speed $1/\pi$, fixed time (labor-hours) supply $\bar L$, and government budget $\bar G$, all of which are taken as exogenous by the private agent:
+$$V(t_F, t_L, q_F, P, A, \pi, \bar L,\bar G) = \max_{C,M,F,H,N} U$$
+$$U(C,M,F,H,N) \equiv u(\psi(C,M,T,\bar G), N) - \phi(P) - \delta(A)$$
+$$\begin{aligned}
+s.t. ~&M = m(H, F) ~~~~~~~~~~~~~~~~~~&~~\text{Miles traveled production [mi/cap-yr]}\\
+     & T = \pi(\bar M) \cdot M       &~~\text{Travel Time [hrs/cap-yr]}\\
+     & P = P_F(\bar F) + P_M(\bar M) &~~\text{Pollution from fuel use and miles traveled}\\
+     & A = a(\bar M) \bar M          &~~\text{Accident risk, with per-mile risk based on average driving}
+\end{aligned}
+\label{privateOptEq}
+$$
+Choice vars (all per-capita-year):
+
+* *F*: fuel consumption [gal/capita-yr]
+* *H*: non-fuel driving costs [$/capita-yr] (vehicle costs including fuel efficiency and automation technology)
+* *N*: leisure consumption [hrs/capita-yr]
+* *M*: Miles traveled [mi/capita-yr]
+* *C*: Consumption of (non-travel) goods [$/capita-yr]
+
+Subject to the individual budget constraint (for wage *w* = 1.0, numeraire), total time constraint, and government budget constraint:
+$$\text{budget constr [\$/yr]: } C + (q_F+t_F) F + H ~=~ I ~=~ (1-t_L) L$$
+$$\text{time constr [hrs/yr]: } L +N + T ~=~ \bar L$$
+$$\text{govt budget constr [\$/yr]: } t_L L + t_F F ~=~ \bar G$$
+(gen equilibrium closure constraint)
+
+**Substituting** the expression for Travel Time *T* in terms of average pace $\pi$ (1/speed) and miles driven, combining the budget constraint and time constraint to solve for labor *L*, all constraints combine into 2. These are the constraints reuiring VMT production to equal VMT demand, and the household budget constraint. Solving the Lagrangian maximization for private households yields the indirect utility function $V$.
+$$M \le m(H, F)  ~~~:\mu$$
+$$ C + (q_F+t_F) F + H \le (1-t_L)(\bar L -N -\pi M) ~~~:\lambda$$
+
+$$
+\begin{aligned}
+V(t_F, t_L, q_F, P, A, \pi, \bar L,\bar G) = \max_{C,M,F,H,N} &u(\psi(C,M,\pi(\bar M) M,\bar G), N) - \phi(P_F(\bar F)+P_M(\bar M)) - \delta(a(\bar M) \bar M) \\
+                       & +\left ( m(H, F) - M \right ) \mu \\
+                       & +\left ((1-t_L)(\bar L -N -\pi M) - C - (q_F + t_F)F -H \right) \lambda
+\end{aligned}
+$$
+$$
+V(t_F, t_L, q_F, P, A, \pi, \bar L,\bar G) = \max_{C,M,F,H,N} L(C,M,F,H,N ~| t_F, t_L, q_F, P, A, \pi, \bar L,\bar G)
+$$
+
+
+Written this way, we expect shadow values $\mu \ge 0, \lambda \ge 0$. 
+
+
+Consider first derivatives of the Lagrangian
+--------------
+Using shorthand notation where subscripts denote some derivatives with respect to the variables $X \in \{ C, M, T, G, N \}$, marginal utility with respect to *X* is denoted
+$$ \frac {\partial u}{\partial \psi} \frac {\partial \psi}{\partial X} \equiv \frac {\partial u}{\partial \psi} \psi_X \equiv u_X$$
+Then
+$$\frac {\partial L}{\partial C} = \frac {\partial u}{\partial \psi} \psi_C - \lambda = 0$$ Hence $\lambda$ is the marginal utility of consumption (or post-tax income)
+
+Let "marginal benefit" of" $B_X$ denote marginal utility of any consumed good *X* converted to equivalent dollars (by dividing by marginal utility of after-tax income $\lambda$). The marginal benefit of consumption is (normalized to) 1:
+
+$$B_C \equiv u_C / \lambda = 1$$
+$$u_C = \lambda$$
+
+
+$$\frac {\partial L}{\partial N} = \frac {\partial u}{\partial \psi} \psi_C - (1-t_L) \lambda = 0$$
+$$B_N \equiv u_N /\lambda = 1-t_L$$
+for wage $w=1$.
+
+For the private optimum, which omits the dependence of society-wide variables pace $\pi$, pollution $P_M$ *and* accident risk *A* on $\bar M$, privately optimal mileage or VMT per capita satisfies:
+$$\frac {\partial L}{\partial M} = \frac {\partial u}{\partial \psi} \psi_M + \frac {\partial u}{\partial \psi} \psi_T \pi(\bar M) - \mu - \pi(\bar M)  (1-t_L) \lambda = 0$$
+with units
+$$[MU/mi] + [MU/travelHr][travelHr/mi] - [MU/mi] - [travelHr/mi] (1-[unitless])[MU/\$] = 0$$
+
+Or, simplifying
+$$u_M + u_T \pi(\bar M) - \mu - \pi(\bar M) (1-t_L) \lambda = 0$$
+$$u_M/ \lambda =   \frac {\mu}{\lambda} + \pi(\bar M) \left ( 1-t_L - \frac {u_T} {\lambda} \right )$$
+with units
+$$[\$/mi] = \frac {[MU/mi]} {[MU/\$]} + [hr/mi]* \left ( 1 - [unitless] - \frac {[MU/travelHr]}{[MU/\$]} \right )$$
+
+To solve for $\mu$, the marginal utility of increased VMT production, consider the private choice of fuel F and other inputs *H* (in $) used to produce VMT *M*:
+$$\frac {\partial L}{\partial H} = \frac {\partial m}{\partial H} \mu -  \lambda = 0$$
+$$m_H \mu =  \lambda $$
+$$[mile/\$]*[MU/mile] = [MU/\$]$$
+
+For the privately optimal fuel use, which omits the dependence of "pollution" (or other fuel-related externalities like energy security) $P_F$ on $\bar F$:
+$$\frac {\partial L}{\partial F} = \frac {\partial m}{\partial F} \mu - (q_F + t_F)  \lambda = 0$$
+$$m_F \mu =  (q_F + t_F)\lambda$$
+$$[mile/gal]*[MU/mile] = [\$/gal]* [MU/\$]$$
+
+Marginal benefit (in $) per mile produced equals marginal non-fuel cost per mile is
+$$\mu/ \lambda =  1/m_H$$
+Also, marginal benefit (in $) per mile produced equals marginal fuel cost per mile. 
+$$\mu/ \lambda =  (q_F + t_F)/m_F$$
+These last two conditions together assure that fuel and non-fuel use are adjusted until their marginal benefit equals their marginal costs [???Interpretation of above two conditions may be off]
+
+These conditions on the optimal levels of fuel use $F$ and other inputs $H$ to the production of miles $M$ can be combined to solve for marginal production cost of travel in terms of average fuel and nonfuel cost per mile.
+Since $m(F,H)$ is homogenous of degree 1, 
+$$m_F F + m_H H = m(F,H) = M$$.
+Substituting the optimal levels of marginal product for inputs
+$$\frac {1}{\mu/ \lambda} \left ( (q_F + t_F) F + 1 H \right ) = M$$
+allows solving for $\mu$, the optimal shadow cost of the production of miles in the condition equating marginal benefit of miles with the marginal production cost
+$$(q_F + t_F) F/M + H/M = {\mu/ \lambda} $$
+Thus at the optimum, the marginal cost of both inputs to VMT production equals the average total cost per mile.
+
+Substituting into the optimal condition for VMT _M_ yields the condition balancing marginal private benefit of travel with marginal private-cost. $\mu/\lambda$ is the optimal private cost per mile, counting the cost of fuel _F_ and other inputs _H_. [Note: _H_ includes vehicle plus private accident costs associated with the production of VMT, but _not_ private time costs.]
+$$u_M/\lambda = \mu/\lambda +  \pi(\bar M)  \left ( (1-t_L) -  u_T/\lambda \right)$$
+$$u_M/\lambda  = \left ( (q_F + t_F) F/M + H/M \right ) + \pi(\bar M)  \left ( (1-t_L) - u_T/\lambda \right )$$
+$$[MB \$/mi] = [fuel+veh cost \$/mi] + [travelHr/mi] \left ( 1- [unitless] - [MB \$/travelHr] \right )$$
+
+Have derived the private-optimal condition for VMT, matching the marginal benefit (utility-per-mile in dollars) of miles with the full cost per mile $c_M$ (Note: P&S2004 call this RHS $p_M$), including the vehicle capital and operation costs per mile $c_V$ plus the net marginal cost of time per mile, where $c_T$ is the net opportunity cost of time spent traveling per hour: 
+$$u_M/\lambda  = c_M \equiv c_V + c_T \pi(\bar M)$$
+where the vehicle private cost $c_V$ are fuel cost plus other financial costs associated with producing VMT (where those financial costs per mile *H* include capital costs, insurance and maintenance costs, and internalized accident cost per mile)
+$$c_V = (q_F + t_F) F/M + H/M$$
+The marginal time costs per hour $c_T$ are the opportunity costs of time that could be spent working or at leisure (the after-tax wage $(1-t_L)w$ for w=1) minus* any marginal benefit per hour gained directly from the time spent traveling (the consumption benefit of travel time) $u_T/\lambda$. 
+$$c_T =  (1-t_L) - u_T/\lambda $$
+It is expected that this term, $u_T$ is low or even negative for Manual Vehicles (MVs), depending on driving conditions, but its value would increase for AVs, offsetting the foregone value of time that could have been spent on non-driving activities.
+
+Implying demand functions for the final consumption goods *C,M* and factors *L,F,H* of the form
+$$C = C(c_M,t_L)$$
+$$M = M(c_M, t_L)$$ (Note: this function for VMT would also be a function of $t_M$ if imposed)
+$$L = L(c_M, t_L)$$
+$$F = F(t_F, \pi, t_L) = a_{FM}(t_F) M(c_M,t_L)$$
+$$H = H(t_F, \pi, t_L) = a_{HM}(t_F) M(c_M,t_L)$$
+
+The budget-balancing rate of change in labor tax with fuel tax is determined from totally differentiating the government budget constraint for fixed *G* with respect to $t_F$:
+$$\frac{d t_L}{d t_F}L + t_L \frac{d L}{d t_F} + F + t_F \frac{d F}{d t_F} = \frac{d G}{d t_F} = 0$$
+So we can infer the marginal change in labor tax $t_L$ necessary to balance the government budget as fuel tax change
+$$\frac {d t_L}{d t_F} = - \frac {F + t_L \frac{d L}{d t_F} + t_F \frac{d F}{d t_F} }{L}$$
+
+* [Note: these last two equations would include the term $t_M dM/dt_F$ on the eft-hand-side and the denominator, respectively, if VMT _M_ was also taxed.]
+* Now look for expression for the FONC for optimal $t_F$ based on differentiating the private indirect utility function $V$
+
+$$\frac{1}{\lambda} \frac{dV}{dt_F} = (E^{P_F} - t_F) \left( - \frac{dF}{dt_F} \right ) + 
+(E^C + E^A + E^{P_M}) \left ( - \frac{dM}{dt_F} \right ) + t_L \frac{dL}{dt_F}$$
+
+
+where
+
+* $\lambda$ is marginal utility of income
+* $E^{P_F} = \phi' P_F'/\lambda$ is marginal pollution cost from fuels
+* $E^{P_M} = \phi' P_M'/\lambda$ is marginal pollution cost from miles
+* $E^C = \nu \pi' M, ~~ v \equiv 1-t_L- u_T/\lambda$ is marginal congestion cost
+* $E^A = \delta' A'/\lambda$ is marginal accident costs
+
+Solving for the socially-optimal $t_F$, to the extent possible (leaving implicit the dependence of $t_L$ and other terms on $t_F$)
+
+
+$$t_F^* = \frac{MEC_F(t_F)}{1+MEB_L} + \frac{(1-\eta_{MI})\epsilon_{LL}^c}{\eta_{FF}} \frac{(q_F+t_F)t_L}{(1-t_L)} +
+\frac {b_{M}} {a_{FM}(t_F)} E^c \left ( {\epsilon_{LL} - (1-\eta_{M}) \epsilon_{LL}^c} \right ) \frac {t_L}{1-t_L}$$
+
+Note that a number of terms in this condition are still endogenous to fuel tax $t_F$: $a_{FM}(t_F)$, $t_L(t_F)$, and $MEC_F(t_F)$. So this is actually an implicity function for $t_F^*$, that must be solved numerically for roots.
+
+Reproducing Parry and Small 2005 Analytical Result
+-------------------
+
+We have derived the private-optimal condition for VMT, matching the marginal benefit (utility-per-mile in dollars) of miles with the full cost per mile $c_M$ (Note: P&S2005 call this $p_M$), including the vehicle capital and operation costs per mile $c_v$ plus the marginal cost of time per mile, where $c_T$ is the full (net) opportunity cost of travel time per hour: 
+$$u_M/\lambda  = c_M \equiv c_V + c_T \pi(\bar M)$$
+The vehicle cost $c_V$ are fuel cost plus other financial costs (where those financial costs per mile *H* include capital costs, insurance and maintenance costs, and internalized accident cost per mile)
+$$c_V = (q_F + t_F) F/M + H/M$$
+The time costs are valued as the opportunity costs of time that could be spent working (valued at the after-tax wage) minus* any marginal benefit per hour gained directly from the time spent traveling (the consumption benefit of travel time) $u_T/\lambda$. 
+$$c_T = w \cdot (1-t_L) - u_T/\lambda$$
+It is expected that this last term, $u_T$ is low or even negative (disutility) for Manual Vehicles, depending on driving conditions, but its value would increase for AVs, offsetting some or all the foregone value of time that could have been spent on non-driving activities.
+
+Note: For pre-tax wage *w* normalized to 1.0, should not all other costs should be scaled appropriately (e.g. $c_T$ time cost per hour or vehicle cost per mile $c_V$), as a fraction of the wage rate per hour? When implementing numerically, care may be needed to assure units consistency.
+
+This utility maximization problem implies optimal demand functions for consumption goods *C*, VMT (Miles) *M*, and Labor *L* of the form
+$$C = C(c_M,t_L)$$
+$$L = L(c_M, t_L)$$
+$$M = M(c_M, t_L)$$
+i.e., convex functions depending on the full unit cost of VMT and the exogenous labor tax rate $t_L$. The VMT demand function $M$ would also be a function of $t_M$ if imposed.
+
+Demand for factors Fuel *F* and other vehicle financial costs *H* are derived from vehicle travel demand *M*
+$$F = F(t_F, \pi, t_L) = a_{FM}(t_F) M(c_M,t_L)$$
+$$H = H(t_F, \pi, t_L) = a_{HM}(t_F) M(c_M,t_L)$$
+
+Optimal fuel intensity and other financial input intensity per mile ($a_{FM}, a_{HM}$) depend on fuel tax. [Q???: would they also depend on VMT tax $t_M$?]
+
+The required rate of change in labor tax with fuel tax is determined from totally differentiating the government balanced-budget constraint for fixed *G* with respect to $t_F$:
+$$\frac{d t_L}{d t_F}L + t_L \frac{d L}{d t_F} + F + t_F \frac{d F}{d t_F} = \frac{d G}{d t_F} = 0$$
+so
+$$\frac {d t_L}{d t_F} = - \frac {F + t_L \frac{d L}{d t_F} + t_F \frac{d F}{d t_F} }{L}$$
+
+Note: if VMT tax is also considered
+$$\left ( \frac{d t_L}{d t_F}L + t_L \frac{d L}{d t_F} \right ) + 
+\left ( \frac{d t_M}{d t_F} M + t_M \frac{d M}{d t_F} \right ) +
+\left ( F + t_F \frac{d F}{d t_F} \right ) = 0$$
+In which case there are combinations of budget-balancing taxes $t_M, t_L$, in response to any change in $t_F$.
+
+### Writing the FONC for the Social Optimization of the Fuel Tax
+
+Private behavior maximizes utility $u$, taking government and environmental variables $t_F, t_L, P, A, \pi, q_F, \bar L, \bar G$ as fixed.  This yields the private indirect utility $V$. Writing the Lagrangian
+
+(@eq01)
+$$
+\begin{aligned}
+&L (C,F,\bar F,H, \bar M,\bar G,N,L,\mu,\lambda) = \\
+&~~~~ u \left ( \psi (C,M,\pi(\bar M)M,\bar G), N \right )\\
+&~~~~ - \phi (P_F (\bar F) + P_M(\bar M)) - \delta(a(\bar M) \bar M)\\ 
+&~~~~ + \mu \left \{ m(F,H) - M \right \} \\
+&~~~~ + \lambda \left \{ (1-t_L)  \left ( \bar L - N - \pi(\bar M) M \right ) - C - (q_F  + t_F ) F - H \right \}
+\end{aligned}
+$$
+where the variables $C, F, H, N, L$ are all implicitly subscripted by vehicle-type and region $i,j$ (subscripts suppressed). The Lagrangian is defined so that the Lagrange multipliesr $\mu$ and $\lambda$ are positive for maximization.
+
+So, the indirect utility *V* is 
+$$
+\begin{aligned}
+V(t_F,t_L, P, A, \pi | \bar M, \bar F, \bar L, \bar G, q_F) &= \\
+\max_{C,M,N,L,H}
+& u \left ( \psi (C,M, \pi (\bar M)M,\bar G), N \right )  \\
+& - \phi (P_F (\bar F) + P_M(\bar M)) - \delta(a(\bar M) \bar M)\\ 
+& + \mu \left ( m(F,H) - M \right ) \\
+& + \lambda \left \{ (1-t_L)  \left ( \bar L - N - \pi(\bar M) M \right ) - C - (q_F  + t_F ) F - H \right \}
+\end{aligned}
+$$
+where total available hours per capita $\bar L$, government budget $\bar G$ and fuel price $q_F$ are taken as fixed for this analysis, from the perspective of both private actors and the social planner. From the private actor perspective, average VMT $\bar M$ and fuel use $\bar F$ are also fixed.
+
+To determine the social optimum, we substitute private-optimal $F$ and $M$ for $\bar F$ and $\bar M$, respectively, assuming average behavior equals the private optimum. and take the total derivative with respect to tax $t_F$. 
+
+By the envelope theorem, the variation in indirect utility with respect to each exogenous parameter *z* is just the partial derivative of the Lagrangian $\left ( \frac {\partial V}{\partial z } = \frac {\partial L}{\partial z } \right)$, evaluated at the privately-optimal levels of consumption of *C*, *M*, *L*, *F* and *H*. 
+
+Also needed for the total derivative are the partial derivatives of $V$ with respect to the terms that are exogenous to private decisions:
+$$\frac {\partial V}{\partial t_F}= -\lambda F$$
+$$\frac {\partial V}{\partial t_L}= -\lambda \left ( \bar L - N - \pi(\bar M) M \right ) = - \lambda L$$
+$$\frac {\partial V}{\partial P}= -\phi'(P)$$
+$$\frac {\partial V}{\partial A}= -\delta'(A)$$
+$$\frac {\partial V}{\partial \pi}= u_T M - \lambda (1-t_L)M \equiv -\lambda c_T M$$
+for $c_T\equiv -u_T/\lambda + (1-t_L)$, the marginal cost of time in \$/hr ($c_T$ is what PS2005 call $v$).
+
+Now taking the total derivative of $V$ with respect to $t_F$:
+$$
+\begin{aligned}
+\frac {dV}{dt_F} = &u_C \frac {dC}{dt_F} + u_M \frac {dM}{dt_F} + u_T \left (\pi \frac {dM}{dt_F} + M \pi' \frac {d M}{dt_F} \right ) + u_N \frac {d N}{dt_F}\\
+&- \frac {d\phi}{dP}\left (\frac {dP}{dP_F} \frac {d P_F}{dF} \frac {d F}{d t_F} + \frac {dP}{dP_M} \frac {d P_M}{dM}\frac {d M}{d t_F} \right )
+- \frac {d\delta}{dA} \frac {dA}{dM} \frac {d M}{d t_F}  \\
+&+ \mu \left ( \frac {d m}{d F} \frac {d F}{d t_F} + \frac {d m}{d H} \frac {d H}{d t_F} - \frac {d M}{d t_F} \right ) \\
+&+ \lambda \left \{ (1-t_L) \frac {d L}{d t_F} - L \frac {d t_L}{d t_F} - \frac {d C}{d t_F} - \left ( F + (q_f+t_F) \frac {d F}{d t_F} \right ) -\frac {d H}{d t_F} \right \} 
+\end{aligned}
+$$
+
+Subsituting some shorthand notation for derivatives ($d\phi/dP = \phi', ~d\delta/dA = \delta', ~dA/dM = A', ~dP_F/dF = P_F', ~dP_M/dM = P_M'$), and recognizing $dP/dP_F = dP/dP_M = 1$, 
+$$
+\begin{aligned}
+\frac {dV}{dt_F} = &u_C \frac {dC}{dt_F} + u_M \frac {dM}{dt_F} + u_T \left (\pi \frac {dM}{dt_F} + M \pi' \frac {d M}{dt_F} \right )  + u_N \frac {d N}{dt_F}\\
+&- \phi' \left ( P_F' \frac {d F}{d t_F} + P_M' \frac {d M}{d t_F} \right )
+- \delta ' A' \frac {d M}{d t_F}  \\
+&+ \mu \left ( \frac {d m}{d F} \frac {d F}{d t_F} + \frac {d m}{d H} \frac {d H}{d t_F} - \frac {d M}{d t_F} \right ) \\
+&+ \lambda \left \{ (1-t_L) \frac {d L}{d t_F} - L \frac {d t_L}{d t_F} - \frac {d C}{d t_F} - \left ( F + (q_f+t_F) \frac {d F}{d t_F} \right ) -\frac {d H}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+Distributing through, and gathering terms around each primary derivative
+$$
+\begin{aligned}
+\frac {dV}{dt_F} = &u_C \frac {dC}{dt_F} + u_M \frac {dM}{dt_F} + u_T \pi \frac {dM}{dt_F} + u_T M \pi' \frac {d M}{dt_F} \\ 
+&- \phi' P_F' \frac {d F}{d t_F} - \phi' P_M' \frac {d M}{d t_F} 
+- \delta ' A' \frac {d M}{d t_F}  \\
+&+ \mu \frac {d m}{d F} \frac {d F}{d t_F} + \mu \frac {d m}{d H} \frac {d H}{d t_F} - \mu \frac {d M}{d t_F} \\
+&+ \left \{ \lambda (1-t_L) \frac {d L}{d t_F} - \lambda L \frac {d t_L}{d t_F} - \lambda \frac {d C}{d t_F} - \left (\lambda  F + \lambda (q_f+t_F) \frac {d F}{d t_F} \right ) -\lambda \frac {d H}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+Regrouping
+$$
+\begin{aligned}
+\frac {dV}{dt_F} = 
+& - \phi' P_F' \frac {d F}{d t_F} + \mu \frac {d m}{d F} \frac {d F}{d t_F} - \lambda (q_f+t_F) \frac {d F}{d t_F} \\
+& + u_C \frac {dC}{dt_F} \\
+& + u_M \frac {dM}{dt_F} + u_T \pi \frac {dM}{dt_F} + u_T M \pi' \frac {d M}{dt_F}  
+- \phi' P_M' \frac {d M}{d t_F} 
+- \delta ' A' \frac {d M}{d t_F}  - \mu \frac {d M}{d t_F}\\
+& + \mu \frac {d m}{d H} \frac {d H}{d t_F}  \\
+&+ \left \{ \lambda (1-t_L) \frac {d L}{d t_F} - \lambda L \frac {d t_L}{d t_F} - \lambda L \frac {d t_L}{d t_F} - \lambda \frac {d C}{d t_F} - \lambda  F -\lambda \frac {d H}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+Dividing through by $\lambda$
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda + \mu \frac {d m}{d F}/\lambda - (q_f+t_F) \right ] \frac {d F}{d t_F} \\
+& + u_C/\lambda \frac {dC}{dt_F} \\
+& + \left [ u_M/\lambda + u_T \pi/\lambda  + u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  - \mu/\lambda \right ] \frac {d M}{d t_F} \\
+& + \mu/\lambda \frac {d m}{d H} \frac {d H}{d t_F}  \\
+&+ \left \{ (1-t_L) \frac {d L}{d t_F} - L \frac {d t_L}{d t_F} - \frac {d C}{d t_F} - F -\frac {d H}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+Simplifying a bit
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda + \mu \frac {d m}{d F}/\lambda - (q_f+t_F) \right ] \frac {d F}{d t_F} \\
+& + \left [ u_C/\lambda - 1 \right ] \frac {dC}{dt_F} \\
+& + \left [ u_M/\lambda + u_T \pi/\lambda  + u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  - \mu/\lambda \right ] \frac {d M}{d t_F} \\
+& + \left [ \mu/\lambda \frac {d m}{d H} - 1 \right ] \frac {d H}{d t_F} - F \\
+&+ \left \{ (1-t_L) \frac {d L}{d t_F} - L \frac {d t_L}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+A significant simplification follows from applying the conditions for optimal factor inputs to VMT production, derived above from the consideration of the linear homogeneity of that function. I.e.:
+$$\mu \frac {d m}{d F}/\lambda = (q_f+t_F)/m_F $$
+and 
+$$\mu/\lambda \frac {d m}{d H} - 1 $$
+So
+$$\mu \frac {d m}{d F}/\lambda - (q_f+t_F) = 0$$
+and
+$$\mu/\lambda \frac {d m}{d H} - 1 = 0$$
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda  \right ] \frac {d F}{d t_F} \\
+& + \left [ u_C/\lambda - 1 \right ] \frac {dC}{dt_F} \\
+& + \left [ u_M/\lambda + u_T \pi/\lambda  + u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  - \mu/\lambda \right ] \frac {d M}{d t_F} \\
+& - F \\
+&+ \left \{ (1-t_L) \frac {d L}{d t_F} - L \frac {d t_L}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+Marginal vehicle/fuel cost per mile (VMT)
+$$c_V \equiv \mu/\lambda = (q_F + t_F) F/M + H/M$$
+Marginal benefit equals full marginal cost per mile:
+$$c_M \equiv u_M/\lambda  = c_M \equiv c_V + c_T \pi(\bar M)$$
+
+$$c_T \equiv - u_T/\lambda  + (1-t_L)$$
+
+$$c_M \equiv u_M/\lambda  = \left( (q_F + t_F) F/M + H/M \right ) + \left( -u_T/\lambda  + (1-t_L) \right ) \pi(\bar M)$$
+Substituting for $u_M/\lambda$
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda  \right ] \frac {d F}{d t_F} \\
+& + \left [ u_C/\lambda - 1 \right ] \frac {dC}{dt_F} \\
+& + \left [ \left ( \mu/\lambda + \left( -u_T/\lambda  + (1-t_L) \right ) \pi(\bar M) \right ) + u_T \pi/\lambda  + u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  - \mu/\lambda \right ] \frac {d M}{d t_F} \\
+&  - F \\
+&+ \left \{ (1-t_L) \frac {d L}{d t_F} - L \frac {d t_L}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+
+Cancelling like terms
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda \right ] \frac {d F}{d t_F} \\
+& + \left [ u_C/\lambda - 1 \right ] \frac {dC}{dt_F} \\
+& + \left [ (1-t_L) \pi(M) + u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  \right ] \frac {d M}{d t_F} \\
+&  - F \\
+&+ \left \{ (1-t_L) \frac {d L}{d t_F} - L \frac {d t_L}{d t_F} \right \}  + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+Expanding the derivative of $dL/dt_F$, using $L = \bar L - N - M \pi(M)$
+$$\frac {dL}{dt_F} = \left ( -\frac {dN}{dt_F} - \pi(M) \frac {dM}{dt_F} - M \pi' \frac {dM}{dt_F} \right )$$
+
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda \right ] \frac {d F}{d t_F} \\
+& + \left [ u_C/\lambda - 1 \right ] \frac {dC}{dt_F} \\
+& + \left [ (1-t_L) \pi(M) + u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  \right ] \frac {d M}{d t_F} \\
+&  - F  - L \frac {d t_L}{d t_F} \\
+&+ \left \{ (1-t_L) \left ( -\frac {dN}{dt_F} - \pi(M) \frac {dM}{dt_F} - M \pi' \frac {dM}{dt_F} \right ) \right \} + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+Re-gathering all the terms related to $dM/dt_F$
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda \right ] \frac {d F}{d t_F} \\
+& + \left [ u_C/\lambda - 1 \right ] \frac {dC}{dt_F} \\
+& + \left [ (1-t_L) \pi(M) + u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda - (1-t_L) \pi(M)  - (1-t_L) M \pi' \right ] \frac {d M}{d t_F} \\
+&  - F  - L \frac {d t_L}{d t_F} \\
+&+ \left [ (1-t_L) \right ] \left ( -\frac {dN}{dt_F} \right ) + u_N \frac {d N}{dt_F}
+\end{aligned}
+$$
+
+The terms in the last line related to $dN/dt_F$ cancel, recognizing that $u_N = (1-t_L)$.
+Cancelling other offsetting terms related to $dM/dt_F$ and recognizing that at the private optimum, $u_C/\lambda = 1$,
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda \right ] \frac {d F}{d t_F} \\
+& + \left [  u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  - (1-t_L) M \pi' \right ] \frac {d M}{d t_F} \\
+&  - F  - L \frac {d t_L}{d t_F} 
+\end{aligned}
+$$
+Now we apply the condition for the required marginal change in labor tax $t_L$ as fuel tax $t_F$ changes, in order to balance the government budget at a fixed level:
+$$\frac {d t_L}{d t_F} = - \frac {F + t_L \frac{d L}{d t_F} + t_F \frac{d F}{d t_F} }{L}$$
+Substituting for the marginal change in labor tax
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda \right ] \frac {d F}{d t_F} \\
+& + \left [  u_T M \pi'/\lambda  
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  - (1-t_L) M \pi' \right ] \frac {d M}{d t_F} \\
+&  - F  +  \left ( F + t_L \frac{d L}{d t_F} + t_F \frac{d F}{d t_F}  \right )
+\end{aligned}
+$$
+xxxx
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ - \phi' P_F'/\lambda  + t_F  \right ] \left ( \frac {d F}{d t_F} \right ) \\
+& + \left [  - \left ( (1-t_L) - u_T/\lambda \right ) \pi' M
+- \phi' P_M'/\lambda  
+- \delta ' A' /\lambda  \right ] \left ( \frac {d M}{d t_F} \right )  \\
+& + t_L \frac {d L}{d t_F} 
+\end{aligned}
+$$
+
+Changing sign on derivatives (so that they are positive)
+$$
+\begin{aligned}
+\frac {1}{\lambda} \frac {dV}{dt_F} = 
+& \left [ \phi' P_F'/\lambda - t_F  \right ] \left ( -\frac {d F}{d t_F} \right ) \\
+& + \left [  \left ( (1-t_L) - u_T/\lambda \right ) \pi' M
++ \phi' P_M'/\lambda  
++ \delta ' A' /\lambda  \right ] \left (-\frac {d M}{d t_F} \right )  \\
+& + t_L \frac {d L}{d t_F} 
+\end{aligned}
+$$
+
+### This exactly reproduces the P&S2005 result (eq. 2.9) 
+
+
+Seeking to Match PS2005 Numerical Results
+--------------
+
+* Now look for expression for the FONC for optimal $t_F$ based on differentiating the private indirect utility function $V$
+
+$$\frac{1}{\lambda} \frac{dV}{dt_F} = (E^{P_F} - t_F) \left( - \frac{dF}{dt_F} \right ) + 
+(E^C + E^A + E^{P_M}) \left ( - \frac{dM}{dt_F} \right ) + t_L \frac{dL}{dt_F}$$
+
+
+where
+
+* $\lambda$ is marginal utility of income
+* $E^{P_F} = \phi' P_F'/\lambda$ is marginal pollution cost from fuels
+* $E^C = c_T \pi' M, ~~ c_T \equiv (1-t_L)- u_T/\lambda$ is marginal congestion (travel) cost
+* $E^{P_M} = \phi' P_M'/\lambda$ is marginal pollution cost from miles
+* $E^A = \delta' A'/\lambda$ is marginal accident costs
+
+Expanding these summary terms for marginal external costs yields the derived equation above.
+
+
+### Expression for optimal fuel tax
+
+Seek to solve $dL/dt_F = 0$ for $t_F$, simplifying to the extent possible (leaving some dependence of $t_L, a_{FM}$ and other terms on $t_F$ implicit).
+
+#### The final expression for optimal fuel tax form P&S2005:
+
+$$t_F^* = \frac{MEC_F(t_F)}{1+MEB_L} + \frac{(1-\eta_{MI})\epsilon_{LL}^c}{\eta_{FF}} \frac{(q_F+t_F)t_L}{(1-t_L)} +
+\frac {b_{M}} {a_{FM}(t_F)} E^c \left ( {\epsilon_{LL} - (1-\eta_{M}) \epsilon_{LL}^c} \right ) \frac {t_L}{1-t_L}$$
+
+Note that a number of terms in this condition are still endogenous to fuel tax $t_F$: $a_{FM}(t_F)$, $t_L(t_F)$, and $MEC_F(t_F)$.
+
+The 3 main terms for optimal $t_F^*$ include the Marginal External Cost (MEC) corrected by MEB, the Ramsey Tax and the "Congestion Rebound" components.
+
+The Marginal External Cost includes a term for the direct externality from fuel use, and terms for the indirect externalities generated with the VMT generated by the fuel use.
+
+$$MEC_F(t_F) \equiv E^{P_F} + (b_{M} / a_{FM}(t_F)) \left( E^C + E^A + E^{P_M} \right)$$
+$1+MEB_L$ is a tax-efficiency adjustment term associated with the general equilibrium effects identified by Goulder, Parry and others.
+$$MEB_L = \frac {t_L \epsilon_{LL}}{1-t_L (1 + \epsilon_{LL})}$$
+
+Manipulating the optimal tax FONC:
+$$\frac{1}{\lambda} \frac{dV}{dt_F} = (E^{P_F} - t_F) \left( - \frac{dF}{dt_F} \right ) + 
+(E^C + E^A + E^{P_M}) \left ( - \frac{dM}{dt_F} \right ) + t_L \frac{dL}{dt_F} = 0 ~ for ~t_F = t_F^*$$
+
+$$t_F^*  =  
+\frac {(E^C + E^A + E^{P_M}) \left ( - \frac{dM}{dt_F} \right ) + t_L \frac{dL}{dt_F}} {\left( \frac{dF}{dt_F} \right )} + E^{P_F}$$
+$$t_F^*  =   E^{P_F} + 
+{(E^C + E^A + E^{P_M})} \frac {dM/dt_F}{dF/dt_F}  + t_L \frac {dL/dt_F} {dF/dt_F}$$
+
+
+**Observations and Questions**
+
+We define a set of elasticities, useful for simplifying results.
+
+Note that the marginal VMT-related externality in the MEC is determined by the VMT per gallon of fuel use, and governed here by the endogenous ratio $b_M/a_{FM}$, where $b_M$ is the ratio of the elasticity of VMT w.r.t. fuel price to the elasticity of fuel demand w.r.t. fuel price, and $a_{FM}$ is fuel intensity, in gals/mile.
+
+It is true that:
+$$\frac {b_{M}} {a_{FM}(t_F)}  = \left ( \frac{dM}{dt_F} \right ) / {\left( \frac{dF}{dt_F} \right )}$$
+as is easily shown from the definition of the terms with elasticities
+$$\begin{aligned}
+b_M \equiv n_{MF}/n_{FF} &= 
+\left ( \frac {dM}{dt_F} \frac{q_F+t_F}{M} \right ) / \left ( \frac{dF}{dt_F} \frac{q_F+t_F}{F} \right ) \\
+& = \left ( \frac{dM}{dt_F}  / \frac{dF}{dt_F} \right ) \left (\frac{q_F+t_F}{M} / \frac{q_F+t_F}{F} \right ) \\
+& = \left ( \frac{dM}{dt_F}  / \frac{dF}{dt_F} \right ) \left (\frac{F}{M} \right ) 
+= \left ( \frac{dM}{dt_F}  / \frac{dF}{dt_F} \right ) a_{FM}(t_F) 
+\end{aligned}
+$$
+thus we find:
+$$t_F^*  =   E^{P_F} + 
+b_M/a_{FM}(t_F^*) (E^C + E^A + E^{P_M}) + t_L \frac {dL/dt_F} {dF/dt_F}$$
+
+* Question: Do the MEB correction of MEC, Ramsey Tax and the "Congestion Rebound" components arise from the formalism above, or from separate consideration?
+
+
+Working further through derivation in P&S2004/5 appendix
+---------------
+The focus is on evaluating and simplifying the effect of taxation ($t_L$) and labor market equilibrium responses on the optimal tax. We are interested in the effect of the final term
+$$ t_L \frac {dL/dt_F} {dF/dt_F}$$
+in the optimal tax expression above, which is equivalent to factors offsetting the optimal fuel tax from the pure Pigouvian (marginal external cost, or $MEC$) tax.
+
+First substitute expressions (demand functions) for $C, L, M, F, \text{and}~ H$.
+
+From $L = L(c_M, t_L)$ where $c_M = ((q_F+t_F)a_{FM}(t_F) +a_{HM}(t_F)) + (1-t_L - u_T/\lambda)\pi(M))$
+$$\frac {dL}{dt_F} = \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} + \frac {\partial L}{\partial t_L} \frac {dt_L}{dt_F}$$
+Remembering the balanced-budget requirement for the change in labor tax with fuel tax, which also depends on the change in labor $dL/dt_F$:
+$$\frac {d t_L}{d t_F} = - \frac {F + t_F \frac{d F}{d t_F} + t_L \frac{d L}{d t_F}}{L}$$
+**Note: these next steps may be markedly more difficult, or not defined if both fuel and VMT taxes are changing to balance the budget.**
+
+Since $dL/dt_F$ and $dt_L/dt_F$ each depend on the other, seek to combine equations and solve out for $dt_L/dt_F$
+Substitute the total derivative for Labor w.r.t. fuel tax into the total derivative of labor tax w.r.t. fuel tax, and then solve for the former:
+$$\frac {dL}{dt_F} = \left ( \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) + \frac {\partial L}{\partial t_L}  \left ( - \frac {F + t_F \frac{d F}{d t_F} + t_L \frac{d L}{d t_F}}{L}\right ) $$
+$$\frac {dL}{dt_F}  \left ( 1 + \frac {d L}{d t_L} \frac {t_L}{L} \right ) 
+= \left ( \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) 
++ \frac {\partial L}{\partial t_L}  \left ( - \frac {F + t_F \frac{d F}{d t_F} }{L}\right ) $$
+
+#### Aside
+Define the elasticity of labor with respect to labor tax:
+$$\eta_{L,t_L} \equiv \frac {\partial L}{\partial t_L} \frac {t_L}{L}$$
+vs 
+$$\epsilon_{LL} \equiv -\frac {\partial L}{\partial t_L} \frac {(1-t_L)}{L} = - \eta_{L,t_L} \frac {(1-t_L)}{t_L}$$
+and
+$$MEB_L \equiv \frac {-t_L \frac {\partial L}{\partial t_L} }{L + t_L \frac {\partial L}{\partial t_L} } ~=~  
+\frac {-\frac {t_L}{L} \frac {\partial L}{\partial t_L} }{1 + \frac {t_L}{L} \frac {\partial L}{\partial t_L} } ~=~ 
+\frac {-\eta_{L,t_L} }{1 + \eta_{L,t_L}}
+$$
+We expect $MEB_L$ to be be positive for less than unitary (negative) elasticity of labor with respect to labor tax:
+$$MEB_L  ~=~ 
+\frac {-\eta_{L,t_L} }{1 + \eta_{L,t_L}} ~>~0 ~~ for ~ -1< \eta_{L,t_L} < 0
+$$
+so
+$$MEB_L \equiv \frac {t_L \epsilon_{LL} }{1 - t_L (1+\epsilon_{LL})}$$
+
+With these definitions, returning to the derivation, and multiplying through by $t_L$
+
+$$\frac {dL}{dt_F}  t_L \left ( 1 + \frac {d L}{d t_L} \frac {t_L}{L} \right ) 
+= \frac {t_L}{L} L \left ( \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) 
+- \frac {\partial L}{\partial t_L}  \frac {t_L}{L} \left ( {F + t_F \frac{d F}{d t_F} } \right ) $$
+
+$$ 
+= \frac {\partial L}{\partial t_L} \frac {t_L}{L} \frac {L}{\partial L/\partial t_L} \left ( \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) 
+- \frac {\partial L}{\partial t_L}  \frac {t_L}{L} \left ( {F + t_F \frac{d F}{d t_F} }\right ) $$
+So substituting
+$$\frac {dL}{dt_F}  t_L  = \frac {1}{( 1 + \eta_{L,t_L} )} \left [
+\eta_{L,t_L} \frac {L}{\partial L/\partial t_L} \left ( \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) 
+- \eta_{L,t_L} \left ( {F + t_F \frac{d F}{d t_F} }\right ) \right ]$$
+
+$$\frac {dL}{dt_F}  t_L  = -\frac {\eta_{L,t_L}}{( 1 + \eta_{L,t_L} )} \left [
+- \frac {L}{\partial L/\partial t_L} \left ( \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) 
++ \left ( {F + t_F \frac{d F}{d t_F} }\right ) \right ]$$
+Yielding essentially P&S2005 Eq. C3., using the definition for *MEB* and reordering
+$$\frac {dL}{dt_F}  t_L  = MEB_L t_F \frac{d F}{d t_F} - MEB_L \left [
+ \frac {L}{\partial L/\partial t_L} \left ( \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) 
+- F \right ]$$
+
+
+#### **More slogging here on 2nd term in brackets ... **
+
+$$ xxx$$
+
+So now we have an expression for the full response (total derivative) of labor L with respect to fuel tax, to use in the FONC for $t_F^*$:
+
+
+$$\frac {dL}{dt_F} = \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} - \frac {\partial L}{\partial t_L} \left [ \frac {F + t_F \frac{d F}{d t_F} + 
+t_L \left (  \frac {\partial L}{\partial t_F} + \frac {\partial L}{\partial \pi} \frac {d\pi}{dt_F} \right ) }{ \left ( L + \frac {\partial L}{\partial t_L} \right ) } \right ]$$
+Solve for $dL/dt_F$
+
+Leading to:
+$$ t_L \frac {dL}{dt_f} = MEB_L \cdot t_F \cdot \frac {dF}{dt_f} - 
+\frac {MEB_L}{\epsilon_{LL}} \left \{  \epsilon_{LL}^c F (\eta_{MI}) + E^C \frac {dM}{dt_F}
+\left [ \epsilon_{LL} - (1-\eta_{MI}) \epsilon_{LL}^C \right ] \right \}$$\
+and 
+$$ t_L \frac {dL/dt_f} {dF/dt_F} = MEB_L \cdot t_F \cdot  - 
+\frac {1} {dF/dt_F} \frac {MEB_L}{\epsilon_{LL}} \left \{  \epsilon_{LL}^c F (\eta_{MI}) + E^C \frac {dM}{dt_F}
+\left [ \epsilon_{LL} - (1-\eta_{MI}) \epsilon_{LL}^C \right ] \right \}$$
+
+Substituting into
+$$t_F^*  =   E^{P_F} + 
+b_M/a_{FM}(t_F^*) (E^C + E^A + E^{P_M}) + t_L \frac {dL/dt_F} {dF/dt_F}$$
+where the first term on the RHS is the full Marginal Externality Cost of fuel
+$$E^{P_F} + b_M/a_{FM}(t_F^*) (E^C + E^A + E^{P_M}) \equiv MEC_F(t_F)$$
+
+Proving the final form (P&S 2005 Eq. ?):
+$$t_F^* = \frac{MEC_F(t_F)}{1+MEB_L} + \frac{(1-\eta_{MI})\epsilon_{LL}^c}{\eta_{FF}} \frac{(q_F+t_F)t_L}{(1-t_L)} +
+\frac {b_{M}} {a_{FM}(t_F)} E^c \left ( {\epsilon_{LL} - (1-\eta_{M}) \epsilon_{LL}^c} \right ) \frac {t_L}{1-t_L}$$
+
+
+where we have defined
+$$\frac {b_M}{a_{FM}(t_F)} \left ( \frac {t_L} {1-t_L} \right ) ~=~ \frac {MEB}{\epsilon_{LL}}  \frac {dM}{d t_F} \frac {1}{dF/dt_F} $$
+
+$$a_{FM} \equiv \frac {dF}{dM}$$
+$$b_M \equiv \frac {\frac{dM}{dt_F} \frac{P_F}{M}} {\frac{dF}{dt_F} \frac{P_F}{F}} = \frac{dM}{dF} \frac{F}{M}$$
+
+
+* _File: "Efficient_CAV_Taxation_-_AppendixDerivations 2016MMDD.Rmd"_
+* _Printed: `r format(Sys.time(), "%d %B, %Y")`_
