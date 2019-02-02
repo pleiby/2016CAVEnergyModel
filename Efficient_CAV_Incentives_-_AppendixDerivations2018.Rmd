@@ -1,7 +1,7 @@
 ---
 title: "Efficient CAV Incentives - Appendix - Derivations"
 author: "Paul Leiby and Jonathan Rubin"
-date: "January 06, 2018"
+date: "Feb 01, 2018"
 output:
   word_document:
     reference_docx: Efficient_CAV_Incentives_-_Template.docx
@@ -20,7 +20,7 @@ $$U(C,o \cdot M,F,H,N) \equiv u(\psi(C,o \cdot M,T,\bar G), N) - \phi(P) - \delt
 $$\begin{aligned}
 s.t. ~&M = m(H, F) ~~~~~~~~~~~~~~~~~~&~~\text{Vehicle Miles traveled production [mi/cap-yr]}\\
      & T = \pi(\bar M) \cdot o \cdot M       &~~\text{Passenger Travel Time [hrs/cap-yr]}\\
-     & P = P_F(\bar F) + P_M(\bar M) &~~\text{Pollution from fuel use and miles traveled}\\
+     & P = P_F(\bar F) + P_M(\bar M) &~~\text{Pollution (ext cost) from fuel use and veh miles traveled}\\
      & A = a(\bar M) \bar M          &~~\text{Ext. Accident risk, per-mile risk based on average driving}
 \end{aligned}
 \label{privateOptEq}
@@ -41,15 +41,17 @@ $$\text{time constr [hrs/yr]: } L +N + T ~=~ \bar L$$
 $$\text{govt budget constr [\$/yr]: } t_L L + t_F F + t_M M ~=~ \bar G$$
 (gen equilibrium closure constraint)
 
-**Substituting** the expression for Travel Time *T* in terms of average pace $\pi$ (1/speed) and miles driven, combining the budget constraint and time constraint to solve for labor *L*, all constraints combine into 2. These are the constraints reuiring VMT production to equal VMT demand, and the household budget constraint. Solving the Lagrangian maximization for private households yields the indirect utility function $V$.
+**Substituting** the expression for Travel Time *T* in terms of average pace $\pi$ (1/speed) and miles driven, combining the budget constraint and time constraint to solve for labor *L*, all constraints combine into 2. These are the constraints requiring VMT production to equal VMT demand, and the household budget constraint. 
+
 $$M \le m(H, F)  ~~~:\mu$$
-$$ C + (q_F+t_F) F + H \le (1-t_L)(\bar L -N -\pi M) ~~~:\lambda$$
+$$ C + (q_F+t_F) F +t_M M + H \le (1-t_L)w(\bar L -N -\pi M o) ~~~:\lambda$$
+Solving the Lagrangian maximization for private households over $(M, C, N, F, H)$ yields the indirect utility function $V$.
 
 $$
 \begin{aligned}
-V(t_F, t_L, q_F, P, A, \pi, \bar L,\bar G) = \max_{C,M,F,H,N} &u(\psi(C,M,\pi(\bar M) M,\bar G), N) - \phi(P_F(\bar F)+P_M(\bar M)) - \delta(a(\bar M) \bar M) \\
+V(t_F, t_L, q_F, P, A, \pi, \bar L,\bar G) = \max_{C,M,F,H,N} &u(\psi(C,o M,\pi(\bar M) o M,\bar G), N) - \phi(P_F(\bar F)+P_M(\bar M)) - \delta(a(\bar M) o \bar M) \\
                        & +\left ( m(H, F) - M \right ) \mu \\
-                       & +\left ((1-t_L)(\bar L -N -\pi M) - C - (q_F + t_F)F -H \right) \lambda
+                       & +\left ((1-t_L)w (\bar L -N -\pi o M) - C - (q_F + t_F)F - t_M M -H \right) \lambda
 \end{aligned}
 $$
 $$
@@ -57,92 +59,148 @@ V(t_F, t_L, q_F, P, A, \pi, \bar L,\bar G) = \max_{C,M,F,H,N} L(C,M,F,H,N ~| t_F
 $$
 
 
-Written this way, we expect shadow values $\mu \ge 0, \lambda \ge 0$. 
+Written this way, we expect shadow values $\mu \ge 0, \lambda \ge 0$. The household indirect utility is a function of terms exogenous or fixed from the consuming household: prices, taxes/incentives, and external costs related to pollution, accidents, congestion, and government activity.
 
 
 Consider first derivatives of the Lagrangian
 --------------
-Using shorthand notation where subscripts denote some derivatives with respect to the variables $X \in \{ C, M, T, G, N \}$, marginal utility with respect to *X* is denoted
+Using shorthand notation where subscripts denote some derivatives with respect to the consumer choice variables $X \in \{ C, M, o, T, N \}$, marginal utility with respect to *X* is denoted
 $$ \frac {\partial u}{\partial \psi} \frac {\partial \psi}{\partial X} \equiv \frac {\partial u}{\partial \psi} \psi_X \equiv u_X$$
-Then
-$$\frac {\partial L}{\partial C} = \frac {\partial u}{\partial \psi} \psi_C - \lambda = 0$$ Hence $\lambda$ is the marginal utility of consumption (or post-tax income)
 
-Let "marginal benefit" of" $B_X$ denote marginal utility of any consumed good *X* converted to equivalent dollars (by dividing by marginal utility of after-tax income $\lambda$). The marginal benefit of consumption is (normalized to) 1:
+#### Private FONC for non-travel consumption goods *C* and *N*
 
-$$B_C \equiv u_C / \lambda = 1$$
+$$\frac {\partial L}{\partial C} = \frac {\partial u}{\partial \psi} \psi_C - \lambda = 0$$ 
+$$u_C - \lambda = 0$$ 
+
+Hence $\lambda$ is the marginal utility of consumption (or post-tax income)
+
+Let "marginal benefit" $B_X$ denote marginal utility of any consumed good *X* converted to equivalent dollars (by dividing by marginal utility of after-tax income $\lambda$). The marginal benefit of consumption is equal to its (normalized) price of 1:
+
 $$u_C = \lambda$$
 
+$$B_C \equiv u_C / \lambda = 1$$
 
-$$\frac {\partial L}{\partial N} = \frac {\partial u}{\partial \psi} \psi_C - (1-t_L) \lambda = 0$$
-$$B_N \equiv u_N /\lambda = 1-t_L$$
-for wage $w=1$.
 
-For the private optimum, which omits the dependence of society-wide variables pace $\pi$, pollution $P_M$ *and* accident risk *A* on $\bar M$, privately optimal mileage or VMT per capita satisfies:
-$$\frac {\partial L}{\partial M} = \frac {\partial u}{\partial \psi} \psi_M + \frac {\partial u}{\partial \psi} \psi_T \pi(\bar M) - \mu - \pi(\bar M)  (1-t_L) \lambda = 0$$
+$$\frac {\partial L}{\partial N} = \frac {\partial u}{\partial \psi} \psi_N - (1-t_L)w \lambda = 0$$
+The marginal benefit of leisure is equalized to the after-tax (hourly) wage
+
+$$B_N \equiv u_N /\lambda = (1-t_L)w$$
+Or, for wage $w=1$
+
+$$B_N \equiv u_N /\lambda = (1-t_L)$$
+
+#### Private FONC for VMT *M*
+
+For the private optimum, which omits the dependence of society-wide variables pace $\pi$, pollution $P_M$ *and* external accident risk *A* on $\bar M$, privately optimal vehicle mileage or VMT per capita satisfies:
+$$\frac {\partial L}{\partial M} = o \frac {\partial u}{\partial \psi} \psi_M + o \frac {\partial u}{\partial \psi} \psi_T \pi(\bar M) - \mu - \pi(\bar M)  (1-t_L) w \cdot o \lambda - t_M \lambda = 0$$
 with units
-$$[MU/mi] + [MU/travelHr][travelHr/mi] - [MU/mi] - [travelHr/mi] (1-[unitless])[MU/\$] = 0$$
+$$[pass/veh][MU/pass-mi] + [pass/veh][MU/travelHr][travelHr/veh-mi] - [MU/veh-mi] - [travelHr/veh-mi] (1-[unitless])[$/hr] [pass/veh][MU/\$] - [$/veh-mi][MU/\$] = 0$$
+
 
 Or, simplifying
-$$u_M + u_T \pi(\bar M) - \mu - \pi(\bar M) (1-t_L) \lambda = 0$$
-$$u_M/ \lambda =   \frac {\mu}{\lambda} + \pi(\bar M) \left ( 1-t_L - \frac {u_T} {\lambda} \right )$$
-with units
-$$[\$/mi] = \frac {[MU/mi]} {[MU/\$]} + [hr/mi]* \left ( 1 - [unitless] - \frac {[MU/travelHr]}{[MU/\$]} \right )$$
+$$o \cdot u_M + o \cdot u_T \pi(\bar M) - \mu - \pi(\bar M) (1-t_L)w \cdot o \lambda - t_M \lambda= 0$$
 
-To solve for $\mu$, the marginal utility of increased VMT production, consider the private choice of fuel F and other inputs *H* (in $) used to produce VMT *M*:
+[Eq. 1]
+
+$$o \cdot u_M/ \lambda =   \frac {\mu}{\lambda} + o \cdot \pi(\bar M) \left ( (1-t_L)w - \frac {u_T} {\lambda} \right ) + t_M$$
+This yields the defining relation for the marginal benefit per vehicle mile travel, $\mu/\lambda$, with units of $/veh-mi:
+
+$$[pass/veh][\$/mi] = \frac {[MU/veh-mi]} {[MU/\$]} + [pass/veh][hr/veh-mi] \cdot \left ( (1 - [unitless])[\$/hr] - \frac {[MU/travelHr]}{[MU/\$]} \right ) + [\$/veh-mi]$$
+
+
+
+#### Private FONC for VMT inputs *F*, *H*
+
+To solve for $\mu$, the shadow value of the VMT production constraint and marginal utility of increased VMT production, consider the private choice of fuel F and other inputs *H* (in $) used to produce VMT *M*:
 $$\frac {\partial L}{\partial H} = \frac {\partial m}{\partial H} \mu -  \lambda = 0$$
 $$m_H \mu =  \lambda $$
-$$[mile/\$]*[MU/mile] = [MU/\$]$$
+$$[veh-mile/\$]*[MU/veh-mile] = [MU/\$]$$
+I.e. the marginal value of VMT, in $/veh-mi is:
 
-For the privately optimal fuel use, which omits the dependence of "pollution" (or other fuel-related externalities like energy security) $P_F$ on $\bar F$:
+$$\frac {\mu} {\lambda} ~=~ \frac {1}{m_H}$$
+
+For the privately optimal fuel use, which omits the dependence of "pollution" (or other fuel-related externalities like energy security) $P_F$ on average societal fuel use $\bar F$:
 $$\frac {\partial L}{\partial F} = \frac {\partial m}{\partial F} \mu - (q_F + t_F)  \lambda = 0$$
 $$m_F \mu =  (q_F + t_F)\lambda$$
 $$[mile/gal]*[MU/mile] = [\$/gal]* [MU/\$]$$
 
-Marginal benefit (in $) per mile produced equals marginal non-fuel cost per mile is
-$$\mu/ \lambda =  1/m_H$$
-Also, marginal benefit (in $) per mile produced equals marginal fuel cost per mile. 
+Marginal benefit (in $) per vehicle mile produced equals marginal non-fuel cost per vehicle mile is
+
+$$\mu/ \lambda =  1/m_H $$
+
+
+
+Also, marginal benefit (in $) per vehicle mile produced equals marginal fuel cost per vehicle mile. 
+
+[Eq. 2]
 $$\mu/ \lambda =  (q_F + t_F)/m_F$$
-These last two conditions together assure that fuel and non-fuel use are adjusted until their marginal benefit equals their marginal costs [???Interpretation of above two conditions may be off]
+These last two conditions together assure that fuel use and non-fuel financial inputs to vehicle travel are adjusted until their marginal benefit equals their marginal costs, on a per vehicle-mile basis.
+
+Questions
+
+  - Q: How does this embody electrification and automation?
+  - Q: Are there external benefits to automation not represented yet (regarding congestion ($T, \pi$), traffic smoothing ($F$), safety ($A$)), changing the marginal social cost of each?
+  - Q: Is homogeneity of degree 1 really a sound assumption for VMT production technology $m(F,H)$? I.e. does 
+$m(\alpha F, \alpha H) = \alpha m(F,H)$? This assumption leads to a key step.
 
 These conditions on the optimal levels of fuel use $F$ and other inputs $H$ to the production of miles $M$ can be combined to solve for marginal production cost of travel in terms of average fuel and nonfuel cost per mile.
 Since $m(F,H)$ is homogenous of degree 1, 
 $$m_F F + m_H H = m(F,H) = M$$.
 Substituting the optimal levels of marginal product for inputs
 $$\frac {1}{\mu/ \lambda} \left ( (q_F + t_F) F + 1 H \right ) = M$$
-allows solving for $\mu$, the optimal shadow cost of the production of miles in the condition equating marginal benefit of miles with the marginal production cost
+allows solving for $\mu$, the optimal shadow cost of the production of miles in the condition equating marginal benefit of miles with the marginal production cost [Eq. 3]
 $$(q_F + t_F) F/M + H/M = {\mu/ \lambda} $$
-Thus at the optimum, the marginal cost of both inputs to VMT production equals the average total cost per mile.
+Thus at the optimum (due to the h.d.1 assumption for VMT production), the marginal cost of both inputs to VMT production equals the average total cost per mile.
 
-Substituting into the optimal condition for VMT _M_ yields the condition balancing marginal private benefit of travel with marginal private-cost. $\mu/\lambda$ is the optimal private cost per mile, counting the cost of fuel _F_ and other inputs _H_. [Note: _H_ includes vehicle plus private accident costs associated with the production of VMT, but _not_ private time costs.]
-$$u_M/\lambda = \mu/\lambda +  \pi(\bar M)  \left ( (1-t_L) -  u_T/\lambda \right)$$
-$$u_M/\lambda  = \left ( (q_F + t_F) F/M + H/M \right ) + \pi(\bar M)  \left ( (1-t_L) - u_T/\lambda \right )$$
-$$[MB \$/mi] = [fuel+veh cost \$/mi] + [travelHr/mi] \left ( 1- [unitless] - [MB \$/travelHr] \right )$$
+Substituting [Eq. 3] into the optimal condition for VMT _M_ [Eq. 1] yields the condition balancing marginal private benefit of travel with marginal private-cost. $\mu/\lambda$ is the optimal private cost per mile, counting the cost of fuel _F_ and other inputs _H_. [Note: _H_ includes vehicle plus private accident costs associated with the production of VMT, but _not_ private time costs.]
 
-Have derived the private-optimal condition for VMT, matching the marginal benefit (utility-per-mile in dollars) of miles with the full cost per mile $c_M$ (Note: P&S2004 call this RHS $p_M$), including the vehicle capital and operation costs per mile $c_V$ plus the net marginal cost of time per mile, where $c_T$ is the net opportunity cost of time spent traveling per hour: 
-$$u_M/\lambda  = c_M \equiv c_V + c_T \pi(\bar M)$$
+$$o \cdot u_M/\lambda = \mu/\lambda +  o \cdot \pi(\bar M)  \left ( (1-t_L)w -  u_T/\lambda \right) + t_M$$
+$$o \cdot u_M/\lambda  = \left ( (q_F + t_F) F/M + H/M \right ) + o \cdot \pi(\bar M)  \left ( (1-t_L)w - u_T/\lambda \right ) + t_M$$
+$$[MB \$/veh-mi] = [pass/veh] [MB \$/pass-mi] = [fuel+veh cost \$/veh-mi] + [travelHr/mi] \left ( 1- [unitless] - [MB \$/travelHr] \right )$$
+Or
+$$u_M/\lambda  = \frac {1}{o} \left ( (q_F + t_F) F/M + H/M + t_M\right ) + \pi(\bar M)  \left ( (1-t_L)w - u_T/\lambda \right )$$
+
+#### Questions and issues re implementing ride pooling and occupancy:
+
+- Need to include Disutility of pooling, $u_o/\lambda$
+- And
+    - empty miles in VMT
+    - Unproductive detour miles in PMT (these now appear in time cost, but not in utility)
+
+Have derived the private-optimal condition for VMT, matching the marginal benefit (utility-per-mile in dollars) of miles with the full cost per vehicle mile $c_M$, including the vehicle fuel, capital and operation costs per mile $c_V$ plus the net marginal cost of time per mile, where $c_T$ is the net opportunity cost of time spent traveling per hour: 
+
+$$u_M/\lambda  = c_M \equiv c_V + c_T \pi(\bar M) + t_M$$
 where the vehicle private cost $c_V$ are fuel cost plus other financial costs associated with producing VMT (where those financial costs per mile *H* include capital costs, insurance and maintenance costs, and internalized accident cost per mile)
 $$c_V = (q_F + t_F) F/M + H/M$$
-The marginal time costs per hour $c_T$ are the opportunity costs of time that could be spent working or at leisure (the after-tax wage $(1-t_L)w$ for w=1) minus* any marginal benefit per hour gained directly from the time spent traveling (the consumption benefit of travel time) $u_T/\lambda$. 
-$$c_T =  (1-t_L) - u_T/\lambda $$
+The marginal time costs per hour $c_T$ are the opportunity costs of time that could be spent working or at leisure (the after-tax wage $(1-t_L)w$ for w=1) minus* any marginal benefit per hour gained directly from the time spent traveling (the consumption benefit of travel time) $u_T/\lambda$.
+
+$$c_T =  \left ( (1-t_L)w - u_T/\lambda \right ) o $$
+**Question:** This is time cost for all occupants or per occupant? Do we exclude occupancy in time cost? No, should count time cost for all passenger miles.
+
 It is expected that this term, $u_T$ is low or even negative for Manual Vehicles (MVs), depending on driving conditions, but its value would increase for AVs, offsetting the foregone value of time that could have been spent on non-driving activities.
 
-Implying demand functions for the final consumption goods *C,M* and factors *L,F,H* of the form
+The indirect utility function implies demand functions for the final consumption goods *C,M* and factors *L,F,H* of the form
 $$C = C(c_M,t_L)$$
-$$M = M(c_M, t_L)$$ (Note: this function for VMT would also be a function of $t_M$ if imposed)
+$$M = M(c_M, t_L)$$ 
+Cost per mile $c_M$ is  function of prices and taxes. (Note: these functions for $C$ and VMT $M$ would also be a function of $t_M$ if imposed, where $t_M$ is embodied in cost per mile $c_M$)
+
 $$L = L(c_M, t_L)$$
-$$F = F(t_F, \pi, t_L) = a_{FM}(t_F) M(c_M,t_L)$$
-$$H = H(t_F, \pi, t_L) = a_{HM}(t_F) M(c_M,t_L)$$
+$$F = F(t_F, t_M, \pi, t_L) = a_{FM}(t_F) M(c_M,t_L)$$
+$$H = H(t_F, t_M, \pi, t_L) = a_{HM}(t_F) M(c_M,t_L)$$
 
 The budget-balancing rate of change in labor tax with fuel tax is determined from totally differentiating the government budget constraint for fixed *G* with respect to $t_F$:
-$$\frac{d t_L}{d t_F}L + t_L \frac{d L}{d t_F} + F + t_F \frac{d F}{d t_F} = \frac{d G}{d t_F} = 0$$
+$$\frac{d t_L}{d t_F}L + t_L \frac{d L}{d t_F} + F + t_F \frac{d F}{d t_F}  + t_M \frac{d M}{d t_M} = \frac{d G}{d t_F} = 0$$
 So we can infer the marginal change in labor tax $t_L$ necessary to balance the government budget as fuel tax change
-$$\frac {d t_L}{d t_F} = - \frac {F + t_L \frac{d L}{d t_F} + t_F \frac{d F}{d t_F} }{L}$$
+$$ \left . {\frac {d t_L}{d t_F}} \right \rvert_{t_M~fixed} = - \frac {F + t_L \frac{d L}{d t_F} + t_F \frac{d F}{d t_F} + t_M \frac{d M}{d t_M}}{L}$$
 
-* [Note: these last two equations would include the term $t_M dM/dt_F$ on the eft-hand-side and the denominator, respectively, if VMT _M_ was also taxed.]
+$$ \left . {\frac {d t_L}{d t_M}} \right \rvert_{t_F~fixed} = - \frac {M + t_L \frac{d L}{d t_M} + t_F \frac{d F}{d t_M} + t_M \frac{d M}{d t_M}}{L}$$
+
+
+* [Note: these last two equations include the term $t_M dM/dt_F$ on the left-hand-side and the numerator, respectively, if VMT _M_ was also taxed.]
 * Now look for expression for the FONC for optimal $t_F$ based on differentiating the private indirect utility function $V$
 
 $$\frac{1}{\lambda} \frac{dV}{dt_F} = (E^{P_F} - t_F) \left( - \frac{dF}{dt_F} \right ) + 
-(E^C + E^A + E^{P_M}) \left ( - \frac{dM}{dt_F} \right ) + t_L \frac{dL}{dt_F}$$
+(E^C + E^A + E^{P_M} -t_M) \left ( - \frac{dM}{dt_F} \right ) + t_L \frac{dL}{dt_F}$$
 
 
 where
