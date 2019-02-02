@@ -113,13 +113,14 @@ for *i*: AV or MV; *j*: urban or non-urban
     - Demand response (mode shifts/induced demand)
 
 ## Analysis Steps
-- Establish estimated base energy intensity and demand impacts for mechanisms
+- Establish est. base energy intensity & demand impacts for mechanisms
     - At different levels of CAV penetration
 - Summarize known cost information
-- Summarize Key Response relationships*  [Rebound, VoTT, congestion effects]
-- Account for equilibrium interactions (through costs/benefits): demand/congestion/speed/safety/energy-intensity & cost
-- Define and Model alternative scenarios: (defines exogenous assumptions and endogenous)
-- **Explore implications of alternative conditions/costs on outcomes**
+- Summarize Key Response relationships*
+    - Rebound, VoTT, congestion effects, ride-pooling
+- Account for equilibrium interactions (through costs/benefits):       - demand/congestion/speed/safety/energy-intensity & cost
+- Define and Model alt scenarios: (defines exogenous assumptions and endogenous)
+- **Explore implications of alt conditions/costs on outcomes**
 
 
 # 2. Connections to Other SMART Project Assumptions & Results
@@ -245,7 +246,7 @@ IM %>% filter(Year==2050 & VC=="LDV") %>%
 
 Each of these incremental energy intensity and travel demand effects may depend on costs *c*.
 
-Energy use is the product of energy intensity *I* (Mj/km) and travel VKT *M* (km/yr):
+Energy use is the product of energy intensity *I* (Mj/veh-km) and travel VKT *M* (veh-km/yr):
 $$E_{vij} ~=~ \prod_k \left ( 1 + \Delta \mu_{kvi}(c) \right ) \cdot I_{Ev0} \cdot \prod_m \left ( 1 + \Delta \delta_{mvj}(c) \right ) \cdot M_{Ev0}$$
 
 ## Unifying Demand Framework
