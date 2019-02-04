@@ -1,7 +1,7 @@
 ---
 title: "CAVESIM Approach and Example Results"
 author: "Paul Leiby"
-date: "November 30, 2018"
+date: "February 4, 2019"
 output:
   beamer_presentation:
     colortheme: dolphin
@@ -255,11 +255,12 @@ Travel demand is based on utility maximization, with time and budget constraints
 
 $$
 \begin {aligned}
-max ~U ~&= ~u(M, T, C, G, X) - D_F(P(\bar F)) - D_M(A(\bar M))\\
+max ~U ~&= ~u(o M, T, C, G, X) - D_F(P(\bar F)) - D_M(A(\bar M))\\
 s.t. ~& L + T + X \le \underline L \\
 & (\tau_f+P_f) F + \tau_M M + H + C ~\le~ I \\
 & I = (1-\tau_L) L \\
-& M = m(F, H)
+& M = m(F, H) \\
+& T = \pi(\bar M) \bar o M
 \end {aligned}
 $$
 Note we also include some consideration (tracking) of societal (non-market) costs associated with fuel use *F* and VKT *M*. These include, e.g. air emissions, accidents, and congestion.
@@ -267,19 +268,9 @@ Note we also include some consideration (tracking) of societal (non-market) cost
 ## Aside
 
 Technically, the separability of *u* in leisure *X* has useful implications.
-$$u(M, T, C, G, X) = u(\phi(M, T, C, G), X)$$
+$$u(o M, T, C, G, X) = u(\phi(o M, T, C, G), X)$$
 It may be useful to separate out travel miles production by vehicle type, where vehicle have different energy and non-energy (capital) cost requirements.
 $$M_v ~=~ f_v(F_v, H_v)$$
-
-## Consider and Account How Automation Technologies Change Travel Costs, For a Range of Cost Components (incl. Energy)
-
-(Important point is that fuel/energy is generally only a limited share of total travel costs.)
-
-## Results: Explore how Economic Costs and Technology Changes Can Influence Behavior & Outcomes re Energy and VKT
-
-Fig: Fuel Use vs. Fuel Incr. Cost
-
-Fig: VKT vs. VKT Incr. Cost
 
 ## CAVESIM Connections to Task 2B and SMART Workflow
 
@@ -296,5 +287,26 @@ Fig: VKT vs. VKT Incr. Cost
 - **Aggregate outputs can provide comparison & inputs**:
     - comparison to detailed models, inputs to benefits (MEB) measures, additional cases
 
-# 6. Preliminary Results
+# 6. Illustrative Results
 
+## Consider and Account How Automation Technologies Change Travel Costs, For a Range of Cost Components (incl. Energy)
+
+(Important point is that fuel/energy is generally only a limited share of total travel costs.)
+
+## Results: Explore how Economic Costs and Technology Changes Can Influence Behavior & Outcomes re Energy and VKT
+
+Fig: Fuel Use vs. Fuel Incr. Cost
+
+Fig: VKT vs. VKT Incr. Cost
+
+## Results: Exploring Demand and VMT for Wide Range of Demand and Technology Scenarios
+
+
+## Modeling Vehicle Sharing (Pooling) with Economic Costs and Responses
+
+- Increased Pooling Enables Higher PMT and Lower VMT
+- But VMT demand responds to economics of lower costs, possible time-cost penalty
+
+Fig: VKT and PKT No Time Cost Penalty for Pooling
+
+Fig: VKT and PKT With Time Cost Penalty Increasing With Pooling
