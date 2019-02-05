@@ -38,19 +38,26 @@ library(knitr)
 
 # 1. Status
 
+## 
+
+Name of task           |  Description of each task
+-----------------------|------------------------------
+2B – ST1 - Aggregation Methods to Estimate National-Level Impacts of CAVs Scenarios [Top-Down CAVESIM Approach]   | Quantify potential MEP impacts of specific Connected and Automated Vehicle (CAV) technologies at a national level based on results of in-depth CAVs case studies and scenarios. Develop estimates of CAVs adoption levels. Develop and apply an aggregate, medium-to-longer-term model of national/regional travel and energy demand implications of CAVs. Identify primary drivers of uncertainty of these impacts.
+
+## CAVESIM Status and Milestone Schedule
+
+2B - ST1 Milestone/Deliverable Description                 | Due
+-----------------------------------------------------------|----------
+Coordination of CAVESIM scenarios and parameters with other SMART workflow and related tasks – ST1    |  Q2
+Integration of CAVESIM results to include HD vehicles and related factors – ST1  | Q3
+Finalized CAVESIM model and analysis for LD and MD/HD vehicles – ST1   |Q4
+
 ## CAVESIM Status at End FY18
 
-- Q3: Preliminary design of HDV & shared mobility model components (ORNL)
+- Q4: Preliminary design of shared mobility model components (ORNL)
 - Q4: Model implementation and runs including multiyear dynamics and new components for LDVs (ORNL)
 	- include initial TNC (ride sharing) to distinguish PKT from VKT
-	- link the model from a static annual to simple dynamic
-		- Seek penetration scenario from MA3T or ADOPT/Workflow Taskforce
-- FY19 Q1-Q2
-	- include available cost information for alternative technologies
-	- (phase 1) benchmark to inputs and results from larger simulations
-		- Following the "Workflow" development to understand and ID major features 
-	- FY18 Product paper (in draft)
-    - Feeds Quad Chart item "Annual: Reports on national aggregate energy and travel impacts depending on incentives and economic drivers""
+	- link the model from a static annual to simple dynamic (multiyear)
 
 ## CAVESIM Top-Down Conceptual Approach Complements Bottom-up National Aggregation and  Detailed Regional Analyses
 
@@ -64,7 +71,7 @@ library(knitr)
   - Social costs also considered (emissions, congestion, accidents)
   - Analytic form allows exploring ranges of imposed costs with constraints under different combinations of inputs to find combinations producing maximum benefit
 
-$$U_{ij} ~=~ u(\psi(C_i, M_{ij}, T_{ij}, G), N) - \phi(P_{ij}(F,M)) - \delta(A_i)$$
+$$U_{ij} ~=~ u(\psi(C_i, o M_{ij}, T_{ij}, G), N) - \phi(P_{ij}(F,M)) - \delta(A_i)$$
 for *i*: AV or MV; *j*: urban or non-urban
 
 ## Variable Definitions
@@ -81,8 +88,9 @@ for *i*: AV or MV; *j*: urban or non-urban
 - $F_i$,    fuel consumption
 - $P_F$,    fuel price, including taxes
 - $H_i$,    vehicle and other driving costs
+- $o$       occupancy, or ride-pooling level
 
-## Conceptual Approach in Words: Main Potential Impacts of Connectivity & Automation Represented, Estimated, and Interacted
+## Conceptual Approach: Main Potential Impacts of Connectivity & Automation Represented, Estimated
 1. **Summarize Effects on Vehicle Energy Intensity**
   - ~8 Identified technological mechanisms
 2. **Summarize/Estimate Effects on Costs, Travel “Costs”**
@@ -126,7 +134,7 @@ for *i*: AV or MV; *j*: urban or non-urban
 # 2. Connections to Other SMART Project Assumptions & Results
 
 ## Base inputs from "Scenario Generation" - Technology Info
-- [ToDo: reconcile with SMART Workflow Scenario Parameters]
+- Reconcile with SMART Workflow Scenario Parameters
 - Technology set (vehicle types) and mix
 - Automation Tech Cost information
 - Impacts on energy use
@@ -151,12 +159,6 @@ for *i*: AV or MV; *j*: urban or non-urban
 - From Land-Use model
 	- Land-use-based rebound effects on PKT demand
 
-
-## Planned Next Steps for CAVESIM (FY19)
-
-- Revise/update all key parameters from draft values to values consistent with SMART Workflow data and scenarios
-- Update additional cost and economic conditions (response elasticities) based on Lit review (share insights and conclusions re parameters with others)
-- XXX Bullet 3
 
 # 3. CAVESIM Inputs to be Drawn From/Benchmarked to Detailed SMART Models/Studies
 
@@ -301,6 +303,7 @@ Fig: VKT vs. VKT Incr. Cost
 
 ## Results: Exploring Demand and VMT for Wide Range of Demand and Technology Scenarios
 
+![Example Technology and Demand Scenarios Diagram](./data/Example_Intensity_Demand_Energy_Scenarios20190204.png)
 
 ## Modeling Vehicle Sharing (Pooling) with Economic Costs and Responses
 
@@ -310,3 +313,10 @@ Fig: VKT vs. VKT Incr. Cost
 Fig: VKT and PKT No Time Cost Penalty for Pooling
 
 Fig: VKT and PKT With Time Cost Penalty Increasing With Pooling
+
+## Planned Next Steps for CAVESIM (FY19)
+
+- Q2: Coordination of CAVESIM scenarios and parameters with other SMART workflow and related tasks 
+- Revise/update all key parameters from draft values to values consistent with SMART Workflow data and scenarios
+- Begin executing large number of cases with available dataset to map outcomes, uncertainty
+
