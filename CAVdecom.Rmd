@@ -1986,6 +1986,91 @@ $$A_2 = A_1 \left ( \frac{V_2}{V_1} \right )^2$$
 
   > In words: the number of injury accidents after the change in speed (A2) equals the number of accidents before the change (A1) multiplied by the new average speed (v2) divided by the former average speed (v1), raised to the square power.
 
+# 8. Simple Examination of VMT and PMT Given Pooling
+
+Consider a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.
+
+```{r initOccupancyEffects}
+occupancyEffects = data.frame("o" = seq(0.8, 1.5, 0.05))
+
+```
+We establish estimates of vehicle travel cost and its primary components (those related to fuel cost, non-fuel finacial costs, and time costs).
+
+```{r poolingScenData}
+
+scenData = VTCostBase
+scenData$DemScen = "Base"
+scenData = rbind(scenData, select(VTCostAlt, CostCat, VehType, VTCost_cpm, DemScen))
+
+# Focus on the base and alt scen cost components for LDV cars
+VehTypeWanted = "LDVAvgSedan"
+DemScenWanted = c("Base", "DS3")
+
+scenData = scenData %>% filter(VehType==VehTypeWanted) %>% spread(key = CostCat, value = VTCost_cpm)
+scenData = scenData %>% 
+  rename(C_F = Fuel,C_T = Time) %>% 
+  mutate(C_H = Total - C_F - C_T,  # combine all (financial) costs other than Fuel and Time. Includes accident
+         C_V = C_F + C_H)
+# Keep only needed variables
+scenData = scenData %>% select(DemScen, C_F, C_H, C_T, C_V)
+
+# Keep only Base and the Alt scenario of interest
+#scenData = scenData %>% filter(DemScen == "Base" | DemScen == "DS3")
+scenData = scenData %>% filter(DemScen %in% DemScenWanted)
+
+# dplyr fn for full-join with no common vars (all combinations)
+# this gives a df with observations for all levels of occupancy o for each value of DemScen
+#  Cost component values are replicated for all occupancy levels, which is correct for costs/veh-mi
+occupancyEffects = crossing(occupancyEffects, scenData)
+
+VoTT_elas_wrt_o = 0.5  # an assumption regarding how occupancy (pooling) increases time cost VoTT
+
+# TravTimeCostBasePars["average_speed.LDV","average"]
+
+occupancyEffects = occupancyEffects %>%
+  mutate(C_Vpmt = C_V/o,            # Variable vehicle travel cost per pass-mi [c/pass-mi]
+         rho = o^VoTT_elas_wrt_o,   # Time-cost multiplier due to disutility of pooling [unitless]
+         C_Tpmt = C_T*rho,          # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi]
+         Pi  = 1/TravTimeCostBasePars["average_speed.LDV","average"],  # assumed pace, (constant over o) [hr/veh-mi]
+         C_Tdph = C_T/Pi,           # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+         C_Mpmt = C_Vpmt + C_Tpmt   # Total cost per passenger mile traveled  [c/pass-mi]
+           )
+
+# Now compute VMT and PMT, given travel costs per passenger mile, the elasticity of PMT w.r.t. cost, and occupancy
+ElasPMT = RelTotCost %>% filter(DemScen %in% DemScenWanted, VehType==VehTypeWanted, Case == "Low") %>%
+  .$ElasVKT
+```
+
+```{r poolingEffectsOnVMTandPMT}
+occupancyEffects = occupancyEffects %>%
+  ungroup() %>%
+  # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
+  mutate(
+    rPMT = (C_Mpmt/C_Mpmt[o==1.0 & DemScen=="Base"])^ElasPMT, 
+    rVMT = rPMT/o
+    ) %>%
+  group_by(DemScen) %>%
+  mutate(  # This is a direct effect of pooling on VMT with no demand response to pooling costs
+    rVMT_direct = rPMT[o==1.0]/o # excludes the effect of pooling on travel costs (time and financial)
+    ) %>% # but does include the effect of the Alt case on cost and PMT
+  ungroup()
+```
+
+```{r plotOccupancyEffects}
+TempoccupancyEffects = occupancyEffects %>% 
+  select(DemScen, o, rPMT, rVMT, rVMT_direct) %>%
+  gather(key= travelEffect, value = value, rPMT:rVMT_direct)
+
+TempoccupancyEffects %>%
+  group_by(DemScen, travelEffect) %>%
+  ggplot( aes(x=o, y=value , color=travelEffect, linetype=DemScen)) + 
+    geom_line(size=1.0) +
+    ggtitle("Effect of Pooling on VMT and PMT") +
+    xlab("Pooling Level (base=1.0)") + ylab("VMT and PMT Relative to Base")
+
+```
+
+
 # References
 
 * Bösch, P. M., Becker, F., Becker, H., & Axhausen, K. W. (2017). Cost-based analysis of autonomous mobility services. _Transport Policy_, (October). http://doi.org/10.1016/j.tranpol.2017.09.005
