@@ -3,6 +3,11 @@
 Abstract:
 A scratch file with evolving list of new references on CAV energy and travel implications, for possible future use.
 
+* Acheampong, Ransford A. and Federico Cugurullo 2019. Capturing the behavioural determinants behind the adoption of autonomous vehicles: Conceptual frameworks and measurement models to predict public transport, sharing and ownership trends of self-driving cars
+February 2019 _Transportation Research Part F Traffic Psychology and Behaviour_ 62:349-372
+DOI: 10.1016/j.trf.2019.01.009
+Project: SURPASS: how autonomous cars will transform cities.
+
 * Linda Lim and Aly M. Tawfik 2018. Estimating Future Travel Costs for Autonomous Vehicles (AVs) and Shared Autonomous Vehicles (SAVs)
 November 2018
 DOI: 10.1109/ITSC.2018.8569715
