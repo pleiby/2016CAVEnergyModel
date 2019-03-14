@@ -1,0 +1,208 @@
+---
+title: "SAV Replacement of Conventional Vehicles"
+author: "Paul N. Leiby"
+date: "3/14/2019"
+output:
+  word_document: default
+  html_document: default
+---
+
+leibypn@ornl.gov
+Oak Ridge National Laboratory
+
+This note summarizes estimates of the number of conventional vehicles that can be replaced by each Shared Automated Vehicle (SAV), essentially providing the same service level in terms of wait/travel time. Estimates are entirely from various simulations, with some improving fidelity over time.
+
+Results for the "SAV Replacement Ratio" (number of private conventional vehicles that can be replaced by SAVs with roughly equivalent service times) depend on:
+
+- service area attributes, such and the density of travel activity and the type of road network on which vehicle operate;
+    - e.g. rural area travel (~20% of total), and studies may not include suburban regions.
+- simulation algorithms (dispatch and routing heuristics)
+- vehicle drivetrain and fueling/charging infrastructure (determining out-of-service time for recharging)
+- acceptable wait times (1 to 5 minutes typically assumed)
+- traffic congestion (related to time of operation)
+- extent of ride-pooling (Dynamic Ride Sharing)
+- assumed extent of replacement of personal trips, in the region with SAV trips. 
+    - Many extant studies exogenously assume some fraction of trips will be taken on SAVs, and ask how many SAVs would be needed, rather than model the fraction of travel on SAVs, reflecting consumer choice).
+
+Comment: It appears that essentially _all_ estimates entail a central or global system optimization, i.e. equivalent to a single coordinated ride-service operator or TNC, seeking to provide acceptable wait and travel times with minimal SAV fleet size.^[Thus they imply either a single coordinated SAV fleet under city/government control or a utility-like arrangement where a service monopoly is granted to, or achieved by, a single operator. In a competitive market, if potential operative profits are substantial, we would expect the entrance of multiple competing ride services, and lower levels of SAV utilization until costs and profits equilibrate.]
+
+
+**SAV: Private Veh** | **Notes**                       | **Source**
+-------------------|------------------------------|------------
+3:1                   |Singapore                    | Speiser et al 2014.
+9:1                   |Early widely-cited simulation of Austin, 12x24 mi. core area. No pooling, congestion|Fagnant & Kockelman, 2014, 2016
+7:1 - 11:1            |Range of simulations in urban (Austin) area, coordinated optimum depends on road network, acceptable (short) wait times for pick-up. Replacement higher for grid networks. These studies typically *omit/simplify congestion effects*, assume SAVs completely replace personal vehicles.| (Fagnant & Kockelman, 2014, 2016, Chen, Kockelman, & Hanna, 2016, Loeb, Kockelman, & Liu, 2017)
+17:1                  |Pooled SAVs. Little explanation given. | Johnson 2016.
+3.6:1                 |Peak travel hour, no DRS/pooling (congested, similar origins and destinations in rush hour)|Levin et al. 2017
+31:1                |Peak estimate in Central business district, extensive DRS/pooling (pooling of 3-4 passengers) |Levin et al. 2017
+
+
+
+
+References
+-----------------
+- Chen, T. D., Kockelman, K. M., & Hanna, J. P. (2016). Operations of a shared, autonomous, electric vehicle fleet: Implications of vehicle & charging infrastructure decisions. Transportation Research Part A: Policy and Practice, 94, 243–254. http://doi.org/10.1016/j.tra.2016.08.020
+- Fagnant, D. J., & Kockelman, K. M. (2014). The travel and environmental implications of
+shared autonomous vehicles, using agent-based model scenarios. Transportation
+Research Part C: Emerging Technologies, 40, 1–13.
+- Fagnant, D. J., & Kockelman, K. M. (2016). Dynamic ride-sharing and fleet sizing for a
+system of shared autonomous vehicles in Austin, Texas. Transportation, 1–16.
+- Fagnant, D. J., Kockelman, K. M., & Bansal, P. (2015). Operations of a shared autonomous
+vehicle fleet for the Austin, Texas market. Transportation Research, 28,
+- Fagnant, D. J., & Kockelman, K. M. (2018). Dynamic ride-sharing and fleet sizing for a system of shared autonomous vehicles in Austin, Texas. Transportation, 45(1), 143–158. http://doi.org/10.1007/s11116-016-9729-z
+- Johnson, Brian A. (Barclays Capital, 2016. Disruptive Mobility, Society of Automotive Analysts 2016 Outlook Conference 10 January 2016. https://societyofautomotiveanalysts.wildapricot.org/resources/Documents/Brian%20Johnson%20slides%20for%20Outlook.pdf
+- Levin, M. W., Kockelman, K. M., Boyles, S. D., & Li, T. (2017). A general framework for modeling shared autonomous vehicles with dynamic network-loading and dynamic ride-sharing application. Computers, Environment and Urban Systems, 64, 373–383. http://doi.org/10.1016/j.compenvurbsys.2017.04.006
+- Loeb, B., Kockelman, K. M., & Liu, J. 2017. Shared autonomous electric vehicle (SAEV)
+operations across the Austin, Texas network with a focus on charging infrastructure
+decisions. Transportation Research Part C: Emerging Technologies
+- Segal, M., and Kockelman, K. M. 2017. Design and implementation of a shared
+autonomous vehicle 1 system for Austin, Texas 2. In Kockelman, K. & Boyles, S.
+(Eds.) Transportation research board 95th annual meeting, no. 16-1837
+- Spieser, K., Treleaven, K., Zhang, R., Frazzoli, E., Morton, D., & Pavone, M. 2014.
+Toward a systematic approach to the design and evaluation of automated mobility-
+on-demand systems: A case study in Singapore. _Road vehicle automation_, 2014 229–245).
+
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxx
+
+ParcSize_0 == N_tot0 = N_PV0, assuming all private (conventional) vehicles.
+Rides0 = 1*N_tot0, assuming "1" ride per private vehicle (normalized to 1.0)
+Rides_1 = 1*N_PV + RR*N_SV = 1*N_tot0
+Assuming no change in travel demand (Rides), Rides_1 = Rides0
+
+ParcSize_1 == N_tot1 = = N_PV + N_SV 
+
+rho == Relative Vehicle Parc Size = N_tot1/N_Ntot0 
+rho == (N_PV + N_SV)/(1*N_PV + RR*N_SV)
+rho == [(N_PV + N_SV)/N_PV]/[(1*N_PV + RR*N_SV)/N_PV]
+rho == (1 + N_SV/N_PV)/(1 + RR*N_SV/N_PV)
+S_s0 == N_SV0/N_PV0 = 0
+S_s1 == N_SV1/N_PV1
+
+rho == (1 + S_s1)/(1 + RR*S_s1)
+
+
+
+See "SMART Mobility WTF  Scenarios - Ownership 20181218a.pptx"
+Total Vehicle Stock Would Decline As Fraction of Shared Vehicles Rises
+
+- 7:1             Austin six-county region in Austin, Texas (Loeb et al., 2017).
+- DRS |Fagnant and
+Kockelman (2016) and Segal and Kockelman (2017) incorporated
+dynamic ride-sharing, only 10% of Austin personal trips.
+
+- Burns et al. (2013) studied a centrally dispatched SAV
+system in three different urban and suburban environments. Their
+findings indicated that a much smaller fleet of SAVs could provide
+service to all residents with acceptable waiting times… Spieser et al. (2014) found
+that a SAV fleet one-third the size of the personal vehicle fleet was
+sufficient for providing service to Singapore travelers.
+
+
+-------------------------------------------
+
+Bibliography - Literature on CAVs SAVs Taxation and VMT
+=========================
+
+* [The Impact of Carsharing on Household Vehicle Ownership](http://www.accessmagazine.org/spring-2011/impact-carsharing-household-vehicle-ownership/) Shaheen, Susan and Elliot Martin, 2019.
+
+* 
+
+* Ana T. Moreno, Andrzej Michalski, Carlos Llorca, and Rolf Moeckel 2018. Shared Autonomous Vehicles Effect on Vehicle-Km Traveled and Average Trip Duration
+_Journal of Advanced Transportation_
+Volume 2018, Article ID 8969353, 10 pagesa
+https://doi.org/10.1155/2018/8969353
+Research Article
+https://www.hindawi.com/journals/jat/2018/8969353/
+
+* Johnson, Brian A. 2015. "Disruptive Mobility: AV Deployment Risks and Possibilities", Barklays Capital presentation, https://orfe.princeton.edu/~alaink/SmartDrivingCars/PDFs/Brian_Johnson_DisruptiveMobility.072015.pdf
+    - SAV: 8% increase in VMT from empty trips, vehicle replacement ratio 9 (traditional vehicle per SAV), vehicle usage intensity x5. Pooled SAVs (PSAV): vehicle replacement ratio 15-18, VMT reduced by 40-50%, vehicle usage intensity x5, Car parc falls by 60% and annual LDV sales by 40% (SAAR, seaonall adjusted annual rate. Barclays calc.)
+  - Discusses 4 alternative types of AVs: 
+        1. Some traditional vehicles "for work and rural use," limited self-driving capabilities
+            - rural areas are 24% of vehicles in use (NHTS)
+        2. Family AV (FAVs) 2.1/HH declines to 1.2, mi/y incr. from 12k to 24k
+        3. SAVs 9:1 replacement, 8% additional VMT empty miles, mi/y incr. from 12k to 64k
+            - cost $0.64/mi per sedan SAV, $0.16/mi 2-seater
+        4. PSAVs Pooled-SAVs: 15:1-18:1 replacement, 40-50% reduced VMT from shared rides, mi/yincr. from 12K to 64k
+            - cost $0.21/mi-consumer sedan PSAV; $0.08/mile-consumer 2-seater PSAV
+
+* Johnson, Brian A. (Barclays Capital, 2016. Disruptive Mobility, Society of Automotive Analysts 2016 Outlook Conference 10 January 2016. https://societyofautomotiveanalysts.wildapricot.org/resources/Documents/Brian%20Johnson%20slides%20for%20Outlook.pdf
+  - Update of 2015 presentation, refined numbers. Slightly lower replacement rate, higher deadhead ZOV VMT, lower cost/mi
+  - Discusses 4 alternative types of AVs: 
+        1. Some traditional vehicles "for work and rural use," limited self-driving capabilities
+            - rural areas are ~20% of vehicles in use (NHTS,  Kim, Jinwon & Brownstone, David)
+“The impact of residential density on vehicle usage and fuel consumption”, 01/2010)
+        2. Family AV (FAVs) 2.1/HH declines to 1.2, mi/veh-y incr. from 11346 to 22692 
+        3. SAVs 7:1 replacement, 12% additional VMT empty miles, mi/veh-y incr. from 11346 to 64k
+            - cost $0.29/mi to consumer per sedan SAV, $0.19/mi 2-seater
+        4. PSAVs Pooled-SAVs: 17:1 replacement, 50%+ reduced VMT from shared rides, mi/yincr. from 11346 to 64k
+            - cost $0.12/mi-consumer sedan PSAV; $0.10/mile-consumer 2-seater PSAV (no clear source)
+                - "perpetual ride with ave wait time of 5 min"
+    - Car parc falls by 60% and annual LDV sales (SAAR) by 40%, mass market by 70% Barclays calc.)
+    - vehicle usage intensity (mi/yr) 5.6X for SAV and Pooled-SAV
+
+* briefing.com 2019 Auto Sales: Light Vehicle Sales (SAAR). Auto Sales Data: Graphs of Monthly SAAR, Domestic and Total, Mar 2003 - Mar 2019, Source is Commerce Department.
+https://www.briefing.com/Investor/Calendars/Economic/Releases/auto.htm?mod=article_inline
+
+*  Fagnant, Kockelman, Bansal, “Operations of a Shared Autonomous Vehicle,” Transportation Research Record, No. 2536: 98-106, 2015.
+> "Results show that each SAV is able to replace around 9 conventional vehicles within [service area] while still maintaining a reasonable level of service (as proxied by user wait times,
+which average just 1.0 minutes)." Approximately 8% more VMT generated, unoccupied travel to the next traveler or repositioning.
+
+* Fagnant, D. J., & Kockelman, K. M. (2018). Dynamic ride-sharing and fleet sizing for a system of shared autonomous vehicles in Austin, Texas. Transportation, 45(1), 143–158. http://doi.org/10.1007/s11116-016-9729-z
+
+* Chen, T. D., Kockelman, K. M., & Hanna, J. P. (2016). Operations of a shared, autonomous, electric vehicle fleet: Implications of vehicle & charging infrastructure decisions. Transportation Research Part A: Policy and Practice, 94, 243–254. http://doi.org/10.1016/j.tra.2016.08.020
+
+* Levin, M. W., Kockelman, K. M., Boyles, S. D., & Li, T. (2017). A general framework for modeling shared autonomous vehicles with dynamic network-loading and dynamic ride-sharing application. Computers, Environment and Urban Systems, 64, 373–383. http://doi.org/10.1016/j.compenvurbsys.2017.04.006
+
+* Levin, M. W., Kockelman, K. M., Boyles, S. D., & Li, T. (2017). A general framework for modeling shared autonomous vehicles with dynamic network-loading and dynamic ride-sharing application. Computers, Environment and Urban Systems, 64, 373–383. http://doi.org/10.1016/j.compenvurbsys.2017.04.006
+
+> 2.2. Shared autonomous vehicles
+Multiple studies have investigated the possibility of using a
+fleet of SAVs to reduce reliance on personal vehicles and improve
+mobility and safety (Fagnant & Kockelman, 2015). Previous work
+(Chen, Kockelman, & Hanna, 2016; Fagnant & Kockelman, 2014;
+Loeb, Kockelman, & Liu, 2017) estimated that one SAV could replace
+between seven and eleven private vehicles, depending on the network,
+with small waiting times for pick-up. Higher replacement
+rates were observed on grid networks (Chen et al., 2016; Fagnant
+& Kockelman, 2014), whereas a rate of 1:7 was observed for a
+six-county region in Austin, Texas (Loeb et al., 2017). Fagnant and
+Kockelman (2016) and Segal and Kockelman (2017) incorporated
+dynamic ride-sharing, and found that it could offset the additional
+vehicle travel time. However, only 10% of personal trips of Austin
+were included. Further studies on different cities have supported
+indications that a smaller fleet of SAVs could provide service to
+all travelers. Burns et al. (2013) studied a centrally dispatched SAV
+system in three different urban and suburban environments. Their
+findings indicated that a much smaller fleet of SAVs could provide
+service to all residents with acceptable waiting times… Spieser et al. (2014) found
+that a SAV fleet one-third the size of the personal vehicle fleet was
+sufficient for providing service to Singapore travelers.
+
+
+> ... This AM peak-hour scenario required far more SAVs than 1 per
+9.3 travelers (Fagnant et al., 2015). One SAV could replace at most
+3.6 personal vehicles because of congestion and peak-hour travel
+patterns. Peak-hour travel is particularly difficult for SAV service
+
+* Ashley Langer, Vikram Maheshr, Clifford Winston, 2017. From gallons to miles: A disaggregate analysis of automobile travel and externality taxes, _Journal of Public Economics_, 152, August 2017, pp 34-46
+
+> Abstract
+Policymakers have prioritized increasing highway revenues as rising fuel economy and a fixed federal gasoline tax have led to highway funding deficits. We use a novel disaggregate sample of motorists to estimate the effect of the price of a vehicle mile traveled on VMT, and we provide the first national assessment of VMT and gasoline taxes that are designed to raise a given amount of revenue. We find that a VMT tax dominates a gasoline tax on efficiency, distributional, and political grounds when policymakers enact independent fuel economy policies and when the VMT tax is differentiated with externalities imposed per mile.
+https://www.sciencedirect.com/science/article/abs/pii/S0047272717300798 of 
+
+
+* B. Starr McMullen, Lei Zhang, Kyle Nakahara, 2010. Distributional impacts of changing from a gasoline tax to a vehicle-mile tax for light vehicles: A case study of Oregon, a_Transport Policy_, 17(6)359-366,
+
+> A vehicle-miles traveled (VMT) tax is frequently mentioned as viable alternative to a fuel tax for
+collecting highway users fees from light vehicles. Both a static model and a regression based model are used here to assess the distributional impacts of a switch from a fuel tax to a VMT tax for the state of Oregon. The VMT tax is found to be slightly more regressive than the fuel tax and rural households are found to actually benefit relative to urban households under a VMT tax. Two alternative VMT structures that might increase incentives to use more fuel efficient vehicles are provided, but both are found to be even more regressive than a flat VMT tax.
+
+* Simoni Et Al. Congestion pricing in a world of self-driving vehicles: An analysis of different strategies in alternative future scenarios
+
+* Pettigrew, Dana and Norman, 2019. Clusters of potential autonomous vehicles users according to propensity to use individual vs shared vehicles - _Transport Policy_, 76, April 2019, pp. 13-20
+
+* Gkartzonikas  Gritza 2019. What have we learned A review of stated preference and choice studies on autonomous vehicles - Trans Research - C.
+
+> This paper provides a review of studies published in peer-reviewed journals, conference pro-ceedings, and technical academic and private sector reports on surveys about autonomous ve-hicles (AVs) from 2012 onward. The studies and respective surveys are categorized in this paperbased on the study objectives and methodology applied. More than half of the reviewed studieson AVs focus on capturing individuals’ behavioral characteristics and perceptions. The secondmost prevalent category includes studies about individuals’ willingness to pay to use AVs. Thereviewed studies were also categorized according to the study population. The paper identifiesand classifies attitudinal questions in each survey into different components that may affectbehavioral intention to ride in AVs and provides information on specific hypotheses that were setin the studies. Moreover, a discussion of the benefits, barriers/concerns, and opportunities re-lated to the deployment of AVs is presented. The paper concludes by summarizing the lessons learned and outlining the research gaps
+> 
