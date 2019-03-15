@@ -1,5 +1,5 @@
 ---
-title: "SAV Replacement Ratio: Replacement of Private Conventional Vehicles"
+title: "SAV Replacement of Private Conventional Vehicles"
 author: "Paul N. Leiby"
 date: "3/14/2019 - draft"
 output:
@@ -10,7 +10,7 @@ output:
 leibypn@ornl.gov
 Oak Ridge National Laboratory
 
-This note first summarizes estimates of the number of conventional vehicles that can be replaced by each Shared Automated Vehicle (SAV), essentially providing the same service level in terms of ride wait/travel time. Estimates are entirely from various simulations, with some improving fidelity over time. The second part of this note shows simple calculations of how the total vehicle fleet (parc) size could decline, if the SAVs introduced replace the rides provided by multiple private cars (according to the SAV Replacement Rate), while the total number of rides remains constant.
+This note summarizes estimates of the number of private conventional vehicles that can be replaced by each Shared Automated Vehicle (SAV) in a regional transportation system, essentially providing the same service level in terms of ride wait/travel time. We call this the "SAV Replacement Ratio," and it depends on the domain of vehicle operation (region, road network and time of day), depends strongly on the extent of ride-pooling, and to some extent on vehicle technology. Estimates are entirely from various published simulation studies, with some improving fidelity over time. The second part of this note shows simple calculations of how the total vehicle fleet (parc) size could decline, if the SAVs introduced replace the rides provided by multiple private cars (according to the SAV Replacement Rate), while the total number of rides remains constant.
 
 ### 1. Estimates of SAV Replacement Ratio in the Literature
 
