@@ -12,6 +12,8 @@ Oak Ridge National Laboratory
 
 This note summarizes estimates of the number of conventional vehicles that can be replaced by each Shared Automated Vehicle (SAV), essentially providing the same service level in terms of wait/travel time. Estimates are entirely from various simulations, with some improving fidelity over time.
 
+### 1. Estimates of SAV Replacement Ratio in the Literature
+
 Results for the "SAV Replacement Ratio" (number of private conventional vehicles that can be replaced by SAVs with roughly equivalent service times) depend on:
 
 - service area attributes, such and the density of travel activity and the type of road network on which vehicle operate;
@@ -63,26 +65,62 @@ Toward a systematic approach to the design and evaluation of automated mobility-
 on-demand systems: A case study in Singapore. _Road vehicle automation_, 2014 229–245).
 
 
+### 2. Estimating Vehicle Parc Size for Levels Replacement Ratio, and SAV Fraction
 
-xxxxxxxxxxxxxxxxxxxxxxxxx
 
-ParcSize_0 == N_tot0 = N_PV0, assuming all private (conventional) vehicles.
 Rides0 = 1*N_tot0, assuming "1" ride per private vehicle (normalized to 1.0)
 Rides_1 = 1*N_PV + RR*N_SV = 1*N_tot0
-Assuming no change in travel demand (Rides), Rides_1 = Rides0
 
-ParcSize_1 == N_tot1 = = N_PV + N_SV 
+Consider the size of the vehicle fleet, or parc, in the base case (Case 0). Assuming all vehicles are private (conventional?) in the Base Case:
 
-rho == Relative Vehicle Parc Size = N_tot1/N_Ntot0 
-rho == (N_PV + N_SV)/(1*N_PV + RR*N_SV)
-rho == [(N_PV + N_SV)/N_PV]/[(1*N_PV + RR*N_SV)/N_PV]
-rho == (1 + N_SV/N_PV)/(1 + RR*N_SV/N_PV)
-S_s0 == N_SV0/N_PV0 = 0
-S_s1 == N_SV1/N_PV1
+$$ParcSize_0 \equiv N_{tot0} = N_{PV0}$$
 
-rho == (1 + S_s1)/(1 + RR*S_s1)
+This number of vehicles satisfies the base demand for rides/trips.
+$$Rides_0 = 1*N_{tot0}$$
+
+assuming "1" ride per private vehicle (i.e. private vehicle ride are normalized to 1.0)
+
+In the alternate case (Case 1), there are $N_{PV}$ private vehicles, $N_{SV}$ shared vehicles, 
+and shared vehicles have a *Replacement Ratio* of $RR$, 
+meaning each shared vehicle provides $RR$ as many rides as a private vehicle:
+
+The total rides provided in the alternate case 
+$$Rides_1 = 1 \cdot N_{PV} + RR \cdot N_{SV} = 1 \cdot N_{tot0}$$
+
+Assuming no change in travel demand (Rides) between Case 0 and Case 1:
+$$Rides_1 = Rides_0$$
+
+$$ParcSize_1 \equiv N_{tot1} = = N_{PV} + N_{SV} $$
+
+$\rho$ denotes the Relative Vehicle Parc Size, i.e.
+$$\rho = N_{tot1}/N_{tot0}$$
+
+$$\rho = \frac {(N_{PV} + N_{SV})}{(1 \cdot N_{PV} + RR \cdot N_{SV})}$$
+Dividing by the total number of vehicle in the alternative case 
+$$N_1 \equiv N_{SV} + N_{PV}$$
+
+$$\rho = \frac {(N_{PV} + N_{SV})/N_{1}}{(1 \cdot N_{PV} + RR \cdot N_{SV})/N_{1}}$$
 
 
+$$\rho = \frac {1}{(N_{PV}/N_1 + RR \cdot N_{SV}/N_{1})}$$
+
+
+So for any posited fraction $S_{s}$ of shared vehicles out of total vehicles $N$
+$$S_{s0} \equiv N_{SV0}/N_0 = 0$$
+$$S_{s1} == N_{SV1}/N_1$$
+$$1-S_{s1} == N_{PV1}/N_1$$
+
+$$\rho = \frac {1}{(1-S_{s1}) + RR \cdot S_{s1})}$$
+
+Note that this result checks out, in that we can compute the number of rides provided by this number of vehicles:
+$$Rides = 1 \cdot N_{PV} + RR  \cdot  N_{SV}$$
+$$Rides = N_1  \cdot  [1 \cdot (1-S_{s1}) + RR  \cdot  S_{s1})]$$
+
+
+### Extension to More Vehicle Types
+- Differentiate between Replacement Ratio for SAVs and SMV (Shared Manual Vehicles may not serve as many rides)
+- Differentiate between Replacement Ratio for SAVs and Private AVs (which may still serve more rides than Private MVs)
+- All relative to ride provision of Private Manual Vehicles
 
 See "SMART Mobility WTF  Scenarios - Ownership 20181218a.pptx"
 Total Vehicle Stock Would Decline As Fraction of Shared Vehicles Rises
