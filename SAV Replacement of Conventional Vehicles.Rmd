@@ -54,9 +54,7 @@ vehicle fleet for the Austin, Texas market. Transportation Research, 28,
 - Fagnant, D. J., & Kockelman, K. M. (2018). Dynamic ride-sharing and fleet sizing for a system of shared autonomous vehicles in Austin, Texas. Transportation, 45(1), 143–158. http://doi.org/10.1007/s11116-016-9729-z
 - Johnson, Brian A. (Barclays Capital, 2016. Disruptive Mobility, Society of Automotive Analysts 2016 Outlook Conference 10 January 2016. https://societyofautomotiveanalysts.wildapricot.org/resources/Documents/Brian%20Johnson%20slides%20for%20Outlook.pdf
 - Levin, M. W., Kockelman, K. M., Boyles, S. D., & Li, T. (2017). A general framework for modeling shared autonomous vehicles with dynamic network-loading and dynamic ride-sharing application. Computers, Environment and Urban Systems, 64, 373–383. http://doi.org/10.1016/j.compenvurbsys.2017.04.006
-- Loeb, B., Kockelman, K. M., & Liu, J. 2017. Shared autonomous electric vehicle (SAEV)
-operations across the Austin, Texas network with a focus on charging infrastructure
-decisions. Transportation Research Part C: Emerging Technologies
+- Loeb, B., Kockelman, K.M., Liu, J., 2018. Shared autonomous electric vehicle (SAEV) operations across the Austin, Texas network with charging infrastructure decisions. Transp. Res. Part C Emerg. Technol. 89, 222–233. https://doi.org/10.1016/j.trc.2018.01.019
 - Segal, M., and Kockelman, K. M. 2017. Design and implementation of a shared
 autonomous vehicle 1 system for Austin, Texas 2. In Kockelman, K. & Boyles, S.
 (Eds.) Transportation research board 95th annual meeting, no. 16-1837
@@ -241,4 +239,19 @@ collecting highway users fees from light vehicles. Both a static model and a reg
 * Gkartzonikas  Gritza 2019. What have we learned A review of stated preference and choice studies on autonomous vehicles - Trans Research - C.
 
 > This paper provides a review of studies published in peer-reviewed journals, conference pro-ceedings, and technical academic and private sector reports on surveys about autonomous ve-hicles (AVs) from 2012 onward. The studies and respective surveys are categorized in this paperbased on the study objectives and methodology applied. More than half of the reviewed studieson AVs focus on capturing individuals’ behavioral characteristics and perceptions. The secondmost prevalent category includes studies about individuals’ willingness to pay to use AVs. Thereviewed studies were also categorized according to the study population. The paper identifiesand classifies attitudinal questions in each survey into different components that may affectbehavioral intention to ride in AVs and provides information on specific hypotheses that were setin the studies. Moreover, a discussion of the benefits, barriers/concerns, and opportunities re-lated to the deployment of AVs is presented. The paper concludes by summarizing the lessons learned and outlining the research gaps
-> 
+
+
+#### Papers re TNC Empty vkt
+
+Cramer, J., & Krueger, A. B. (2016). Disruptive Change in the Taxi Business: The Case of Uber. American Economic Review, 106(5), 177–182. http://doi.org/10.1257/aer.p20161002
+
+Henao, A., & Marshall, W. E. (2018). The impact of ride-hailing on vehicle miles traveled. Transportation, (0123456789). http://doi.org/10.1007/s11116-018-9923-2
+
+Lavieri, P. S., Dias, F. F., Juri, N. R., Kuhr, J., & Bhat, C. R. (2018). A Model of Ridesourcing Demand Generation and Distribution. Transportation Research Record. http://doi.org/10.1177/0361198118756628
+
+Loeb, B., Kockelman, K. M., & Liu, J. (2018). Shared autonomous electric vehicle (SAEV) operations across the Austin, Texas network with charging infrastructure decisions. Transportation Research Part C: Emerging Technologies, 89(May 2017), 222–233. http://doi.org/10.1016/j.trc.2018.01.019
+
+Schaller, B. (2017). Empty Seats, Full Streets. Fixing Manhattan’s Traffic Problem. Retrieved from http://schallerconsult.com/rideservices/emptyseats.pdf
+
+
+Schaller, B., 2017. Empty Seats, Full Streets. Fixing Manhattan’s Traffic Problem, Schaller Consulting, December.
