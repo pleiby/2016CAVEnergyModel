@@ -1,7 +1,7 @@
 ---
-title: "SAV Replacement of Conventional Vehicles"
+title: "SAV Replacement Ratio: Replacement of Private Conventional Vehicles"
 author: "Paul N. Leiby"
-date: "3/14/2019"
+date: "3/14/2019 - draft"
 output:
   word_document: default
   html_document: default
@@ -10,14 +10,14 @@ output:
 leibypn@ornl.gov
 Oak Ridge National Laboratory
 
-This note summarizes estimates of the number of conventional vehicles that can be replaced by each Shared Automated Vehicle (SAV), essentially providing the same service level in terms of wait/travel time. Estimates are entirely from various simulations, with some improving fidelity over time.
+This note first summarizes estimates of the number of conventional vehicles that can be replaced by each Shared Automated Vehicle (SAV), essentially providing the same service level in terms of ride wait/travel time. Estimates are entirely from various simulations, with some improving fidelity over time. The second part of this note shows simple calculations of how the total vehicle fleet (parc) size could decline, if the SAVs introduced replace the rides provided by multiple private cars (according to the SAV Replacement Rate), while the total number of rides remains constant.
 
 ### 1. Estimates of SAV Replacement Ratio in the Literature
 
 Results for the "SAV Replacement Ratio" (number of private conventional vehicles that can be replaced by SAVs with roughly equivalent service times) depend on:
 
-- service area attributes, such and the density of travel activity and the type of road network on which vehicle operate;
-    - e.g. rural area travel (~20% of total), and studies may not include suburban regions.
+- service area attributes, such as the density of travel activity and the type of road network on which vehicles operate;
+    - e.g. studies may not include full metro areas, and ride hailing/pooling expected to be near-zero in rural area travels (~20% of total trips). 
 - simulation algorithms (dispatch and routing heuristics)
 - vehicle drivetrain and fueling/charging infrastructure (determining out-of-service time for recharging)
 - acceptable wait times (1 to 5 minutes typically assumed)
@@ -26,7 +26,7 @@ Results for the "SAV Replacement Ratio" (number of private conventional vehicles
 - assumed extent of replacement of personal trips, in the region with SAV trips. 
     - Many extant studies exogenously assume some fraction of trips will be taken on SAVs, and ask how many SAVs would be needed, rather than model the fraction of travel on SAVs, reflecting consumer choice).
 
-Comment: It appears that essentially _all_ estimates entail a central or global system optimization, i.e. equivalent to a single coordinated ride-service operator or TNC, seeking to provide acceptable wait and travel times with minimal SAV fleet size.^[Thus they imply either a single coordinated SAV fleet under city/government control or a utility-like arrangement where a service monopoly is granted to, or achieved by, a single operator. In a competitive market, if potential operative profits are substantial, we would expect the entrance of multiple competing ride services, and lower levels of SAV utilization until costs and profits equilibrate.]
+Comment: It appears that essentially _all_ estimates entail a central or global system optimization, i.e. equivalent to a _single_ coordinated ride-service operator or TNC, seeking to provide acceptable wait and travel times with minimal SAV fleet size.^[Thus they imply either a single coordinated SAV fleet under city/government control or a utility-like arrangement where a service monopoly is granted to, or achieved by, a single operator. Perhaps more realistically, in a competitive market with potentially substantial profits, we would expect the entrance of multiple competing ride services, and lower levels of SAV utilization until costs and profits equilibrate. This would imply lower SAV Replacement Ratio]
 
 
 **SAV: Private Veh** | **Notes**                       | **Source**
@@ -67,18 +67,16 @@ on-demand systems: A case study in Singapore. _Road vehicle automation_, 2014 22
 
 ### 2. Estimating Vehicle Parc Size for Levels Replacement Ratio, and SAV Fraction
 
+We show simple calculations of how the total vehicle fleet (parc) size could decline, if the SAVs introduced replace the rides provided by multiple private cars (according to the SAV Replacement Rate), while the total number of rides remains constant.
 
-Rides0 = 1*N_tot0, assuming "1" ride per private vehicle (normalized to 1.0)
-Rides_1 = 1*N_PV + RR*N_SV = 1*N_tot0
-
-Consider the size of the vehicle fleet, or parc, in the base case (Case 0). Assuming all vehicles are private (conventional?) in the Base Case:
+Consider the size of the vehicle fleet, or parc, $N_{tot0}$ in the base case (Case 0). Assuming for simplicity that all vehicles are private (conventional?) in the Base Case, the number of Private vehicles $N_{PV0{} equals the total number of vehicles:
 
 $$ParcSize_0 \equiv N_{tot0} = N_{PV0}$$
 
-This number of vehicles satisfies the base demand for rides/trips.
+This number of vehicles satisfies the base demand for rides/trips, $Rides_0$.
 $$Rides_0 = 1*N_{tot0}$$
 
-assuming "1" ride per private vehicle (i.e. private vehicle ride are normalized to 1.0)
+where we normalize the number of rides per private vehicle to 1.0. Note that with this normalization, the number of rides provided per SAV is equal to the Replacement Ratio $RR$
 
 In the alternate case (Case 1), there are $N_{PV}$ private vehicles, $N_{SV}$ shared vehicles, 
 and shared vehicles have a *Replacement Ratio* of $RR$, 
