@@ -1,7 +1,7 @@
 ---
-title: "SAV Replacement of Private Conventional Vehicles"
+title: "SAV Replacement of Private Household Conventional Vehicles and Implications for Vehicle Fleet Size"
 author: "Paul N. Leiby"
-date: "3/14/2019 - draft"
+date: "3/18/2019 - draft"
 output:
   word_document: default
   html_document: default
@@ -10,11 +10,11 @@ output:
 leibypn@ornl.gov
 Oak Ridge National Laboratory
 
-This note summarizes estimates of the number of private conventional vehicles that can be replaced by each Shared Automated Vehicle (SAV) in a regional transportation system, essentially providing the same service level in terms of ride wait/travel time. We call this the "SAV Replacement Ratio," and it depends on the domain of vehicle operation (region, road network and time of day), depends strongly on the extent of ride-pooling, and to some extent on vehicle technology. Estimates are entirely from various published simulation studies, with some improving fidelity over time. The second part of this note shows simple calculations of how the total vehicle fleet (parc) size could decline, if the SAVs introduced replace the rides provided by multiple private cars (according to the SAV Replacement Rate), while the total number of rides remains constant.
+This note summarizes estimates of the number of private (household) conventional vehicles that could be replaced by each Shared Automated Vehicle (SAV) in a regional transportation system, essentially providing the same service level in terms of ride wait/travel time. We call this the "SAV Replacement Ratio," and it depends on the domain of vehicle operation (region, road network and time of day), depends strongly on the extent of ride-pooling, and to some extent on vehicle technology. Estimates are entirely from various published simulation studies, with some improving fidelity over time. The second part of this note shows simple calculations of how the total vehicle fleet (parc) size could decline, if the SAVs introduced replace the rides provided by multiple private cars (according to the SAV Replacement Rate), while the total number of rides remains constant.
 
 ### 1. Estimates of SAV Replacement Ratio in the Literature
 
-Results for the "SAV Replacement Ratio" (number of private conventional vehicles that can be replaced by SAVs with roughly equivalent service times) depend on:
+Results for the "SAV Replacement Ratio" (number of private conventional household vehicles that could be replaced by commercially-operated SAVs while providing roughly equivalent service times) necessarily vary with assumed system conditions. They depend on:
 
 - service area attributes, such as the density of travel activity and the type of road network on which vehicles operate;
     - e.g. studies may not include full metro areas, and ride hailing/pooling expected to be near-zero in rural area travels (~20% of total trips). 
@@ -22,24 +22,141 @@ Results for the "SAV Replacement Ratio" (number of private conventional vehicles
 - vehicle drivetrain and fueling/charging infrastructure (determining out-of-service time for recharging)
 - acceptable wait times (1 to 5 minutes typically assumed)
 - traffic congestion (related to time of operation)
-- extent of ride-pooling (Dynamic Ride Sharing)
+- extent of ride-pooling (Dynamic Ride Sharing, or DRS)
 - assumed extent of replacement of personal trips, in the region with SAV trips. 
     - Many extant studies exogenously assume some fraction of trips will be taken on SAVs, and ask how many SAVs would be needed, rather than model the fraction of travel on SAVs, reflecting consumer choice).
 
-Comment: It appears that essentially _all_ estimates entail a central or global system optimization, i.e. equivalent to a _single_ coordinated ride-service operator or TNC, seeking to provide acceptable wait and travel times with minimal SAV fleet size.^[Thus they imply either a single coordinated SAV fleet under city/government control or a utility-like arrangement where a service monopoly is granted to, or achieved by, a single operator. Perhaps more realistically, in a competitive market with potentially substantial profits, we would expect the entrance of multiple competing ride services, and lower levels of SAV utilization until costs and profits equilibrate. This would imply lower SAV Replacement Ratio]
+Comment: It appears that essentially _all_ estimates involve a central or global system optimization, i.e. equivalent to a _single_ coordinated ride-service operator or TNC, seeking to provide acceptable wait and travel times with minimal SAV fleet size.^[Thus they may imply either a single coordinated SAV fleet under city/government control or a utility-like arrangement where a service monopoly is granted to, or achieved by, a single operator. Perhaps more realistically, in a competitive market with potentially substantial profits, we would expect the entrance of multiple competing ride services, and lower levels of SAV utilization until costs and profits equilibrate. This would imply lower SAV Replacement Ratio] These estimates are generally demand driven.
 
 
-**SAV: Private Veh** | **Notes**                       | **Source**
+**Table 1: Estimates of the Replacement Ratio - Household Vehicles to SAVs Needed to Satisfy Demand**
+
+**Private Veh: SAV** | **Notes**                       | **Source**
 -------------------|------------------------------|------------
 3:1                   |Singapore                    | Speiser et al 2014.
 9:1                   |Early widely-cited simulation of Austin, 12x24 mi. core area. No pooling, congestion|Fagnant & Kockelman, 2014, 2016
 7:1 - 11:1            |Range of simulations in urban (Austin) area, coordinated optimum depends on road network, acceptable (short) wait times for pick-up. Replacement higher for grid networks. These studies typically *omit/simplify congestion effects*, assume SAVs completely replace personal vehicles.| (Fagnant & Kockelman, 2014, 2016, Chen, Kockelman, & Hanna, 2016, Loeb, Kockelman, & Liu, 2017)
 17:1                  |Pooled SAVs. Little explanation given. | Johnson 2016.
 3.6:1                 |Peak travel hour, no DRS/pooling (congested, similar origins and destinations in rush hour)|Levin et al. 2017
-31:1                |Peak estimate in Central business district, extensive DRS/pooling (pooling of 3-4 passengers) |Levin et al. 2017
+31:1                  |Peak estimate in Central business district, extensive DRS/pooling (pooling of 3-4 passengers) |Levin et al. 2017
 
 
+### 2. Estimating Vehicle Parc Size for Levels Replacement Ratio, and SAV Fraction
 
+We show simple calculations of how the total vehicle fleet (parc) size could decline, if 
+
+- the SAVs introduced replace rides provided by multiple private cars (according to the SAV Replacement Rate),
+- the utilization rate (rides per car) for private household vehicles remains constant,
+- while the total number of rides remains constant.
+
+#### Base Case - All Private Household Vehicles
+
+Consider the size of the vehicle fleet, or parc, in the base case (Case 0) $N_{tot0}$. Assuming for simplicity that  in the Base Case all vehicles are private (and manually driven?), the number of Private vehicles $N_{PV0}$ equals the total number of vehicles:
+
+$$ParcSize_0 \equiv N_{tot0} = N_{PV0}$$
+
+For convenience and generality to any transport region and time interval, we normalize the base number of rides per private household vehicle to 1.0.^[More specifically, the average number of rides (roadway trips) provided per household vehicle per year in the U.S. is XXX, while in a specific urban area and hour of the day it may be YYY.] Note that with this normalization, the number of rides provided per SAV is the same as the relative number of ride, i.e. equal to the Replacement Ratio $RR$.^[This is also the approach and interpretation of shared vehicle activity in, e.g. Levin et al. 2017]
+
+This base case number of household vehicles satisfies the base demand for rides/trips, $Rides_0$.
+$$Rides_0 = 1 \cdot N_{tot0}$$
+
+#### Alternative Case with SAVs
+
+In the alternate case (Case 1), there are $N_{PV1}$ private vehicles, $N_{SV1}$ shared vehicles, 
+and shared vehicles have a *Replacement Ratio* of $RR$, 
+meaning each shared vehicle provides $RR$ as many rides as a private vehicle. 
+
+We are interested in the relative total fleet/parc size compared the base case, given a replacement ratio
+$RR$ and a given fraction i=$S_{SV1}$ of vehicles that are SAVs.
+
+For $\rho$ denoting the Relative Vehicle Parc Size, i.e.
+$$\rho \equiv N_{tot1}/N_{tot0} = (N_{PV1} + N_{SV1})/N_{PV0}$$
+We assume the total rides provided (total travel demand) in the alternate case are the same as in the base case.
+$$Rides_1 = Rides_0$$
+If the utilization rate of private vehicles is unchanged, i.e. still 1.0, this means.
+$$Rides_1 = 1 \cdot N_{PV1} + RR \cdot N_{SV1} = Rides_0 = 1 \cdot N_{PV0}$$
+So the equal ride service condition implies a relationship between the base and alternate vehicle numbers:
+$$1 \cdot N_{PV1} + RR \cdot N_{SV1} = N_{PV0}$$
+Looking at the fleet/parc size in the alternative case
+$$ParcSize_1 \equiv N_{tot1} = N_{PV1} + N_{SV1} $$
+
+Looking at the Relative Vehicle Parc Size
+$$\rho \equiv \frac {N_{tot1}} {N_{tot0}} = \frac {N_{PV1} + N_{SV1}} {N_{PV0}} = \frac {N_{PV1} + N_{SV1}} {1 \cdot N_{PV1} + RR \cdot N_{SV1}}$$
+
+or
+$$\rho = \frac {N_{PV1} + N_{SV1}}{1 \cdot N_{PV1} + RR \cdot N_{SV1}}$$
+Dividing both the numerator and denomnator by the total number of vehicles in the alternative case
+($N_{tot1} \equiv N_{PV1} + N_{SV1}$) allows us the express the relative parc size in terms of the replacement ratio and the
+assumed fraction of vehicles that are SAVs.
+
+$$\rho = \frac {1}{(N_{PV1}/N_{tot1} + RR \cdot N_{SV1}/N_{tot1})}$$
+
+
+So for any posited fraction $S_{s}$ of shared vehicles out of total vehicles $N$
+$$S_{s1} == N_{SV1}/N_{tot1}$$
+$$1-S_{s1} == N_{PV1}/N_{tot1}$$
+
+$$\rho = \frac {1}{(1-S_{s1}) + RR \cdot S_{s1}}$$
+
+Check:
+
+Note that this algebraic result checks out, in that we can compute the number of rides provided by this number of vehicles:
+$$Rides_1 = 1 \cdot N_{PV1} + RR  \cdot  N_{SV1}$$
+$$\begin {align}
+Rides_1 = N_{tot1}  \cdot  [1 \cdot (1-S_{s1}) + RR  \cdot  S_{s1}]\\
+= N_{tot1}  \cdot  [(1-S_{s1}) + RR  \cdot  S_{s1}]
+\end {align}$$
+
+### Examples of Total Fleet/Parc Size for Different SAV Replacement Ratios and Shares of the Fleet
+```{r echo=F, message=F, warning=F}
+library(tidyverse)
+echoWorking = F
+```
+
+```{r calcAndPlotRelativeParcSize, echo=echoWorking}
+RRvals = 1:20
+SSvals = seq(from=0, to =1.0, length.out = 21)
+parc = data.frame(matrix(nrow=length(RRvals), ncol=length(SSvals)))
+#RRvals = data.frame(RR = 1:20)
+#SSvals = data.frame(SS = seq(from=0, to =1.0, length.out = 20))
+#x = full_join(RRvals, SSvals, by=NULL)
+
+rparc <- function(rr, ss) {
+  # compute relative vehicle parc size for Replacement Ratio rr, SAV Share ss
+  return( 1/((1-ss) + rr * ss) )
+}
+
+for (r in seq_along(RRvals)) {
+  for (c in seq_along(SSvals)) {
+    parc[r,c] = rparc(RRvals[r], SSvals[c])
+  }
+}
+
+names(parc) = c(paste0("S_",SSvals))
+parc$RR = RRvals
+
+x = parc %>% gather(key = "SS", value="rho", -RR) %>%
+  mutate(SS = as.numeric(gsub(pattern = "S_", replacement ="", SS))) %>%
+  arrange(RR)
+
+x %>%  mutate(RR = as.factor(RR)) %>% 
+  group_by(RR) %>%
+  ggplot(aes(x=SS, y =rho, color=RR)) + geom_line() +
+  ggtitle("Relative Fleet/Parc Size for Alternative SAV Replacement Ratios") + 
+  xlab("SAV Share of Fleet") + ylab("Relative Fleet Size")
+```
+
+
+### Potential Extension: More Vehicle Types; Different Utilization Rates; Changed Total Travel Demand
+
+This is an idealized calculation for two vehicle types, 
+comparing the ride service provisions of SAVs with Private/Household Manual Vehicles. 
+
+Potential extensions that would influence the estimate Replacement Ratio and vehicle Parc Size include:
+- Differentiating between the Replacement Ratio for SAVs and SMVs (Shared Manual Vehicles may not serve as many rides);
+- Differentiating between the Replacement Ratio for SAVs and Private AVs (which may still serve more rides than Private MVs, e.g. within a single household);
+- Accounting for declining utilization of private household vehicles, without their scrappage/resale; qnd
+- Accounting to changes in trips/VMT 
 
 References
 -----------------
@@ -55,6 +172,7 @@ vehicle fleet for the Austin, Texas market. Transportation Research, 28,
 - Johnson, Brian A. (Barclays Capital, 2016. Disruptive Mobility, Society of Automotive Analysts 2016 Outlook Conference 10 January 2016. https://societyofautomotiveanalysts.wildapricot.org/resources/Documents/Brian%20Johnson%20slides%20for%20Outlook.pdf
 - Levin, M. W., Kockelman, K. M., Boyles, S. D., & Li, T. (2017). A general framework for modeling shared autonomous vehicles with dynamic network-loading and dynamic ride-sharing application. Computers, Environment and Urban Systems, 64, 373–383. http://doi.org/10.1016/j.compenvurbsys.2017.04.006
 - Loeb, B., Kockelman, K.M., Liu, J., 2018. Shared autonomous electric vehicle (SAEV) operations across the Austin, Texas network with charging infrastructure decisions. Transp. Res. Part C Emerg. Technol. 89, 222–233. https://doi.org/10.1016/j.trc.2018.01.019
+- Shaheen, Susan and Elliot Martin, 2019. [The Impact of Carsharing on Household Vehicle Ownership](http://www.accessmagazine.org/spring-2011/impact-carsharing-household-vehicle-ownership/).
 - Segal, M., and Kockelman, K. M. 2017. Design and implementation of a shared
 autonomous vehicle 1 system for Austin, Texas 2. In Kockelman, K. & Boyles, S.
 (Eds.) Transportation research board 95th annual meeting, no. 16-1837
@@ -63,66 +181,17 @@ Toward a systematic approach to the design and evaluation of automated mobility-
 on-demand systems: A case study in Singapore. _Road vehicle automation_, 2014 229–245).
 
 
-### 2. Estimating Vehicle Parc Size for Levels Replacement Ratio, and SAV Fraction
 
-We show simple calculations of how the total vehicle fleet (parc) size could decline, if the SAVs introduced replace the rides provided by multiple private cars (according to the SAV Replacement Rate), while the total number of rides remains constant.
+-------------------------------------------
 
-Consider the size of the vehicle fleet, or parc, $N_{tot0}$ in the base case (Case 0). Assuming for simplicity that all vehicles are private (conventional?) in the Base Case, the number of Private vehicles $N_{PV0{} equals the total number of vehicles:
+Bibliography & Notes - Literature on CAVs SAVs Taxation and VMT
+=========================
 
-$$ParcSize_0 \equiv N_{tot0} = N_{PV0}$$
-
-This number of vehicles satisfies the base demand for rides/trips, $Rides_0$.
-$$Rides_0 = 1*N_{tot0}$$
-
-where we normalize the number of rides per private vehicle to 1.0. Note that with this normalization, the number of rides provided per SAV is equal to the Replacement Ratio $RR$
-
-In the alternate case (Case 1), there are $N_{PV}$ private vehicles, $N_{SV}$ shared vehicles, 
-and shared vehicles have a *Replacement Ratio* of $RR$, 
-meaning each shared vehicle provides $RR$ as many rides as a private vehicle:
-
-The total rides provided in the alternate case 
-$$Rides_1 = 1 \cdot N_{PV} + RR \cdot N_{SV} = 1 \cdot N_{tot0}$$
-
-Assuming no change in travel demand (Rides) between Case 0 and Case 1:
-$$Rides_1 = Rides_0$$
-
-$$ParcSize_1 \equiv N_{tot1} = = N_{PV} + N_{SV} $$
-
-$\rho$ denotes the Relative Vehicle Parc Size, i.e.
-$$\rho = N_{tot1}/N_{tot0}$$
-
-$$\rho = \frac {(N_{PV} + N_{SV})}{(1 \cdot N_{PV} + RR \cdot N_{SV})}$$
-Dividing by the total number of vehicle in the alternative case 
-$$N_1 \equiv N_{SV} + N_{PV}$$
-
-$$\rho = \frac {(N_{PV} + N_{SV})/N_{1}}{(1 \cdot N_{PV} + RR \cdot N_{SV})/N_{1}}$$
-
-
-$$\rho = \frac {1}{(N_{PV}/N_1 + RR \cdot N_{SV}/N_{1})}$$
-
-
-So for any posited fraction $S_{s}$ of shared vehicles out of total vehicles $N$
-$$S_{s0} \equiv N_{SV0}/N_0 = 0$$
-$$S_{s1} == N_{SV1}/N_1$$
-$$1-S_{s1} == N_{PV1}/N_1$$
-
-$$\rho = \frac {1}{(1-S_{s1}) + RR \cdot S_{s1})}$$
-
-Note that this result checks out, in that we can compute the number of rides provided by this number of vehicles:
-$$Rides = 1 \cdot N_{PV} + RR  \cdot  N_{SV}$$
-$$Rides = N_1  \cdot  [1 \cdot (1-S_{s1}) + RR  \cdot  S_{s1})]$$
-
-
-### Extension to More Vehicle Types
-- Differentiate between Replacement Ratio for SAVs and SMV (Shared Manual Vehicles may not serve as many rides)
-- Differentiate between Replacement Ratio for SAVs and Private AVs (which may still serve more rides than Private MVs)
-- All relative to ride provision of Private Manual Vehicles
-
-See "SMART Mobility WTF  Scenarios - Ownership 20181218a.pptx"
+* See "SMART Mobility WTF  Scenarios - Ownership 20181218a.pptx"
 Total Vehicle Stock Would Decline As Fraction of Shared Vehicles Rises
 
-- 7:1             Austin six-county region in Austin, Texas (Loeb et al., 2017).
-- DRS |Fagnant and
+- 7:1 Austin six-county region in Austin, Texas (Loeb et al., 2017).
+- DRS Fagnant and
 Kockelman (2016) and Segal and Kockelman (2017) incorporated
 dynamic ride-sharing, only 10% of Austin personal trips.
 
@@ -133,15 +202,6 @@ service to all residents with acceptable waiting times… Spieser et al. (2014) 
 that a SAV fleet one-third the size of the personal vehicle fleet was
 sufficient for providing service to Singapore travelers.
 
-
--------------------------------------------
-
-Bibliography - Literature on CAVs SAVs Taxation and VMT
-=========================
-
-* [The Impact of Carsharing on Household Vehicle Ownership](http://www.accessmagazine.org/spring-2011/impact-carsharing-household-vehicle-ownership/) Shaheen, Susan and Elliot Martin, 2019.
-
-* 
 
 * Ana T. Moreno, Andrzej Michalski, Carlos Llorca, and Rolf Moeckel 2018. Shared Autonomous Vehicles Effect on Vehicle-Km Traveled and Average Trip Duration
 _Journal of Advanced Transportation_
@@ -225,7 +285,6 @@ patterns. Peak-hour travel is particularly difficult for SAV service
 > Abstract
 Policymakers have prioritized increasing highway revenues as rising fuel economy and a fixed federal gasoline tax have led to highway funding deficits. We use a novel disaggregate sample of motorists to estimate the effect of the price of a vehicle mile traveled on VMT, and we provide the first national assessment of VMT and gasoline taxes that are designed to raise a given amount of revenue. We find that a VMT tax dominates a gasoline tax on efficiency, distributional, and political grounds when policymakers enact independent fuel economy policies and when the VMT tax is differentiated with externalities imposed per mile.
 https://www.sciencedirect.com/science/article/abs/pii/S0047272717300798 of 
-
 
 * B. Starr McMullen, Lei Zhang, Kyle Nakahara, 2010. Distributional impacts of changing from a gasoline tax to a vehicle-mile tax for light vehicles: A case study of Oregon, a_Transport Policy_, 17(6)359-366,
 
