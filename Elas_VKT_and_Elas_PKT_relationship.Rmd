@@ -1,0 +1,117 @@
+---
+title: "Elas VKT and Elas PKT"
+author: "Paul N. Leiby"
+date: "3/27/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=F, message=F, warning=F}
+library(tidyverse)
+library(knitr)
+echoWorking = F
+```
+
+```{r basicUSTripStats, echo=echoWorking}
+```
+## Relationship Between the Elasticity of VKT and Elasticity of PKT Given Ride Pooling
+
+Vehicle Kilometers Travel (VKT) or $M_V$ is related to Passenger Kilometers Travel (PKT) or $M_P$ through vehicle occupancy *o*
+
+$$M_V = M_P /o$$
+This is essentially the defining relationship for occupancy. That is, *o* is the actual distance-weighted average occupancy of the vehicle occupancy over all segments, including e.g. ZOV kilometers from repositioning, single-passenger kilometers and high-occupancy kilometers when pooling. Thus average occupancy can be less than or greater than the reference level for an average private household vehicle, $o_r$.
+
+The cost per passenger kilometer $C_P$ is vehicle (capital and operating) cost per kilometer $C_V$ shared over passengers plus
+
+- time cost for each passenger along their intended route, given VoTT $C_T(o)$ [\$/hr] and average pace $\pi$ [hr/km; 
+- plus additional cost of passenger detour time in pooled mode, for incremental detour distance $\delta(o)$ [unitless];
+- plus equivalent cost of the disutility of sharing space $C_D(o)$ as occupancy increases.
+
+$$C_P ~=~ C_V/o + C_T(o) \cdot \pi + C_T(o) \cdot \pi \cdot \delta(o) + C_D(o)$$
+Posit for now the function $\gamma (o)$ of relative cost increase with occupancy, that includes the effect of those cost terms that are unrelated to vehicle capital and operating cost.
+
+$$\gamma(o) ~=~ 1 + \frac {\left ( C_T(o) \cdot \pi + C_T(o) \cdot \pi \cdot \delta(o) + C_D(o) \right )}{C_V/o} $$
+
+So, on a per-kilometer cost basis
+
+$$ C_P ~=~ \frac {C_V} {o} \cdot \gamma (o)$$
+where $\gamma (o_r) \equiv \gamma_r = o_r C_P/C_V$, the reference ratio of full passenger costs to vehicle capital/operating costs, and $\gamma' (o) \ge 0$.
+
+As written here, the vehicle costs $C_V$ refer _only_ to capital and operating costs per vehicle kilometer and exclude all time/disutility costs for the passengers.
+
+Q: Is the elasticity of VKT with respect to this measure of cost per vehicle kilometer useful?
+
+Consider travel demand elasticities with respect to (generalized) travel cost
+
+$$ElasPKT \equiv \epsilon_{M_P,C_P} \equiv \frac {d ln PKT} {d ln C_P}$$
+is the elasticity of PKT w.r.t. passenger cost/mi
+and 
+
+$$ElasVKT \equiv \epsilon_{M_V,C_V} \equiv \frac {d ln VKT} {d ln C_V}$$
+is the elasticity of VKT w.r.t. vehicle cost/mi.
+
+#### What is the relationship between elasticities?
+
+Recall that the elasticity of a function composition is the chained product of the elasticities of each function in the composition:
+
+$$\epsilon_{f(y(x)),x} = \frac {d ln f(y(x))} {d ln x} = \frac { \frac {df}{dy}\frac {dy}{f(y)} }{dx/x}  $$
+
+
+$$\begin {align}
+\epsilon_{f(y(x)),x} &= \frac {df}{dy}\frac {dy}{f(y)} \frac {x}{dx} \\
+&= \frac {df}{dy}\frac {dy}{f(y)} \frac {y}{y} \frac {x}{dx} \\
+&= \frac {df}{dy}\frac {y}{f(y)} \frac {dy}{dx} \frac {x}{y} = \epsilon_{f,y} \epsilon_{y,x}  
+\end {align}$$
+
+
+Similarly, the demand for VKT is the compostion of functions of the demand for PKT which is in turn a function of the cost of vehicle travel and occupancy
+
+$$M_V(C_V) = f(M_P(C_P(C_V, o)))$$
+specifically
+
+$$M_V(C_V) = \frac {M_P(C_P(C_V, o))}{o(\cdot)}$$
+
+$$\epsilon_{M_V, C_V} \equiv \frac {d ln M_V} {d ln C_V} ~=~ \frac {d ln M_P} {d ln C_V} - \frac {d ln o} {d ln C_V}$$
+$$\frac {d ln M_P} {d ln C_V} ~=~ \frac {d ln M_P} {d ln C_P} \cdot \frac {d ln C_P} {d ln C_V}$$
+
+$$\epsilon_{M_P, C_V} ~=~ \epsilon_{M_P, C_P} \cdot \epsilon_{C_P, C_V}$$
+Finally, looking at the elasticity of passenger travel cost with respect to vehicle travel cost:
+$$C_P ~=~ \frac {C_V}{o(\cdot)} \gamma(o(\cdot))$$
+Using the rules for the elasticity of function products and compositions:
+
+$$\epsilon_{C_P, C_V} ~=~ 1 - \epsilon_{o, C_V} + \epsilon_{\gamma, o} \cdot \epsilon_{o, C_V}$$
+
+$$\epsilon_{C_P, C_V} ~=~ 1 - \epsilon_{o, C_V} (1 - \epsilon_{\gamma, o})$$
+This result has the following corner cases:
+$\epsilon_{C_P, C_V} ~=~ 1$, i.e. $C_P/C_V = constant$ if
+
+- if $\epsilon_{o, C_V} = 0$, that is if occupancy is invariant w.r.t. vehicle travel cost;
+- if $\epsilon_{\gamma, o} = 1$, that is if $\gamma(o) = k o^1$ and the disutility multiplier of passenger costs rises proportionally with occupancy *o*, essentially offsetting the monetary cost reduction from spreading the vehicle costs over more passengers.
+
+Returning to the relationship between `ElasVKT` and `ElasPKT`:
+$$\begin {align}
+\epsilon_{M_V,C_V} &= \epsilon_{M_P, C_V} - \epsilon_{o,C_V}\\
+&= \epsilon_{M_P, C_P} \epsilon_{C_P, C_V} - \epsilon_{o,C_V}\\
+\end {align}$$
+
+$$\epsilon_{M_V,C_V} = \epsilon_{M_P, C_P} \cdot \left (1 - \epsilon_{o, C_V} \cdot (1- \epsilon_{\gamma,o}) \right ) - \epsilon_{o,C_V}$$
+This relates the elasticity of VKT with respect to vehicle costs to the elasticity of PKT with respect to costs per passenger mile, with terms (elasticities) that relate to the response of occupancy $o$ to vehicle cost, and the response of proporational travel disutility cost $\gamma$ to occupancy.
+
+Q: Is the elasticity $\epsilon_{o, C_V}$ well-defined? Or do we need to speak of some other relation like $\epsilon_{o, C_P}$, the elasticity of occupancy to passenger cost per km?
+
+#### Numerical Evaluations
+
+Test formulation assumes:
+
+$$\epsilon_{M_P, C_P} = -1.0$$
+
+$$\gamma(o) = \gamma_r \cdot (o/o_r)^{\epsilon_{\gamma,o}}$$
+
+*o* = 0.5 : 2.0 : 0.1
+
+$\epsilon_{\gamma,o}$ = 0 : 2 : 0.1
+
+$$o(C_V) = ???$$
