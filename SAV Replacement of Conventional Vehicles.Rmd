@@ -26,7 +26,7 @@ Results for the "SAV Replacement Ratio" (number of private conventional househol
 - assumed extent of replacement of personal trips, in the region with SAV trips. 
     - Many extant studies exogenously assume some fraction of trips will be taken on SAVs, and ask how many SAVs would be needed, rather than model the fraction of travel on SAVs, reflecting consumer choice).
 
-Comment: It appears that essentially _all_ estimates involve a central or global system optimization, i.e. equivalent to a _single_ coordinated ride-service operator or TNC, seeking to provide acceptable wait and travel times with minimal SAV fleet size.^[Thus they may imply either a single coordinated SAV fleet under city/government control or a utility-like arrangement where a service monopoly is granted to, or achieved by, a single operator. Perhaps more realistically, in a competitive market with potentially substantial profits, we would expect the entrance of multiple competing ride services, and lower levels of SAV utilization until costs and profits equilibrate. This would imply lower SAV Replacement Ratio] These estimates are generally demand driven.
+Comment: It appears that essentially _all_ estimates involve a central or global system optimization, even if by heuristic or agent-based simulation. That is, they are more descriptive of a _single_ coordinated ride-service system or TNC, seeking to provide acceptable wait and travel times with minimal SAV fleet size.^[Thus they may imply either a single coordinated SAV fleet under city/government control or a utility-like arrangement where a service monopoly is granted to, or achieved by, a single operator. Perhaps more realistically, in a competitive market with potentially substantial profits, we would expect the entrance of multiple competing ride services, and lower levels of SAV utilization until costs and profits equilibrate. This would imply lower SAV Replacement Ratios.] These estimates are generally driven by demand-side travel requirements.
 
 
 **Table 1: Estimates of the Replacement Ratio - Household Vehicles to SAVs Needed to Satisfy Demand**
@@ -45,9 +45,9 @@ Comment: It appears that essentially _all_ estimates involve a central or global
 
 We show simple calculations of how the total vehicle fleet (parc) size could decline, if 
 
-- the SAVs introduced replace rides provided by multiple private cars (according to the SAV Replacement Rate),
-- the utilization rate (rides per car) for private household vehicles remains constant,
-- while the total number of rides remains constant.
+- the introduced SAVs replace rides provided by multiple private cars (according to the SAV Replacement Rate),
+- the utilization rate (rides per car) for private household vehicles remains constant, while
+- the total number of/demand for rides remains constant.
 
 #### Base Case - All Private Household Vehicles
 
@@ -55,7 +55,24 @@ Consider the size of the vehicle fleet, or parc, in the base case (Case 0) $N_{t
 
 $$ParcSize_0 \equiv N_{tot0} = N_{PV0}$$
 
-For convenience and generality to any transport region and time interval, we normalize the base number of rides per private household vehicle to 1.0.^[More specifically, the average number of rides (roadway trips) provided per household vehicle per year in the U.S. is XXX, while in a specific urban area and hour of the day it may be YYY.] Note that with this normalization, the number of rides provided per SAV is the same as the relative number of ride, i.e. equal to the Replacement Ratio $RR$.^[This is also the approach and interpretation of shared vehicle activity in, e.g. Levin et al. 2017]
+```{r echo=F, message=F, warning=F}
+library(tidyverse)
+library(knitr)
+echoWorking = F
+```
+```{r basicUSTripStats, echo=echoWorking}
+# U.S. DOT-NHTSA 2018. Summary of Travel Trends 2017 National Household Travel Survey - 2017_nhts_summary_travel_trends. https://nhts.ornl.gov/assets/2017_nhts_summary_travel_trends.pdf
+# U.S. DOT-BTS 2019. Tranportation Statistics Annual Report - Final - TSAR-Full-2018-Web-Final, Feb. 2019 https://www.bts.gov/sites/bts.dot.gov/files/docs/browse-statistical-products-and-data/transportation-statistics-annual-reports/TSAR-Full-2018-Web-Final.pdf
+numHHvehiclesUS2017 = 223E6  # US DOT-NHTSA 2018 p. 68
+numAveTripsPerPersonDailyUS2017 = 3.37  # US DOT-NHTSA 2018 p. 40
+numAveTripsPerPersonAnnualUS2017 = 1231  # US DOT-NHTSA 2018 p. 32
+numAvePersonTripsAllModesAnnualUS2017 = (64582+6048+142754+40303+102327+15139)*1E6  # US DOT-NHTSA 2018 p. 29
+numAvePersonTripsPrivateVehicleAnnualUS2017 = 0.826 * numAvePersonTripsAllModesAnnualUS2017  # US DOT-NHTSA 2018 p. 30
+totalRegisteredVehiclesUS2016 = 268799083 # US DOT-BTS 2018 p. 1-4
+numAveVehiclesPerHHUS2017 = 1.88  # US DOT-NHTSA 2018 p. 59
+```
+
+For convenience and generality to any transport region and time interval, we normalize the base number of rides per private household vehicle to 1.0.^[More specifically, the average number of rides (roadway trips) provided per household vehicle per year in the U.S. is XXX, while in a specific urban area and hour of the day it may be YYY.] Note that with this normalization, the number of rides provided per SAV is the same as the relative number of rides, i.e. equal to the Replacement Ratio $RR$.^[This is also the approach and interpretation of shared vehicle activity in, e.g. Levin et al. 2017]
 
 This base case number of household vehicles satisfies the base demand for rides/trips, $Rides_0$.
 $$Rides_0 = 1 \cdot N_{tot0}$$
@@ -108,13 +125,9 @@ Rides_1 = N_{tot1}  \cdot  [1 \cdot (1-S_{s1}) + RR  \cdot  S_{s1}]\\
 \end {align}$$
 
 ### Examples of Total Fleet/Parc Size for Different SAV Replacement Ratios and Shares of the Fleet
-```{r echo=F, message=F, warning=F}
-library(tidyverse)
-echoWorking = F
-```
 
 ```{r calcAndPlotRelativeParcSize, echo=echoWorking}
-RRvals = 1:20
+RRvals = 1:16
 SSvals = seq(from=0, to =1.0, length.out = 21)
 parc = data.frame(matrix(nrow=length(RRvals), ncol=length(SSvals)))
 #RRvals = data.frame(RR = 1:20)
@@ -135,15 +148,24 @@ for (r in seq_along(RRvals)) {
 names(parc) = c(paste0("S_",SSvals))
 parc$RR = RRvals
 
-x = parc %>% gather(key = "SS", value="rho", -RR) %>%
+rparcTable = parc %>% gather(key = "SS", value="rho", -RR) %>%
   mutate(SS = as.numeric(gsub(pattern = "S_", replacement ="", SS))) %>%
   arrange(RR)
 
-x %>%  mutate(RR = as.factor(RR)) %>% 
+rparcTable %>%  mutate(RR = as.factor(RR)) %>% 
   group_by(RR) %>%
   ggplot(aes(x=SS, y =rho, color=RR)) + geom_line() +
   ggtitle("Relative Fleet/Parc Size for Alternative SAV Replacement Ratios") + 
   xlab("SAV Share of Fleet") + ylab("Relative Fleet Size")
+```
+
+```{r tableOfRelativeParcSize, echo=echoWorking}
+rparcTable %>%  mutate(RR = as.factor(RR)) %>% 
+  filter(RR %in% c(6,8,10,12)) %>%  # selected Replacement Ratios to display
+  filter(((SS*100) %% 10) ==0) %>%    # fraction is a multiple of 10%
+  spread(key=RR, value=rho) %>%
+  kable(digits=4,caption = "Relative Parc Size for Alternative SAV Replacement Ratios")
+
 ```
 
 
