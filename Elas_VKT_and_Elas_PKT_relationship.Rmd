@@ -115,3 +115,169 @@ $$\gamma(o) = \gamma_r \cdot (o/o_r)^{\epsilon_{\gamma,o}}$$
 $\epsilon_{\gamma,o}$ = 0 : 2 : 0.1
 
 $$o(C_V) = ???$$
+
+## 2. PMT and VMT for Various Levels of Pooling
+
+```{r}
+ElasPKT	= -1	#	e_{PMT,CT}
+ElasCTOccupancy	= 0.5	#	elas_{C_T,o}
+ReductCTAutomation	= 0.5	#	rho_A
+ReductPaceAutomation	= 1	#	PaceReduct_A
+ElasTourContractionWithPooling = 0.0 #
+ElasRiderDetourWithPooling = 0.0
+PacePi =1/39.98
+
+PMTVMT0 = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
+#M = M_b/o		#	unitless (normalized VMT)
+#M_B /o =1/o		#	unitless (normalized VMT)
+
+VTCostBase = read.csv("VTCostBase.csv", comment.char = "#")
+VTCostAlt = read.csv("VTCostAlt.csv", comment.char = "#")
+
+VTCostAlt1 = VTCostAlt %>% filter(
+  DemScen == "DS3",
+  VehType == "LDVAvgSedan"
+  ) %>%
+  select(CostCat, VTCost_cpm) %>%
+  spread(key = CostCat, value = VTCost_cpm)
+VTCostBase1 = VTCostBase %>% filter(
+  VehType == "LDVAvgSedan"
+  ) %>%
+  select(CostCat, VTCost_cpm) %>%
+  spread(key = CostCat, value = VTCost_cpm)
+
+
+PMTVMT0 = PMTVMT0 %>% mutate(
+  C_Fbase = VTCostBase1$Fuel,		#	cents/mi VTCostBase(Fuel, LDVAvgSedan)
+  C_F = VTCostAlt1$Fuel,		#	cents/mi VTCostAlt(Fuel, LDVAvgSedan)
+  C_Hbase = VTCostBase1$Total - VTCostBase1$Fuel - VTCostBase1$Time,		#	cents/mi VTCostBase(NonFuelOrTime, LDVAvgSedan)
+  C_H = VTCostAlt1$Total - VTCostAlt1$Fuel - VTCostAlt1$Time,  		#	cents/mi VTCostAlt(NonFuelOrTime, LDVAvgSedan)
+  C_Tbase = VTCostBase1$Time	  
+)
+
+PMTVMT0 = PMTVMT0 %>% mutate(
+  C_Vbase = C_Fbase + C_Hbase,		#	cents/mi
+  C_V = C_F + C_H,		#	c/mi
+  c_Vbase = C_Vbase / C_Vbase[o==1.0],		#	unitless
+  c_V = C_V /C_Vbase[o==1.0] 	#	unitless
+)
+
+PMTVMT0 = PMTVMT0 %>% mutate(
+  C_VPM_base = C_Vbase /o,		#	c/pass-mi
+  C_VPM = C_V / o,		#	c/pass-mi
+  rho_o = o^ElasCTOccupancy,		#	unitless (Pooling Time Cost Mult)
+  Pi_base =1/39.98,		#	hr/mi
+  Pi = Pi_base * ReductPaceAutomation		#	hr/mi
+)
+
+PMTVMT0 = PMTVMT0 %>% mutate(
+  C_Tbase = rho_o *C_Tbase/Pi_base,		#	cents/hr
+  C_T = C_Tbase*ReductCTAutomation,		#	cents/hr
+  #"= C_Tbase*Pi_base,		#	cents/mi
+  #"= C_T * Pi,		#	cents/mi
+)
+
+PMTVMT0 = PMTVMT0 %>% mutate(
+  C_Mbase = C_Vbase/o + C_Tbase*Pi_base,		#	cents/mi
+  C_M = C_V/o + C_T*Pi		#	cents/mi
+)
+
+PMTVMT0 = PMTVMT0 %>% mutate(
+  PMT_mv = (C_Mbase/C_Mbase[o==1.0])^ElasPKT,		#	pass-mi (normalized)
+  PMT_av = (C_M/C_Mbase[o==1.0])^ElasPKT,		#	pass-mi (normalized)
+  VMT_mv = PMT_mv/o,		#	veh-mi (normalized)
+  VMT_av = PMT_av/o,		#	veh-mi (normalized)
+  VMT_mv_direct = PMT_mv[o==1.0]/o,		#	veh-mi (normalized)
+  VMT_av_direct = PMT_av[o==1.0]/o		#	veh-mi (normalized)
+)
+
+```
+
+```{r}
+
+```
+
+```{r}
+ElasPKT	= -1	#	e_{PMT,CT}
+ElasCTOccupancy	= 0.5	#	elas_{C_T,o}
+ReductCTAutomation	= 0.5	#	rho_A
+ReductPaceAutomation	= 1	#	PaceReduct_A
+ElasTourContractionWithPooling = 0.0 #
+ElasRiderDetourWithPooling = 0.0
+PacePi =1/39.98
+
+VTCostBase = read.csv("VTCostBase.csv", comment.char = "#")
+VTCostAlt = read.csv("VTCostAlt.csv", comment.char = "#")
+
+VTCostAlt1 = VTCostAlt %>% filter(
+  DemScen == "DS3",
+  VehType == "LDVAvgSedan"
+  ) %>%
+  select(CostCat, VTCost_cpm) %>%
+  spread(key = CostCat, value = VTCost_cpm)
+VTCostBase1 = VTCostBase %>% filter(
+  VehType == "LDVAvgSedan"
+  ) %>%
+  select(CostCat, VTCost_cpm) %>%
+  spread(key = CostCat, value = VTCost_cpm)
+
+
+PMTVMT = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05), Case0="base", Case1="alt") #	occupancy, unitless (pass/veh, normalized)
+#M = M_b/o		#	unitless (normalized VMT)
+#M_B /o =1/o		#	unitless (normalized VMT)
+
+
+PMTVMT = PMTVMT %>% mutate(
+  C_Fbase = VTCostBase1$Fuel,		#	cents/mi VTCostBase(Fuel, LDVAvgSedan)
+  C_F = VTCostAlt1$Fuel,		#	cents/mi VTCostAlt(Fuel, LDVAvgSedan)
+  C_Hbase = VTCostBase1$Total - VTCostBase1$Fuel - VTCostBase1$Time,		#	cents/mi VTCostBase(NonFuelOrTime, LDVAvgSedan)
+  C_H = VTCostAlt1$Total - VTCostAlt1$Fuel - VTCostAlt1$Time,  		#	cents/mi VTCostAlt(NonFuelOrTime, LDVAvgSedan)
+  C_Tbase = VTCostBase1$Time	  
+)
+
+PMTVMT = PMTVMT %>% mutate(
+  C_Vbase = C_Fbase + C_Hbase,		#	cents/mi
+  C_V = C_F + C_H,		#	c/mi
+  c_Vbase = C_Vbase / C_Vbase[o==1.0],		#	unitless
+  c_V = C_V /C_Vbase[o==1.0] 	#	unitless
+)
+
+PMTVMT = PMTVMT %>% mutate(
+  C_VPM_base = C_Vbase /o,		#	c/pass-mi
+  C_VPM = C_V / o,		#	c/pass-mi
+  rho_o = o^ElasCTOccupancy,		#	unitless (Pooling Time Cost Mult)
+  Pi_base =1/39.98,		#	hr/mi
+  Pi = Pi_base * ReductPaceAutomation,		#	hr/mi
+  TourContraction = o^ElasTourContractionWithPooling,
+  RideDetourExpansion = o^ElasRiderDetourWithPooling
+)
+
+PMTVMT = PMTVMT %>% mutate(
+  C_Tbase = rho_o *C_Tbase/Pi_base,		#	cents/hr
+  C_T = C_Tbase*ReductCTAutomation,		#	cents/hr
+  #"= C_Tbase*Pi_base,		#	cents/mi
+  #"= C_T * Pi,		#	cents/mi
+  C_Mbase = C_Vbase/o + C_Tbase*Pi_base,		#	cents/mi
+  C_M = C_V/o + C_T*Pi		#	cents/mi
+)
+
+PMTVMT = PMTVMT %>% mutate(
+  PMT_mv = (C_Mbase/C_Mbase[o==1.0])^ElasPKT,		#	pass-mi (normalized)
+  PMT_av = (C_M/C_Mbase[o==1.0])^ElasPKT,		#	pass-mi (normalized)
+  VMT_mv = PMT_mv/o,		#	veh-mi (normalized)
+  VMT_av = PMT_av/o,		#	veh-mi (normalized)
+  VMT_mv_direct = PMT_mv[o==1.0]/o,		#	veh-mi (normalized)
+  VMT_av_direct = PMT_av[o==1.0]/o,		#	veh-mi (normalized)
+  EnergyUse_av = VMT_av*C_F/C_Fbase
+)
+```
+
+```{r}
+More = PMTVMT %>% select(o, C_Vbase, C_Tbase, C_V, C_T, Pi_base, Pi)
+vals = PMTVMT %>% select(o)
+vals$ElasTourContractionWithPooling = seq(from = -0.3,to = 0,length.out = nrow(vals))
+
+left_join(More, vals, by="o")
+
+```
+
