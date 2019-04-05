@@ -126,11 +126,11 @@ $\epsilon_{\gamma,o}$ = 0 : 2 : 0.1
 
 $$o(C_V) = ???$$
 
-## 2. PMT and VMT for Various Levels of Pooling
+## 2. PMT and VMT for Various Levels of Pooling - Numerical Examples
 
-```{r}
-ElasPKT	= -1	#	e_{PMT,CT}
-ElasCTOccupancy	= 0.5	#	elas_{C_T,o}
+```{r setDemandAndPoolingParams}
+ElasPKT	= -1	            #	e_{PMT,CT}
+ElasCTOccupancy	= 0.5	    #	elas_{C_T,o}
 ReductCTAutomation	= 0.5	#	rho_A
 ReductPaceAutomation	= 1	#	PaceReduct_A
 ElasTourContractionWithPooling = 0.0 #
