@@ -16,7 +16,17 @@ echoWorking = F
 ```
 
 ```{r basicUSTripStats, echo=echoWorking}
+# U.S. DOT-NHTSA 2018. Summary of Travel Trends 2017 National Household Travel Survey - 2017_nhts_summary_travel_trends. https://nhts.ornl.gov/assets/2017_nhts_summary_travel_trends.pdf
+# U.S. DOT-BTS 2019. Tranportation Statistics Annual Report - Final - TSAR-Full-2018-Web-Final, Feb. 2019 https://www.bts.gov/sites/bts.dot.gov/files/docs/browse-statistical-products-and-data/transportation-statistics-annual-reports/TSAR-Full-2018-Web-Final.pdf
+numHHvehiclesUS2017 = 223E6  # US DOT-NHTSA 2018 p. 68
+numAveTripsPerPersonDailyUS2017 = 3.37  # US DOT-NHTSA 2018 p. 40
+numAveTripsPerPersonAnnualUS2017 = 1231  # US DOT-NHTSA 2018 p. 32
+numAvePersonTripsAllModesAnnualUS2017 = (64582+6048+142754+40303+102327+15139)*1E6  # US DOT-NHTSA 2018 p. 29
+numAvePersonTripsPrivateVehicleAnnualUS2017 = 0.826 * numAvePersonTripsAllModesAnnualUS2017  # US DOT-NHTSA 2018 p. 30
+totalRegisteredVehiclesUS2016 = 268799083 # US DOT-BTS 2018 p. 1-4
+numAveVehiclesPerHHUS2017 = 1.88  # US DOT-NHTSA 2018 p. 59
 ```
+
 ## Relationship Between the Elasticity of VKT and Elasticity of PKT Given Ride Pooling
 
 Vehicle Kilometers Travel (VKT) or $M_V$ is related to Passenger Kilometers Travel (PKT) or $M_P$ through vehicle occupancy *o*
