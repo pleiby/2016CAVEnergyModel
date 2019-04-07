@@ -18,13 +18,47 @@ echoWorking = F
 ```{r basicUSTripStats, echo=echoWorking}
 # U.S. DOT-NHTSA 2018. Summary of Travel Trends 2017 National Household Travel Survey - 2017_nhts_summary_travel_trends. https://nhts.ornl.gov/assets/2017_nhts_summary_travel_trends.pdf
 # U.S. DOT-BTS 2019. Tranportation Statistics Annual Report - Final - TSAR-Full-2018-Web-Final, Feb. 2019 https://www.bts.gov/sites/bts.dot.gov/files/docs/browse-statistical-products-and-data/transportation-statistics-annual-reports/TSAR-Full-2018-Web-Final.pdf
-numHHvehiclesUS2017 = 223E6  # US DOT-NHTSA 2018 p. 68
-numAveTripsPerPersonDailyUS2017 = 3.37  # US DOT-NHTSA 2018 p. 40
-numAveTripsPerPersonAnnualUS2017 = 1231  # US DOT-NHTSA 2018 p. 32
-numAvePersonTripsAllModesAnnualUS2017 = (64582+6048+142754+40303+102327+15139)*1E6  # US DOT-NHTSA 2018 p. 29
-numAvePersonTripsPrivateVehicleAnnualUS2017 = 0.826 * numAvePersonTripsAllModesAnnualUS2017  # US DOT-NHTSA 2018 p. 30
-totalRegisteredVehiclesUS2016 = 268799083 # US DOT-BTS 2018 p. 1-4
-numAveVehiclesPerHHUS2017 = 1.88  # US DOT-NHTSA 2018 p. 59
+numHHvehicles_US2017 = 223E6  # US DOT-NHTSA 2018 p. 68
+numAveTripsPerPersonDaily_US2017 = 3.37  # US DOT-NHTSA 2018 p. 40
+numAveTripsPerPersonAnnual_US2017 = 1231  # US DOT-NHTSA 2018 p. 32
+numAvePersonTripsAllModesAnnual_US2017 = (64582+6048+142754+40303+102327+15139)*1E6  # US DOT-NHTSA 2018 p. 29
+numAvePersonTripsPrivateVehicleAnnual_US2017 = 0.826 * numAvePersonTripsAllModesAnnual_US2017  # US DOT-NHTSA 2018 p. 30
+totalRegisteredVehicles_US2016 = 268799083 # US DOT-BTS 2018 p. 1-4 (HH and non-HH?)
+numAveVehiclesPerHH_US2017 = 1.88  # US DOT-NHTSA 2018 p. 59
+numHHUS_2017 = numHHvehicles_US2017/numAveVehiclesPerHH_US2017  # lower estimate than FRED Total Household data
+# numHHUS = [FRED Total Households (TTLHH)](https://fred.stlouisfed.org/series/TTLHH)
+```
+
+```{r getTotalHouseholdsFromFRED, echo=echoWorking}
+# install.packages("fredr")
+# update.packages("rlang") # latest version of rlang may also be necessary
+library("fredr")
+APIkeyPL = "96d09b567c2b44d33ffb53e34d47897a"
+# Can persistently set key by appending ""FRED_API_KEY=abcdefghijklmnopqrstuvwxyz123456 to an .Renviron file in the working directory or at the user level. 
+fredr_set_key(APIkeyPL) # Set the required FRED API key for the session.
+# fredr() or fredr_series_observations() - Fetch a FRED series. By default, return a tibble
+# fredr_series_search_text() - Search for a FRED series by text.
+# fredr_request() - Send a general request to the FRED API.
+
+fredr_series_search_text(search_text = "Total Household") # - Search for a FRED series by text.
+
+# Getting Started with fredr for FRED data: see https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html
+
+TTLHH = fredr_series_search_text(
+  search_text = "Total Households",
+  order_by = "search_rank",
+  sort_order = "desc",
+  limit = 1) %>%
+  pull(id) %>%
+  fredr(series_id = .,
+        observation_start = as.Date("1990-01-01")
+  )
+
+TTLHH %>%
+  ggplot(data = ., mapping = aes(x = date, y = value, color = series_id)) +
+    geom_line() +
+    labs(x = "Observation Date", y = "Number", color = "Series")
+# head(TTLHH)
 ```
 
 ## Relationship Between the Elasticity of VKT and Elasticity of PKT Given Ride Pooling
