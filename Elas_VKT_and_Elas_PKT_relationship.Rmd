@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r echo=F, message=F, warning=F}
+rm(list=ls())
 library(tidyverse)
 library(knitr)
 echoWorking = F
@@ -34,30 +35,31 @@ numHHUS_2017 = numHHvehicles_US2017/numAveVehiclesPerHH_US2017  # lower estimate
 # update.packages("rlang") # latest version of rlang may also be necessary
 library("fredr")
 APIkeyPL = "96d09b567c2b44d33ffb53e34d47897a"
-# Can persistently set key by appending ""FRED_API_KEY=abcdefghijklmnopqrstuvwxyz123456 to an .Renviron file in the working directory or at the user level. 
 fredr_set_key(APIkeyPL) # Set the required FRED API key for the session.
+# Can persistently set key by appending ""FRED_API_KEY=abcdefghijklmnopqrstuvwxyz123456 to an .Renviron file in the working directory or at the user level. 
 # fredr() or fredr_series_observations() - Fetch a FRED series. By default, return a tibble
 # fredr_series_search_text() - Search for a FRED series by text.
 # fredr_request() - Send a general request to the FRED API.
 
-fredr_series_search_text(search_text = "Total Household") # - Search for a FRED series by text.
+# fredr_series_search_text(search_text = "Total Household") # - Search for a FRED series by text.
 
 # Getting Started with fredr for FRED data: see https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html
 
-TTLHH = fredr_series_search_text(
-  search_text = "Total Households",
-  order_by = "search_rank",
-  sort_order = "desc",
-  limit = 1) %>%
-  pull(id) %>%
-  fredr(series_id = .,
-        observation_start = as.Date("1990-01-01")
-  )
+# TTLHH = fredr_series_search_text(
+#   search_text = "Total Households",
+#   order_by = "search_rank",
+#   sort_order = "desc",
+#   limit = 1) %>%
+#   pull(id) %>%
+#   fredr(series_id = .,
+#         observation_start = as.Date("1990-01-01")
+#   )
+# 
+# TTLHH %>%
+#   ggplot(data = ., mapping = aes(x = date, y = value, color = series_id)) +
+#     geom_line() +
+#     labs(x = "Observation Date", y = "Number", color = "Series")
 
-TTLHH %>%
-  ggplot(data = ., mapping = aes(x = date, y = value, color = series_id)) +
-    geom_line() +
-    labs(x = "Observation Date", y = "Number", color = "Series")
 # head(TTLHH)
 ```
 
@@ -66,25 +68,26 @@ TTLHH %>%
 Vehicle Kilometers Travel (VKT) or $M_V$ is related to Passenger Kilometers Travel (PKT) or $M_P$ through vehicle occupancy *o*
 
 $$M_V = M_P /o$$
-This is essentially the defining relationship for occupancy. That is, *o* is the actual distance-weighted average occupancy of the vehicle occupancy over all segments, including e.g. ZOV kilometers from repositioning, single-passenger kilometers and high-occupancy kilometers when pooling. Thus average occupancy can be less than or greater than the reference level for an average private household vehicle, $o_r$.
+We take this as the defining relationship for average occupancy *o*. That is, *o* is the actual distance-weighted average of vehicle occupancy over all travel segments, including e.g. ZOV kilometers from repositioning, single-passenger kilometers and high-occupancy kilometers when pooling. As such is is the ratio of passenger km travel to vehicle km travel.^[A fine point is whether occupancy includes in the numerator PKT any passenger travel on added _detour_, or unproductive, km when deviating from their shortest O-D path to pick up or drop off other passengers. We argue it should not, and thus such detour miles lower the average effective occupancy.] Thus average occupancy can be less than or greater than the reference level for an average private household vehicle, $o_r$.
 
-The cost per passenger kilometer $C_P$ is vehicle (capital and operating) cost per kilometer $C_V$ shared over passengers plus
+The average travel cost per passenger kilometer $C_P$ is vehicle (capital and operating) cost per kilometer $C_V$ shared over passengers plus
 
-- time cost for each passenger along their intended route, given VoTT $C_T(o)$ [\$/hr] and average pace $\pi$ [hr/km; 
+- time cost for each passenger along their intended route, given VoTT $C_T(o)$ [\$/hr] and average pace $\pi$ [hr/km]; 
 - plus additional cost of passenger detour time in pooled mode, for incremental detour distance $\delta(o)$ [unitless];
 - plus equivalent cost of the disutility of sharing space $C_D(o)$ as occupancy increases.
 
-$$C_P ~=~ C_V/o + C_T(o) \cdot \pi + C_T(o) \cdot \pi \cdot \delta(o) + C_D(o)$$
-Posit for now the function $\gamma (o)$ of relative cost increase with occupancy, that includes the effect of those cost terms that are unrelated to vehicle capital and operating cost.
+$$C_P(o) ~=~ C_V/o + C_T(o) \cdot \pi + C_T(o) \cdot \pi \cdot \delta(o) + C_D(o)$$
+Posit for now the function $\gamma (o)$ which captures the fractional increase in cost-increase with occupancy, that includes the effect of those cost terms that are unrelated to vehicle capital and operating cost.
 
-$$\gamma(o) ~=~ 1 + \frac {\left ( C_T(o) \cdot \pi + C_T(o) \cdot \pi \cdot \delta(o) + C_D(o) \right )}{C_V/o} $$
+$$\gamma(o) ~=~ \frac {C_P(o)}{C_V/o} ~=~ 1 + \frac {\left ( C_T(o) \cdot \pi + C_T(o) \cdot \pi \cdot \delta(o) + C_D(o) \right )}{C_V/o} $$
+It is not certain that total total cost will follow such a from in occupancy, but this is a reasonable approximation until more research/data on the effects of pooling on real and perceived costs is available.
 
-So, on a per-kilometer cost basis
+So, on a per-passenger-kilometer cost basis
 
-$$ C_P ~=~ \frac {C_V} {o} \cdot \gamma (o)$$
-where $\gamma (o_r) \equiv \gamma_r = o_r C_P/C_V$, the reference ratio of full passenger costs to vehicle capital/operating costs, and $\gamma' (o) \ge 0$.
+$$ C_P(o) ~=~ \frac {C_V} {o} \cdot \gamma (o)$$
+where $\gamma (o_r) \equiv \gamma_r = o_r C_P/C_V$, the reference ratio of full passenger costs to vehicle capital/operating costs, and the first derivative $\gamma' (o) \ge 0$.
 
-As written here, the vehicle costs $C_V$ refer _only_ to capital and operating costs per vehicle kilometer and exclude all time/disutility costs for the passengers.
+As written here, the vehicle costs $C_V$ refer _only_ to capital and operating costs per vehicle kilometer and exclude all time/disutility costs for the passengers. The vehicle related costs per passenger-km decline inversely with *o* while the time/disutility cost per passenger-km rises according to some monotonic function of *o*.
 
 Q: Is the elasticity of VKT with respect to this measure of cost per vehicle kilometer useful?
 
@@ -101,7 +104,7 @@ is the elasticity of VKT w.r.t. vehicle cost/mi.
 
 Recall that the elasticity of a function composition is the chained product of the elasticities of each function in the composition:
 
-$$\epsilon_{f(y(x)),x} = \frac {d ln f(y(x))} {d ln x} = \frac { \frac {df}{dy}\frac {dy}{f(y)} }{dx/x}  $$
+$$\epsilon_{f(y(x)),x} = \frac {d ln f(y(x))} {d ln x} = \frac { {df/f(y)} }{dx/x}  $$
 
 
 $$\begin {align}
@@ -111,14 +114,15 @@ $$\begin {align}
 \end {align}$$
 
 
-Similarly, the demand for VKT is the compostion of functions of the demand for PKT which is in turn a function of the cost of vehicle travel and occupancy
+The demand for VKT is a function of the demand for PKT which is in turn a function of the cost of vehicle travel and occupancy
 
 $$M_V(C_V) = f(M_P(C_P(C_V, o)))$$
 specifically
 
 $$M_V(C_V) = \frac {M_P(C_P(C_V, o))}{o(\cdot)}$$
 
-$$\epsilon_{M_V, C_V} \equiv \frac {d ln M_V} {d ln C_V} ~=~ \frac {d ln M_P} {d ln C_V} - \frac {d ln o} {d ln C_V}$$
+$$\epsilon_{M_V, C_V} \equiv \frac {d ln M_V} {d ln C_V} ~=~ \frac {d ln M_P} {d ln C_V} - \frac {d ln o} {d ln C_V} ~=~ \epsilon_{M_P, C_V} - \epsilon_{o, C_V}$$
+Focusing on the first term on the right-hand-side
 $$\frac {d ln M_P} {d ln C_V} ~=~ \frac {d ln M_P} {d ln C_P} \cdot \frac {d ln C_P} {d ln C_V}$$
 
 $$\epsilon_{M_P, C_V} ~=~ \epsilon_{M_P, C_P} \cdot \epsilon_{C_P, C_V}$$
@@ -132,7 +136,7 @@ $$\epsilon_{C_P, C_V} ~=~ 1 - \epsilon_{o, C_V} (1 - \epsilon_{\gamma, o})$$
 This result has the following corner cases:
 $\epsilon_{C_P, C_V} ~=~ 1$, i.e. $C_P/C_V = constant$ if
 
-- if $\epsilon_{o, C_V} = 0$, that is if occupancy is invariant w.r.t. vehicle travel cost;
+- if $\epsilon_{o, C_V} = 0$, that is if occupancy is invariant w.r.t. vehicle travel cost; then $C_P$ and $C_V$ move in direct proportion ($\epsilon_{C_P, C_V} = 1$) and Elas_VMT with respect to vehicle cost equals Elas_PMT with respect to passenger cost ($\epsilon_{M_V,C_V} = \epsilon_{M_P, C_P}$).
 - if $\epsilon_{\gamma, o} = 1$, that is if $\gamma(o) = k o^1$ and the disutility multiplier of passenger costs rises proportionally with occupancy *o*, essentially offsetting the monetary cost reduction from spreading the vehicle costs over more passengers.
 
 Returning to the relationship between `ElasVKT` and `ElasPKT`:
@@ -151,18 +155,42 @@ Q: Is the elasticity $\epsilon_{o, C_V}$ well-defined? Or do we need to speak of
 Test formulation assumes:
 
 $$\epsilon_{M_P, C_P} = -1.0$$
-
+Proportional added cost function $\gamma(o)$ is constant-elastic in occupancy *o*:
 $$\gamma(o) = \gamma_r \cdot (o/o_r)^{\epsilon_{\gamma,o}}$$
+
+Consider a rang of test values for occupancy *o* and the elasticity of cost increase to passengers:
 
 *o* = 0.5 : 2.0 : 0.1
 
 $\epsilon_{\gamma,o}$ = 0 : 2 : 0.1
 
+The elasticity of occupancy with respect to vehicle cost is the result of the passengers' utility maximization problem, assuming that the ride is priced to the passenger in terms of the vehicle (capital and operating) cost divided by occupancy, and the passengers take into account all the time and disutility cost associated with pooling.
 $$o(C_V) = ???$$
+
+```{r calcElasVPTfromPKT, echo=echoWorking}
+elas_Mp_Cp = -1.0
+o_vals = seq(from = 0.5, to = 2.0, by = 0.1)  # not used in elasticity calculation
+elas_gamma_o = seq(from = 0, to = 2.0, by = 0.1)
+
+elas_o_Cv_vals = seq(from = 0, to = 0.5, by = 0.1)
+
+elas_Mv_Cv = matrix(data=NA, nrow = length(elas_gamma_o), ncol= length(elas_o_Cv_vals))
+# data_frame(elas_gamma_o = seq(from = 0, to = 2.0, by = 0.1))
+
+for (i in seq_along(elas_o_Cv_vals))  {
+  elas_Mv_Cv[,i] = elas_Mp_Cp * (1 - elas_o_Cv_vals[i] * (1- elas_gamma_o) ) - elas_o_Cv_vals[i]
+}
+
+elas_Mv_Cv = as.data.frame(x = elas_Mv_Cv)
+names(elas_Mv_Cv) = paste0("elas_o_Cv_", elas_o_Cv_vals)
+elas_Mv_Cv$elas_gamma_o = elas_gamma_o
+
+head(elas_Mv_Cv)
+```
 
 ## 2. PMT and VMT for Various Levels of Pooling - Numerical Examples
 
-```{r setDemandAndPoolingParams}
+```{r setDemandAndPoolingParams, echo=echoWorking}
 ElasPKT	= -1	            #	e_{PMT,CT}
 ElasCTOccupancy	= 0.5	    #	elas_{C_T,o}
 ReductCTAutomation	= 0.5	#	rho_A
@@ -170,15 +198,15 @@ ReductPaceAutomation	= 1	#	PaceReduct_A
 ElasTourContractionWithPooling = 0.0 #
 ElasRiderDetourWithPooling = 0.0
 PacePi =1/39.98
+```
 
-PMTVMT0 = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
-#M = M_b/o		#	unitless (normalized VMT)
-#M_B /o =1/o		#	unitless (normalized VMT)
+### Read cost informtion (vehicle travel cost per mile by category) for Base assumptions and Alternative assumptions.
 
+```{r readBaseAndAltCostTables, echo=echoWorking}
 VTCostBase = read.csv("VTCostBase.csv", comment.char = "#")
 VTCostAlt = read.csv("VTCostAlt.csv", comment.char = "#")
 
-VTCostAlt1 = VTCostAlt %>% filter(
+VTCostAlt1 = VTCostAlt %>% dplyr::filter(
   DemScen == "DS3",
   VehType == "LDVAvgSedan"
   ) %>%
@@ -189,7 +217,12 @@ VTCostBase1 = VTCostBase %>% filter(
   ) %>%
   select(CostCat, VTCost_cpm) %>%
   spread(key = CostCat, value = VTCost_cpm)
+```
 
+```{r calcPMTandVMT0, echo=echoWorking}
+PMTVMT0 = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
+#M = M_b/o		#	unitless (normalized VMT)
+#M_B /o =1/o		#	unitless (normalized VMT)
 
 PMTVMT0 = PMTVMT0 %>% mutate(
   C_Fbase = VTCostBase1$Fuel,		#	cents/mi VTCostBase(Fuel, LDVAvgSedan)
@@ -216,7 +249,7 @@ PMTVMT0 = PMTVMT0 %>% mutate(
 
 PMTVMT0 = PMTVMT0 %>% mutate(
   C_Tbase = rho_o *C_Tbase/Pi_base,		#	cents/hr
-  C_T = C_Tbase*ReductCTAutomation,		#	cents/hr
+  C_T = C_Tbase*ReductCTAutomation		#	cents/hr
   #"= C_Tbase*Pi_base,		#	cents/mi
   #"= C_T * Pi,		#	cents/mi
 )
@@ -237,11 +270,7 @@ PMTVMT0 = PMTVMT0 %>% mutate(
 
 ```
 
-```{r}
-
-```
-
-```{r}
+```{r setDemandAndPoolingParams1, echo=echoWorking}
 ElasPKT	= -1	#	e_{PMT,CT}
 ElasCTOccupancy	= 0.5	#	elas_{C_T,o}
 ReductCTAutomation	= 0.5	#	rho_A
@@ -249,7 +278,10 @@ ReductPaceAutomation	= 1	#	PaceReduct_A
 ElasTourContractionWithPooling = 0.0 #
 ElasRiderDetourWithPooling = 0.0
 PacePi =1/39.98
+```
 
+
+```{r calcPMTandVMT, echo=echoWorking}
 VTCostBase = read.csv("VTCostBase.csv", comment.char = "#")
 VTCostAlt = read.csv("VTCostAlt.csv", comment.char = "#")
 
@@ -316,7 +348,7 @@ PMTVMT = PMTVMT %>% mutate(
 )
 ```
 
-```{r}
+```{r test1}
 More = PMTVMT %>% select(o, C_Vbase, C_Tbase, C_V, C_T, Pi_base, Pi)
 vals = PMTVMT %>% select(o)
 vals$ElasTourContractionWithPooling = seq(from = -0.3,to = 0,length.out = nrow(vals))
