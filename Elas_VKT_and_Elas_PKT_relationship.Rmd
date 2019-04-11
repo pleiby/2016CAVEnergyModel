@@ -38,10 +38,11 @@ APIkeyPL = "96d09b567c2b44d33ffb53e34d47897a"
 fredr_set_key(APIkeyPL) # Set the required FRED API key for the session.
 # Can persistently set key by appending ""FRED_API_KEY=abcdefghijklmnopqrstuvwxyz123456 to an .Renviron file in the working directory or at the user level. 
 # fredr() or fredr_series_observations() - Fetch a FRED series. By default, return a tibble
-# fredr_series_search_text() - Search for a FRED series by text.
+# fredr_series_search_text(search_text = "text sought") # - Search for a FRED series by text (in the series description). Returns tibble of matching series
+# fredr_series_search_id(search_text = "IDsought", limit=NULL) - to search for a series by character ID of the series. The data (matching series) returned is a tibble
+# fredr_series(series_id = "UNRATE") - function returns information for a single series specified by series_id. Returns tibble wit ro
 # fredr_request() - Send a general request to the FRED API.
 
-# fredr_series_search_text(search_text = "Total Household") # - Search for a FRED series by text.
 
 # Getting Started with fredr for FRED data: see https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html
 
@@ -146,6 +147,7 @@ $$\begin {align}
 \end {align}$$
 
 $$\epsilon_{M_V,C_V} = \epsilon_{M_P, C_P} \cdot \left (1 - \epsilon_{o, C_V} \cdot (1- \epsilon_{\gamma,o}) \right ) - \epsilon_{o,C_V}$$
+
 This relates the elasticity of VKT with respect to vehicle costs to the elasticity of PKT with respect to costs per passenger mile, with terms (elasticities) that relate to the response of occupancy $o$ to vehicle cost, and the response of proporational travel disutility cost $\gamma$ to occupancy.
 
 Q: Is the elasticity $\epsilon_{o, C_V}$ well-defined? Or do we need to speak of some other relation like $\epsilon_{o, C_P}$, the elasticity of occupancy to passenger cost per km?
@@ -182,10 +184,16 @@ for (i in seq_along(elas_o_Cv_vals))  {
 }
 
 elas_Mv_Cv = as.data.frame(x = elas_Mv_Cv)
-names(elas_Mv_Cv) = paste0("elas_o_Cv_", elas_o_Cv_vals)
+#names(elas_Mv_Cv) = paste("elas_o_Cv", elas_o_Cv_vals, sep="#")
+names(elas_Mv_Cv) = elas_o_Cv_vals
 elas_Mv_Cv$elas_gamma_o = elas_gamma_o
 
-head(elas_Mv_Cv)
+elas_Mv_Cv = elas_Mv_Cv %>% 
+  gather(key = elas_o_Cv, value = elas_Mv_Cv, -elas_gamma_o) # gather up all columns except elas_gamma_o
+# tail(elas_Mv_Cv)
+
+elas_Mv_Cv %>% ggplot(aes(x=elas_gamma_o, y= elas_Mv_Cv, color=elas_o_Cv)) + 
+  geom_line() + ggtitle("Variation in Elasticity-of-VMT/Elasticity-of-PMT with elas_gamma_o")
 ```
 
 ## 2. PMT and VMT for Various Levels of Pooling - Numerical Examples
@@ -206,23 +214,30 @@ PacePi =1/39.98
 VTCostBase = read.csv("VTCostBase.csv", comment.char = "#")
 VTCostAlt = read.csv("VTCostAlt.csv", comment.char = "#")
 
-VTCostAlt1 = VTCostAlt %>% dplyr::filter(
-  DemScen == "DS3",
+VTCost = VTCostAlt %>% select(DemScen, VehType, CostCat, VTCost_cpm) # extract essential vars
+VTCostBase$DemScen="Base"              # label base as another scenario
+VTCostBase = VTCostBase[names(VTCost)] # order cost to match alt cost scenario data
+VTCost = rbind(VTCost, VTCostBase)
+
+VTCost1 = VTCost %>% dplyr::filter(
   VehType == "LDVAvgSedan"
   ) %>%
-  select(CostCat, VTCost_cpm) %>%
   spread(key = CostCat, value = VTCost_cpm)
-VTCostBase1 = VTCostBase %>% filter(
-  VehType == "LDVAvgSedan"
-  ) %>%
-  select(CostCat, VTCost_cpm) %>%
-  spread(key = CostCat, value = VTCost_cpm)
+
 ```
 
 ```{r calcPMTandVMT0, echo=echoWorking}
 PMTVMT0 = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
 #M = M_b/o		#	unitless (normalized VMT)
 #M_B /o =1/o		#	unitless (normalized VMT)
+
+VTCost1 = VTCost1 %>%
+  rename(C_F = Fuel,         # fuel costs, c/mi
+         C_T = Time) %>%     # time costs, c/mi
+  mutate(
+    C_H = Total - C_F - C_T, # non-fuel vehicle financial costs
+    C_V = C_F + C_H		       # vehicle costs, c/mi
+  )
 
 PMTVMT0 = PMTVMT0 %>% mutate(
   C_Fbase = VTCostBase1$Fuel,		#	cents/mi VTCostBase(Fuel, LDVAvgSedan)
