@@ -69,7 +69,7 @@ fredr_set_key(APIkeyPL) # Set the required FRED API key for the session.
 Vehicle Kilometers Travel (VKT) or $M_V$ is related to Passenger Kilometers Travel (PKT) or $M_P$ through vehicle occupancy *o*
 
 $$M_V = M_P /o$$
-We take this as the defining relationship for average occupancy *o*. That is, *o* is the actual distance-weighted average of vehicle occupancy over all travel segments, including e.g. ZOV kilometers from repositioning, single-passenger kilometers and high-occupancy kilometers when pooling. As such is is the ratio of passenger km travel to vehicle km travel.^[A fine point is whether occupancy includes in the numerator PKT any passenger travel on added _detour_, or unproductive, km when deviating from their shortest O-D path to pick up or drop off other passengers. We argue it should not, and thus such detour miles lower the average effective occupancy.] Thus average occupancy can be less than or greater than the reference level for an average private household vehicle, $o_r$.
+We take this as the defining relationship for average occupancy *o*. That is, *o* is the actual distance-weighted average of vehicle occupancy over all travel segments, including e.g. ZOV kilometers from repositioning, single-passenger kilometers and high-occupancy kilometers when pooling. As such occupancy is the ratio of passenger km travel to vehicle km travel.^[A fine point is whether occupancy includes in the numerator PKT any passenger travel on added _detour_, or unproductive, km when deviating from their ordinary (shortest O-D) path to pick up or drop off other passengers. We argue it should not, and thus such detour miles lower the average effective occupancy.] Thus average occupancy can be greater *or* lesss than the reference level for an average private household vehicle, $o_r$.^[Reference occupancy includes both the driver and the average number of passengers on the same route for private household vehicles. This value is slightly is typically 1.5-1.6 for passenger cars, and reflects the typical size of groups, family or friends, traveling from the same Origin to Destination. (Davis, Williams and Boundy 2017, Fig. 8.1)]
 
 The average travel cost per passenger kilometer $C_P$ is vehicle (capital and operating) cost per kilometer $C_V$ shared over passengers plus
 
@@ -301,8 +301,12 @@ PMTVMT = PMTVMT %>% mutate(
 
 
 ```{r}
-PMTVMT %>% select(-VehType) %>%
+TestPMTVMT = PMTVMT %>% select(-VehType) %>%
   filter(DemScen %in% c("DS3", "Base"))
+
+head(TestPMTVMT)
+
+tail(TestPMTVMT)
 ```
 
 
@@ -312,10 +316,12 @@ PMTVMT %>% select(-VehType) %>%
 ```{r test1, echo=echoWorking}
 More = PMTVMT %>% select(DemScen, o, C_V, C_T, C_t, Pi) %>%
   filter(DemScen %in% c("DS3", "Base"))
-More 
+head(More )
+
 More = PMTVMT %>% select(DemScen, o, VMT, PMT, EnergyUse) %>%
   filter(DemScen %in% c("DS3", "Base"))
-More
+
+head(More )
 ```
 
 
@@ -333,7 +339,10 @@ PMTVMT = PMTVMT %>% mutate(
 vals = PMTVMT %>% select(o)
 vals$ElasTourContractionWithPooling = seq(from = -0.3,to = 0,length.out = nrow(vals))
 
-left_join(More, vals, by="o")
+# ??? left_join(More, vals, by="o")
 
 ```
 
+### References
+
+* Davis, S. C., S. E. Williams, and R. G. Boundy. _Transportation Energy Data Book_. Center for Transportation Analysis, US Department of Energy, 2017.
