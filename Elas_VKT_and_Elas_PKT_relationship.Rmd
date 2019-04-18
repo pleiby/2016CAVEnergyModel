@@ -161,7 +161,7 @@ $$\epsilon_{M_P, C_P} = -1.0$$
 Proportional added cost function $\gamma(o)$ is constant-elastic in occupancy *o*:
 $$\gamma(o) = \gamma_r \cdot (o/o_r)^{\epsilon_{\gamma,o}}$$
 
-Consider a rang of test values for occupancy *o* and the elasticity of cost increase to passengers:
+Consider a range of test values for occupancy *o* and the elasticity of cost increase to passengers:
 
 *o* = 0.5 : 2.0 : 0.1
 
