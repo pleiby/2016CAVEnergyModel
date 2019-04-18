@@ -333,23 +333,48 @@ PMTVMT = PMTVMT %>% mutate(
   TourContraction = o^ElasTourLengthWithPooling,
   RideDetourExpansion = o^ElasRiderDetourWithPooling
 )
-
-
 ```
-```{r}
-# vals$ElasTourLengthWithPooling = seq(from = -0.5,to = 0.1,length.out = nrow(vals))
 
-# Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes
+The ability of pooling to reduce VMT is summarized in an elasticity of "tour" length (the VMT needed to complete multiple trip) with respect to occupancy *o*:
+
+$$L_{tour} = L_{tour,r} o^{\epsilon_{L,o}}$$
+
+Considering alternative such elasticities
+
+```{r}
+
+# Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes, to allow testing of various cases
 AltVMT = PMTVMT %>% 
   select(DemScen, o, VMT, PMT, EnergyUse) %>%
 # establish values of ElasTourLengthWithPooling to be evaluated
   crossing(data.frame("ElasTourLengthWithPooling" = seq(from = -0.5, to = 0.1,by = 0.1))) #
 AltVMT = AltVMT %>%
-  mutate(EnergyUse = EnergyUse * o^ElasTourLengthWithPooling) %>%
-  spread(key=ElasTourLengthWithPooling, value = EnergyUse)
+  mutate(EnergyUse = EnergyUse * o^ElasTourLengthWithPooling)
 
-AltVMT %>% filter(DemScen == "DS3")
-# ??? Test this, and graph
+AltVMT %>% filter(DemScen == "DS3") %>%
+  select(-DemScen, -VMT, -PMT) %>%
+  spread(key=ElasTourLengthWithPooling, value = EnergyUse) %>%
+  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Lenght Elasticity")
+
+```
+
+```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, pixels=300}
+library(RColorBrewer)
+cols <- brewer.pal(3, "BuGn")
+# those three colors make up initial palette. 
+# Then pass them to colorRampPalette() to create interpolating function.
+pal <- colorRampPalette(cols)
+
+AltVMT %>% filter(DemScen == "DS3") %>% 
+  arrange(ElasTourLengthWithPooling, o) %>%
+  # mutate(ElasTourLengthWithPooling = paste0("Elas=",ElasTourLengthWithPooling)) %>%
+  mutate(ElasTourLengthWithPooling = as.factor(ElasTourLengthWithPooling)) %>%
+  # group_by(ElasTourLengthWithPooling) %>%
+  ggplot(aes(x=o, y = EnergyUse)) +
+  geom_line(aes(color=ElasTourLengthWithPooling), size = 1) +
+  xlab("Occupancy (1.0 = base)") +
+  ylab("Energy Use (1.0 = base)")
+    
 ```
 
 ### References
