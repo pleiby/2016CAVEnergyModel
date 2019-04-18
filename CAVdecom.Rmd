@@ -1,7 +1,7 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
 
-date: "Dec. 15, 2018"
+date: "April 18, 2019"
 
 author:
   - name: Paul N. Leiby
@@ -1624,7 +1624,7 @@ SR_test = SR_test %>%
 
 ```
 
-```{r testCalcVsRefScenarios}
+```{r testCalcVsRefScenarios, echo=echoWorking}
 testVars = c("fracVMTIncr", "NIE", "EnergyUse")
 SR_test = SR_test %>% gather(key=varname, value = testValue, testVars) %>%
   filter(VC != "Tot") # ignore Tot case for new
@@ -1647,8 +1647,39 @@ kable(summaryScenarioResultsTableExample)
 
 
 
-```{r policyAndScenarioCalcs2, echo=echoWorking}
+```{r policyAndScenarioCalcs2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+data = CaseWantedEffects %>% 
+  gather(key=variable, value = calcValue, testVars) %>%
+  # rename variable names, establish as factor in correct order for bar plot
+  mutate(variable= ifelse(variable=="NIE", "Intensity", 
+                         ifelse(variable=="fracVMTIncr", "VMT", "Energy"))) %>%
+  mutate(variable = factor(variable, levels = c("Intensity", "VMT", "Energy")))
 
+# # color with RcolorBrewer
+# ggplot(data, aes(x=CombScen, calcValue, fill=condition, y=value, x=specie)) + 
+#     geom_bar( stat="identity", position="fill") +    
+#     scale_fill_brewer(palette = "Set1")
+#  
+# Faceting
+data %>% filter(VC == "LDV") %>%
+  # mutate(variable = factor(variable, levels=names(sort(table(variable),decreasing=TRUE)))  ) %>%
+  ggplot(
+    #aes(x=reorder(variable, c("Intensity", "VMT", "Energy")),
+    aes(x=variable,
+             y=calcValue, color=variable, fill=variable)) + 
+    geom_bar( stat="identity") +    
+    facet_wrap(~TechScen) +
+    scale_fill_brewer(palette="Spectral") +
+    ggtitle("Fig: Energy-Intensity, VMT, and Energy Scenarios", subtitle = "LDV CAVs, Excludes Pooling/Sharing") +
+    ylab("Fractional Change")
+    # scale_fill_brewer(palette="Blues")
+
+```
+
+```{r examineCaseCombinations, echo=echoWorking}
+table(CWE_test$CombScen,CWE_test$TechScen)
+table(CWE_test$CombScen,CWE_test$DemScen)
+table(CWE_test$TechScen,CWE_test$DemScen)
 ```
 
 ```{r saveCAVdecomEnvironment, echo=echoWorking}
@@ -2121,6 +2152,7 @@ occupancyEffects = occupancyEffects %>%
 TempoccupancyEffects = occupancyEffects %>% 
   select(DemScen, o, PMT, VMT, VMT_direct) %>%
   gather(key= travelEffect, value = value, PMT:VMT_direct)
+
 
 TempoccupancyEffects %>%
   group_by(DemScen, travelEffect) %>%
