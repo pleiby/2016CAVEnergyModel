@@ -755,7 +755,7 @@ VTCShrBase %>%
               
 ```
 
-```{r baseCostShareStackedBarGraph, echo=echoWorking}
+```{r baseCostShareStackedBarGraph, echo=echoWorking, dpi=300}
 
 VTCShrBase %>% filter(CostCat != "Total") %>%
   # gather(key = VehType, value=VTCost_shr, -CostCat) %>%
@@ -772,7 +772,7 @@ VTCShrBase %>% filter(CostCat != "Total") %>%
 
 #### Display Base Travel Costs per Mile by Component
 
-```{r baseCostComponStackedBarGraph, echo=echoWorking}
+```{r baseCostComponStackedBarGraph, echo=echoWorking, dpi=300}
 
 VTCostBase %>% filter(CostCat != "Total") %>%
   ggplot() + 
@@ -978,7 +978,7 @@ VTCShrAlt %>%
 
 ### Display Alternative Scenario Travel Costs per Mile by Component
 
-```{r defFn_plotStackedBarShares, echo=echoWorking}
+```{r defFn_plotStackedBarShares, echo=echoWorking, dpi=300}
 # function to take dataframe of shares by demand scenario and VehType, and
 #   for specified demand scenario ds,
 #   plot stacked bar graph with one column for each VehType.
@@ -996,7 +996,7 @@ plotStackedBarShares <- function(df, ds) {
 }
 ```
 
-```{r altCostSharesStackedBarGraph, echo=echoWorking}
+```{r altCostSharesStackedBarGraph, echo=echoWorking, dpi=300}
 plotStackedBarShares(VTCShrAlt, "DS1")
 
 plotStackedBarShares(VTCShrAlt, "DS2")
@@ -1017,7 +1017,7 @@ VTCostAlt = VTCostAlt %>% rename(BaseVTCost_cpm = VTCost_cpm) %>%
 
 ```
 
-```{r defFn_plotStackedBarCostCompons, echo=echoWorking}
+```{r defFn_plotStackedBarCostCompons, echo=echoWorking, dpi=300}
 # function to take dataframe of shares by demand scenario and VehType, and
 #   for specified demand scenario ds,
 #   plot stacked bar graph with one column for each VehType.
@@ -1035,7 +1035,7 @@ plotStackedBarCostCompons <- function(df, ds) {
 ```
 
 
-```{r altCostComponStackedBarGraph, echo=echoWorking}
+```{r altCostComponStackedBarGraph, echo=echoWorking, dpi=300}
 plotStackedBarCostCompons(VTCostAlt, "DS1")
 
 plotStackedBarCostCompons(VTCostAlt, "DS2")
@@ -1772,7 +1772,7 @@ kable(x = round(pmd,2),
 6.2 Fuel Consumption vs Speed - Berry Approach
 ---------------------------------------
 
-```{r FCvsSpeedBerry, echo=echoWorking}
+```{r FCvsSpeedBerry, echo=echoWorking, dpi=300}
 S_r = 71          # "Reference speed" km/h
 f_r = 0.5         # "Aero losses fraction of total @ reference speed" unitless
 I_r = 4.7         # "FC_r, Fuel consumption @ reference speed" l/100km
@@ -1818,7 +1818,7 @@ TCdf = TCdf %>%
 # Plot the cost components, per mile
 TCdf %>% select(Speed_mph, FuelCost_dpm, TimeCost_dpm, TotalCost_dpm) %>%
   gather(variable, value, FuelCost_dpm:TotalCost_dpm) %>%
-  ggplot(aes(Speed_mph,value)) + geom_line(aes(color=variable)) + 
+  ggplot(aes(Speed_mph,value)) + geom_line(aes(color=variable), size=1) + 
   ggtitle("Example Tradeoff of Energy Costs with Time Costs (TTC = $18/hr, $3.5/gal)")
 ```
 
@@ -1986,21 +1986,34 @@ $$A_2 = A_1 \left ( \frac{V_2}{V_1} \right )^2$$
 
   > In words: the number of injury accidents after the change in speed (A2) equals the number of accidents before the change (A1) multiplied by the new average speed (v2) divided by the former average speed (v1), raised to the square power.
 
-# 8. Simple Examination of VMT and PMT Given Pooling
+# 8. Examination of VMT and PMT Given Various Levels of Pooling
 
 Consider a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.
 
-```{r initOccupancyEffects}
-occupancyEffects = data.frame("o" = seq(0.8, 1.5, 0.05))
-
+```{r setDemandAndPoolingParams, echo=echoWorking}
+ElasPKT	= -1	            #	e_{PMT,CT}, elasticity of passenger travel demand w.r.t. cost/pass-km
+elas_VoTT_wrt_o	= 0.5	    #	elas_{C_T,o}, elasticity of Cost of Travel time C_T = VoTT, w.r.t. occupancy,
+                          #    an assumption regarding how occupancy (pooling) increases time cost VoTT
+ReductCTAutomation	= 0.5	#	rho_A, reduction factor for the Cost of Travel Time (per hour)
+ReductPaceAutomation	= 1	#	PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
+Elas_TourLength_wrt_Pooling = 0.0     # elasticity of Vehicle tour length (for mult pooled trips) w.r.t. occupancy
+Elas_RiderDetour_wrt_Pooling = 0.0    # elasticity of Passenger trip length w.r.t. occupancy and pooling
+PacePi =1/39.98           # base or default pace, hr/mi
 ```
-We establish estimates of vehicle travel cost and its primary components (those related to fuel cost, non-fuel finacial costs, and time costs).
 
-```{r poolingScenData}
+```{r initOccupancyEffects, echo=echoWorking}
+occupancyEffects = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
+```
 
-scenData = VTCostBase
-scenData$DemScen = "Base"
-scenData = rbind(scenData, select(VTCostAlt, CostCat, VehType, VTCost_cpm, DemScen))
+We establish estimates of vehicle travel cost per mile by component category (those related to fuel cost, non-fuel financial costs, and time costs). Gather these for Base assumptions and Alternative assumptions.
+
+```{r poolingScenData, echo=echoWorking}
+
+# extract essential cost vars, and combine base and alt scenario cases
+scenData = VTCostAlt %>% select(DemScen, VehType, CostCat, VTCost_cpm) # extract essential vars
+VTCostBase$DemScen="Base"              # label base as another scenario
+VTCostBase = VTCostBase[names(scenData)] # order cost to match alt cost scenario data, and bind
+scenData = rbind(scenData, VTCostBase) # conbine alt and base scenario data
 
 # Focus on the base and alt scen cost components for LDV cars
 VehTypeWanted = "LDVAvgSedan"
@@ -2008,12 +2021,29 @@ DemScenWanted = c("Base", "DS3")
 
 scenData = scenData %>% filter(VehType==VehTypeWanted) %>% spread(key = CostCat, value = VTCost_cpm)
 scenData = scenData %>% 
-  rename(C_F = Fuel,C_T = Time) %>% 
-  mutate(C_H = Total - C_F - C_T,  # combine all (financial) costs other than Fuel and Time. Includes accident
-         C_V = C_F + C_H)
+  rename(C_F = Fuel,            # fuel costs, c/mi
+         C_T = Time,            # time costs [c/mi]
+         C_K = VehCapCost,
+         C_Total = Total) %>%   # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
+  mutate(
+    C_H = C_Total - C_F - C_T,  # non-fuel (and non-time) vehicle financial costs. Includes accident
+    C_V = C_F + C_H	          # vehicle costs, c/mi
+    # c_V = C_V/C_V[DemScen=="Base"]		# normalized vehicle travel cost relative to base
+  )
 # Keep only needed variables
 scenData = scenData %>% select(DemScen, C_F, C_H, C_T, C_V)
+```
 
+**Note:** For the Demand Scenarios (DemScen) the only costs/km varying over Alt Scenario for each VehType are: 
+Time, AccAndIns (for 2 cases & small), and Total (not Fuel, Registration, Parking, Maintenance, TollsFees, VehCapCost)
+
+The differences in energy cost/mi arise separately as result of the technology scenarios.
+Demand scenarios do include variation in the elasticity of VKT with respect to costs, though, 
+but that is not part of the VTCost data table.
+
+### 8.1 Consider alternative occupancy levels, and their effects on costs, PMT, and VMT.
+
+```{r calcOccupancyEffects}
 # Keep only Base and the Alt scenario of interest
 #scenData = scenData %>% filter(DemScen == "Base" | DemScen == "DS3")
 scenData = scenData %>% filter(DemScen %in% DemScenWanted)
@@ -2021,60 +2051,160 @@ scenData = scenData %>% filter(DemScen %in% DemScenWanted)
 # dplyr fn for full-join with no common vars (all combinations)
 # this gives a df with observations for all levels of occupancy o for each value of DemScen
 #  Cost component values are replicated for all occupancy levels, which is correct for costs/veh-mi
-occupancyEffects = crossing(occupancyEffects, scenData)
-
-VoTT_elas_wrt_o = 0.5  # an assumption regarding how occupancy (pooling) increases time cost VoTT
+occupancyEffects = crossing(scenData, occupancyEffects, )
 
 # TravTimeCostBasePars["average_speed.LDV","average"]
 
 occupancyEffects = occupancyEffects %>%
   mutate(C_Vpmt = C_V/o,            # Variable vehicle travel cost per pass-mi [c/pass-mi]
-         rho = o^VoTT_elas_wrt_o,   # Time-cost multiplier due to disutility of pooling [unitless]
-         C_Tpmt = C_T*rho,          # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi]
+         rho = o^elas_VoTT_wrt_o ,  # Time-cost multiplier due to disutility of pooling [unitless]
+         C_Tpmt = C_T * rho,        # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi]
          Pi  = 1/TravTimeCostBasePars["average_speed.LDV","average"],  # assumed pace, (constant over o) [hr/veh-mi]
          C_Tdph = C_T/Pi,           # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
-         C_Mpmt = C_Vpmt + C_Tpmt   # Total cost per passenger mile traveled  [c/pass-mi]
-           )
+         C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
+         # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
+         Pi = ifelse(DemScen!="Base", Pi * ReductPaceAutomation, Pi)
+  )
+```
 
+Pooling, or increased occupancy, reduces costs by sharing vehicle operating costs over all passengers, and reducing total VMT as pooling contracts the vehicle distance traveled in completing a tour of multiple trips (considered later). It can also increase costs to passengers by increasing the costs per unit travel time (relative to solo travel), and by adding some detour distance to a passenger's travel.  
+
+We account for these changes, and the resulting demand response through the elasticity of travel demand with respect to full, generalized cost.
+
+Obviously the response of travelers will be quite heterogenous and situation-dependent, but the aggregate response can be estimated.
+
+
+```{r}
 # Now compute VMT and PMT, given travel costs per passenger mile, the elasticity of PMT w.r.t. cost, and occupancy
-ElasPMT = RelTotCost %>% filter(DemScen %in% DemScenWanted, VehType==VehTypeWanted, Case == "Low") %>%
+ElasPKT = RelTotCost %>% filter(DemScen %in% DemScenWanted, VehType==VehTypeWanted, Case == "Low") %>%
   .$ElasVKT
 ```
 
-```{r poolingEffectsOnVMTandPMT}
+The estimated long-run elasticity of LDV passenger travel demand with respect to cost use here is `r ElasPKT` (for the Demand Scenario `r DemScenWanted`, "Low" case).
+
+```{r poolingEffectsOnVMTandPMT, echo=echoWorking}
+# c.f. this approach to costs (vehicle and time)
+# PMTVMT = PMTVMT %>% mutate(
+#   C_t = rho_o *C_T/Pi,		        #	time cost pre hr, adjusted for occupancy [cents/pass-hr]
+#   # C_t = ifelse(DemScen!="Base", C_t * ReductCTAutomation, C_t)  # not needed, already in scenario-dep travel time cost
+#   C_T = rho_o *C_T                # time cost per mile, adjusted for occupancy and speed [cents/pass-mi]
+# )
+# 
+# PMTVMT = PMTVMT %>% mutate(
+#   C_M = C_V/o + C_t*Pi		#	travel distance cost, share of vehicle costs plus time cost, cents/pass-mi
+# )
+# 
+# PMTVMT = PMTVMT %>% mutate(
+#   PMT = (C_M/C_M[DemScen=="Base" & o==1.0])^ElasPKT,		#	pass-mi (normalized w.r.t Base scenario, base Occupancy)
+#   VMT = PMT/o,		                                      #	veh-mi (normalized) (defining relation for Occupancy "o")
+#   EnergyUse = VMT * C_F/C_F[DemScen=="Base" & o==1.0]   # relative fuel cost/km indicates relative fuel intensity
+# )
+
 occupancyEffects = occupancyEffects %>%
   ungroup() %>%
   # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
   mutate(
-    rPMT = (C_Mpmt/C_Mpmt[o==1.0 & DemScen=="Base"])^ElasPMT, 
-    rVMT = rPMT/o
-    ) %>%
+    PMT = (C_Mpmt/C_Mpmt[o==1.0 & DemScen=="Base"])^ElasPKT, #	pass-mi (normalized w.r.t Base scenario, base Occupancy)
+    VMT = PMT/o,                                             #	veh-mi (normalized) (defining relation for Occupancy "o")
+    EnergyUse = VMT * C_F/C_F[DemScen=="Base" & o==1.0]   # relative fuel cost/km indicates relative fuel intensity
+    )
+
+occupancyEffects = occupancyEffects %>%
   group_by(DemScen) %>%
-  mutate(  # This is a direct effect of pooling on VMT with no demand response to pooling costs
-    rVMT_direct = rPMT[o==1.0]/o # excludes the effect of pooling on travel costs (time and financial)
+  mutate(  # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
+    VMT_direct = PMT[o==1.0]/o 	#	veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
     ) %>% # but does include the effect of the Alt case on cost and PMT
   ungroup()
 ```
 
-```{r plotOccupancyEffects}
+```{r plotOccupancyEffects, echo=echoWorking, dpi=300}
 TempoccupancyEffects = occupancyEffects %>% 
-  select(DemScen, o, rPMT, rVMT, rVMT_direct) %>%
-  gather(key= travelEffect, value = value, rPMT:rVMT_direct)
+  select(DemScen, o, PMT, VMT, VMT_direct) %>%
+  gather(key= travelEffect, value = value, PMT:VMT_direct)
 
 TempoccupancyEffects %>%
   group_by(DemScen, travelEffect) %>%
   ggplot( aes(x=o, y=value , color=travelEffect, linetype=DemScen)) + 
     geom_line(size=1.0) +
     ggtitle("Effect of Pooling on VMT and PMT") +
-    xlab("Pooling Level (base=1.0)") + ylab("VMT and PMT Relative to Base")
+    xlab("Pooling Level (base=1.0)") + 
+    ylab("VMT and PMT Relative to Base")
 
 ```
+
+```{r checkOccupancyEffects, echo=echoWorking}
+# This check out to match calculations elsewhere
+# occupancyEffects %>% select(DemScen, o, PMT, VMT, EnergyUse) %>%
+#   filter(DemScen=="DS3")
+```
+
+### 8.2. Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
+
+```{r calcPMTandVMT, echo=echoWorking}
+occupancyEffects = occupancyEffects %>% mutate(
+  TourContraction = o^Elas_TourLength_wrt_Pooling,
+  RideDetourExpansion = o^Elas_RiderDetour_wrt_Pooling
+)
+```
+
+The ability of pooling to reduce VMT is summarized in an elasticity of "tour" length (the VMT needed to complete multiple trip) with respect to occupancy *o*:
+
+$$L_{tour} = L_{tour,r} o^{\epsilon_{L,o}}$$
+
+Considering alternative such elasticities
+
+```{r tableForElasTourLengthEffect, echo=echoWorking}
+
+# Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes, to allow testing of various cases
+AltVMT = occupancyEffects %>% 
+  select(DemScen, o, VMT, PMT, EnergyUse) %>%
+# establish values of ElasTourLengthWithPooling to be evaluated
+  crossing(data.frame("ElasTourLengthWithPooling" = seq(from = -0.5, to = 0.1,by = 0.1))) #
+AltVMT = AltVMT %>%
+  mutate(EnergyUse = EnergyUse * o^ElasTourLengthWithPooling)
+
+AltVMT %>% filter(DemScen == "DS3") %>%
+  select(-DemScen, -VMT, -PMT) %>%
+  spread(key=ElasTourLengthWithPooling, value = EnergyUse) %>%
+  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Lenght Elasticity")
+
+```
+
+```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+# cols <- brewer.pal(3, "BuGn")
+# those three colors make up initial palette. 
+# Then pass them to colorRampPalette() to create interpolating function.
+# pal <- colorRampPalette(cols)
+
+baseenergy = pull(occupancyEffects[occupancyEffects$DemScen=="DS3" & occupancyEffects$o==1.0,],EnergyUse)
+
+AltVMT %>% filter(DemScen == "DS3") %>% 
+  arrange(ElasTourLengthWithPooling, o) %>%
+  # mutate(ElasTourLengthWithPooling = paste0("Elas=",ElasTourLengthWithPooling)) %>%
+  mutate(ElasTourLengthWithPooling = as.factor(ElasTourLengthWithPooling)) %>%
+  # group_by(ElasTourLengthWithPooling) %>%
+  ggplot(aes(x=o, y = EnergyUse)) +
+  geom_line(aes(color=ElasTourLengthWithPooling), size = 1) +
+  scale_color_brewer(type="seq", palette="Blues") + # setting color of lines?
+  xlab("Occupancy/Pooling Level (1 = base)") +
+  ylab("Relative Total Energy Use (1.0 = base)") + 
+  # annotate("text", x = 1.0, y = 25, label = "Some text") +
+  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50, label = "Some text") +
+  # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
+  # ggtitle("") +
+  theme(legend.position = c(0.8, 0.8),
+        axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"))
+    
+```
+
 
 
 # References
 
 * Bösch, P. M., Becker, F., Becker, H., & Axhausen, K. W. (2017). Cost-based analysis of autonomous mobility services. _Transport Policy_, (October). http://doi.org/10.1016/j.tranpol.2017.09.005
 * Brown, A., Gonder, J., & Repac, B. (2014). An Analysis of Possible Energy Impacts of Automated Vehicle. In G. Meyer & S. Beiker (Eds.), Road Vehicle Automation (pp. 61-70). Springer. Retrieved from http://link.springer.com/book/10.1007%2F978-3-319-05990-
+* Davis, S. C., S. E. Williams, and R. G. Boundy. _Transportation Energy Data Book_. Center for Transportation Analysis, US Department of Energy, 2017.
 * European Road Safety Observatory 2018 [Speed and Accident Risk](https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_accident_risk_en) (last revised 06/07/2018).
 * Kloeden, C. N., McLean, A. J., Moore, V. M. & Ponte, G. (1997) Travelling speed and the rate of crash involvement. Volume 1: findings. Report No. CR 172. Federal Office of Road Safety FORS, Canberra
 * Kloeden, C. N., Ponte, G. & McLean, A. J. (2001) Travelling speed and the rate of crash involvement on rural roads. Report No. CR 204. Australian Transport Safety Bureau ATSB, Civic Square, ACT
