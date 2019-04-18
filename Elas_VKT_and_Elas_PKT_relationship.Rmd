@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 rm(list=ls())
 library(tidyverse)
 library(knitr)
+library(RColorBrewer)
 echoWorking = F
 ```
 
@@ -341,7 +342,7 @@ $$L_{tour} = L_{tour,r} o^{\epsilon_{L,o}}$$
 
 Considering alternative such elasticities
 
-```{r}
+```{r tableForElasTourLengthEffect, echo=echoWorking}
 
 # Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes, to allow testing of various cases
 AltVMT = PMTVMT %>% 
@@ -358,13 +359,12 @@ AltVMT %>% filter(DemScen == "DS3") %>%
 
 ```
 
-```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, pixels=300}
-library(RColorBrewer)
+```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 cols <- brewer.pal(3, "BuGn")
 # those three colors make up initial palette. 
 # Then pass them to colorRampPalette() to create interpolating function.
 pal <- colorRampPalette(cols)
-
+baseenergy = pull(PMTVMT[PMTVMT$DemScen=="DS3" & PMTVMT$o==1.0,],EnergyUse)
 AltVMT %>% filter(DemScen == "DS3") %>% 
   arrange(ElasTourLengthWithPooling, o) %>%
   # mutate(ElasTourLengthWithPooling = paste0("Elas=",ElasTourLengthWithPooling)) %>%
@@ -372,8 +372,16 @@ AltVMT %>% filter(DemScen == "DS3") %>%
   # group_by(ElasTourLengthWithPooling) %>%
   ggplot(aes(x=o, y = EnergyUse)) +
   geom_line(aes(color=ElasTourLengthWithPooling), size = 1) +
-  xlab("Occupancy (1.0 = base)") +
-  ylab("Energy Use (1.0 = base)")
+  scale_color_brewer(type="seq", palette="Blues") + # setting color of lines?
+  xlab("Occupancy/Pooling Level (1 = base)") +
+  ylab("Relative Total Energy Use (1.0 = base)") + 
+  # annotate("text", x = 1.0, y = 25, label = "Some text") +
+  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50, label = "Some text") +
+  # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
+  # ggtitle("") +
+  theme(legend.position = c(0.8, 0.8),
+        axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"))
     
 ```
 
