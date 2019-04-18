@@ -203,8 +203,8 @@ ElasPKT	= -1	            #	e_{PMT,CT}, elasticity of passenger travel demand w.r
 ElasCTOccupancy	= 0.5	    #	elas_{C_T,o}, elasticity of Cost of Travel time C_T = VoTT, w.r.t. occupancy
 ReductCTAutomation	= 0.5	#	rho_A, reduction factor for the Cost of Travel Time (per hour)
 ReductPaceAutomation	= 1	#	PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
-ElasTourContractionWithPooling = 0.0 #, elasticity of Vehicle tour length (for mult trips) w.r.t. occupancy
-ElasRiderDetourWithPooling = 0.0     #, elasticity of Passenger trip length w.r.t. occupancy and pooling
+ElasTourLengthWithPooling = 0.0      # elasticity of Vehicle tour length (for mult pooled trips) w.r.t. occupancy
+ElasRiderDetourWithPooling = 0.0     # elasticity of Passenger trip length w.r.t. occupancy and pooling
 PacePi =1/39.98           # base or default pace, hr/mi
 ```
 
@@ -252,7 +252,7 @@ VTCost1 = VTCost1 %>%
 # PMTVMT$VehType = "LDVAvgSedan"
 # PMTVMT = full_join(VTCost1, PMTVMT) # requires some common variables
 
-# establish values of Occupance "o" to be evaluated
+# establish values of Occupancy "o" to be evaluated
 PMTVMT = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
 # Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes
 PMTVMT = VTCost1 %>% 
@@ -290,17 +290,18 @@ PMTVMT = PMTVMT %>% mutate(
 
 PMTVMT = PMTVMT %>% mutate(
   PMT = (C_M/C_M[DemScen=="Base" & o==1.0])^ElasPKT,		#	pass-mi (normalized w.r.t Base scenario, base Occupancy)
-  VMT = PMT/o,		                    #	veh-mi (normalized) (defining relation for Occupancy "o")
-  VMT_direct = PMT[o==1.0]/o		      #	veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+  VMT = PMT/o,		                                      #	veh-mi (normalized) (defining relation for Occupancy "o")
+  EnergyUse = VMT * C_F/C_F[DemScen=="Base" & o==1.0]   # relative fuel cost/km indicates relative fuel intensity
 )
 
-PMTVMT = PMTVMT %>% mutate(
-  EnergyUse = VMT * C_F/C_F[DemScen=="Base" & o==1.0]
-)
+PMTVMT = PMTVMT %>% group_by(DemScen) %>%
+  mutate(
+    VMT_direct = PMT[o==1.0]/o		      #	veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+) %>% ungroup()
 ```
 
 
-```{r}
+```{r testPMTVMTresults, echo=echoWorking}
 TestPMTVMT = PMTVMT %>% select(-VehType) %>%
   filter(DemScen %in% c("DS3", "Base"))
 
@@ -325,22 +326,30 @@ head(More )
 ```
 
 
-## 3. Consider various egrees to which pooling contracts tour length and adds detours to passenger trips
+## 3. Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
 
 ```{r calcPMTandVMT, echo=echoWorking}
 PMTVMT = PMTVMT %>% mutate(
-  TourContraction = o^ElasTourContractionWithPooling,
+  TourContraction = o^ElasTourLengthWithPooling,
   RideDetourExpansion = o^ElasRiderDetourWithPooling
 )
 
 
 ```
 ```{r}
-vals = PMTVMT %>% select(o)
-vals$ElasTourContractionWithPooling = seq(from = -0.3,to = 0,length.out = nrow(vals))
+# vals$ElasTourLengthWithPooling = seq(from = -0.5,to = 0.1,length.out = nrow(vals))
 
-# ??? left_join(More, vals, by="o")
+# Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes
+AltVMT = PMTVMT %>% 
+  select(DemScen, o, VMT, PMT, EnergyUse) %>%
+# establish values of ElasTourLengthWithPooling to be evaluated
+  crossing(data.frame("ElasTourLengthWithPooling" = seq(from = -0.5, to = 0.1,by = 0.1))) #
+AltVMT = AltVMT %>%
+  mutate(EnergyUse = EnergyUse * o^ElasTourLengthWithPooling) %>%
+  spread(key=ElasTourLengthWithPooling, value = EnergyUse)
 
+AltVMT %>% filter(DemScen == "DS3")
+# ??? Test this, and graph
 ```
 
 ### References
