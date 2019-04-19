@@ -2198,7 +2198,7 @@ AltVMT = AltVMT %>%
 AltVMT %>% filter(DemScen == "DS3") %>%
   select(-DemScen, -VMT, -PMT) %>%
   spread(key=ElasTourLengthWithPooling, value = EnergyUse) %>%
-  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Lenght Elasticity")
+  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Length Elasticity")
 
 ```
 
@@ -2221,12 +2221,14 @@ AltVMT %>% filter(DemScen == "DS3") %>%
   xlab("Occupancy/Pooling Level (1 = base)") +
   ylab("Relative Total Energy Use (1.0 = base)") + 
   # annotate("text", x = 1.0, y = 25, label = "Some text") +
-  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50, label = "Some text") +
+  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
   # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
   # ggtitle("") +
   theme(legend.position = c(0.8, 0.8),
-        axis.text=element_text(size=12),
-        axis.title=element_text(size=14,face="bold"))
+        axis.text=element_text(size=14),
+        axis.title=element_text(size=16,face="bold"),
+        legend.title=element_text(size=14),
+        legend.text=element_text(size=12))
     
 ```
 
