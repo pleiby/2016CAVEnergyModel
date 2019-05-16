@@ -1,36 +1,35 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
-
-date: "April 18, 2019"
-
 author:
-  - name: Paul N. Leiby
-    email: leibypn@ornl.gov
-    affiliation: Oak Ridge National Laboratory
-
-address:
-  - code: Oak Ridge National Laboratory
-    address: ORNL Energy Analysis Group, One Bethel Valley Road, Oak Ridge, TN, 37831-6036
-  
-abstract:  A compact and aggregated model of road vehicle travel and energy use is constructed to consider the interactions of multiple relevant identified mechanisms (Wadud et al. 2016, Stephens et al. 2016) by which automation can alter efficiency and activity. Travel demand and vehicle use derives from a standard utility-theoretic specification of driver/traveler behavior. Vehicle efficiency, travel (vehicle-kilometers traveled), average travel speed, congestion, and travel time are endogenous. Following Small and Verhoef (2007) and others, utility derives from travel, aggregate goods consumption, and liesure, subject to individual budget and time constraints.
-
-keywords:
-  automated vehicles, transportation energy efficiency, travel demand, aggregate modeling
-  
-#bibliography: mybibfile.bib
-#output: rticles::elsevier_article
-
-output: 
+- affiliation: Oak Ridge National Laboratory
+  email: leibypn@ornl.gov
+  name: Paul N. Leiby
+date: "April 18, 2019"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
   word_document:
-    toc: true
+    df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
-    df_print: kable
     reference_docx: mystyles.docx
-#   pdf_document: default
-
+    toc: yes
 file: CAVdecomp_2018MMDD.Rmd
+keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
+  modeling
+address:
+- address: ORNL Energy Analysis Group, One Bethel Valley Road, Oak Ridge, TN, 37831-6036
+  code: Oak Ridge National Laboratory
+abstract: A compact and aggregated model of road vehicle travel and energy use is
+  constructed to consider the interactions of multiple relevant identified mechanisms
+  (Wadud et al. 2016, Stephens et al. 2016) by which automation can alter efficiency
+  and activity. Travel demand and vehicle use derives from a standard utility-theoretic
+  specification of driver/traveler behavior. Vehicle efficiency, travel (vehicle-kilometers
+  traveled), average travel speed, congestion, and travel time are endogenous. Following
+  Small and Verhoef (2007) and others, utility derives from travel, aggregate goods
+  consumption, and liesure, subject to individual budget and time constraints.
 ---
 
 ```{r global_options, include=FALSE}
@@ -1591,22 +1590,8 @@ TechScen :LDV.EIntens  :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse     :HDV
 "),header=TRUE,sep=":",strip.white=TRUE)
 # As in '[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170914r1.xlsx]Policy+Scenario'!$A$97:$I$105
 ```
-    TechScen :LDV.EIntens  :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse     :HDV.EUse     :Tot.EUse     :ScenarioName
-    2        :-0.769347291 :-0.2815     :0.667260556 :0.428904653 :-0.615441836 : 0.026667993 :-0.447064047 :
-    7        :-0.1868      :-0.175      :0.119096619 :0.109988946 :-0.089950629 :-0.08425912  :-0.088458169 :
-    4        :-0.718603695 :-0.2815     :0.671164285 :0.682936788 :-0.529740545 : 0.209190082 :-0.33597384  :
-    3        : 0.342       : 0.0        :0.646717246 :0.449406    : 1.209894545 : 0.449406    : 1.010474797 :
-    1        :-0.326813226 :-0.192325   :0.14263231  :0.117220316 :-0.230795041 :-0.097649081 :-0.19588073  :
-    5        : 0.0992      :-0.1        :0.073921709 :0.07975024  : 0.180454742 :-0.028224784 : 0.125733578 :
-    TechScen :LDV.EIntens :HDV.EIntens :LDV.VMTpveh :HDV.VMTpveh :LDV.EUse :HDV.EUse :Tot.EUse :ScenarioName
-    2        :-76.93%     :-28.15%     :66.73%      :42.89%      :-61.54%  : 2.67%   :-44.71%  :Have our cake & eat it too
-    7        :-18.68%     :-17.50%     :11.91%      :11.00%      : -9.00%  :-8.43%   : -8.85%  :Stuck in the middle at Level 2
-    4        :-71.86%     :-28.15%     :67.12%      :68.29%      :-52.97%  :20.92%   :-33.60%  :Strong responses
-    3        : 34.20%     :  0.00%     :64.67%      :44.94%      :120.99%  :44.94%   :101.05%  :Dystopian nightmare
-    1        :-32.68%     :-19.23%     :14.26%      :11.72%      :-23.08%  :-9.76%   :-19.59%  :Cautiously optimistic
-    5        :  9.92%     :-10.00%     : 7.39%      : 7.98%      : 18.05%  :-2.82%   : 12.57   :Driver assist, limited other benefits
 
-```{r gatherTestValueForScenarios}
+```{r gatherTestValueForScenarios, echo=echoWorking}
 # rotate example test results, and split out vehicle class distinction
 SR_test = summaryScenarioResultsTableExample %>%
   select(-ScenarioName) %>%
@@ -1638,7 +1623,8 @@ cat("Calculated values match Scenario test values to within total absolute error
 ```
 
 ```{r mirrorExtSummaryScenarioResults, echo=echoWorking}
-kable(summaryScenarioResultsTableExample)
+kable(summaryScenarioResultsTableExample, 
+      caption="Summary Scenario Results from Example in Worksheet", digits=4)
 ```
 
 
@@ -1675,6 +1661,12 @@ data %>% filter(VC == "LDV") %>%
     # scale_fill_brewer(palette="Blues")
 
 ```
+
+Tables indicating cross-tabs of:
+
+- Combined vs Tech scenarios, 
+- Combined vs. Demand scenarios, and 
+- Tech vs. Demand scenarios.
 
 ```{r examineCaseCombinations, echo=echoWorking}
 table(CWE_test$CombScen,CWE_test$TechScen)
