@@ -4,11 +4,8 @@ author:
 - affiliation: Oak Ridge National Laboratory
   email: leibypn@ornl.gov
   name: Paul N. Leiby
-date: "April 18, 2019"
+date: "May 15, 2019"
 output:
-  html_document:
-    df_print: paged
-    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
@@ -16,7 +13,10 @@ output:
     fig_width: 7
     reference_docx: mystyles.docx
     toc: yes
-file: CAVdecomp_2018MMDD.Rmd
+  html_document:
+    df_print: paged
+    toc: yes
+file: CAVdecom.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
   modeling
 address:
@@ -402,6 +402,17 @@ EnergyIntensityChanges = msa %>%
 EnergyIntensityChanges = arrange(EnergyIntensityChanges, TechScen, VC, Year)
 ```
 
+!!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved for TechScen 2 (for both LDVs and HDVs)
+
+```{r fixVariantTechCaseIntensity, echo=echoWorking}
+# !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved
+EnergyIntensityChangesX = EnergyIntensityChanges %>%
+  mutate( # only alter the TechScen==2 energy intensity (doubling
+    NIE = ifelse((TechScen==2) & (VC=="LDV"), (1+NIE)*2.44-1, NIE)
+    )
+
+```
+
 ```{r displayNetIntensityChangeByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # Confirm: Following matches table "Net Energy Intensity Change by Scenario"
 #  in workbook "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170809.xlsx]Scenario Master'!$A$1:$F$11"
@@ -527,13 +538,13 @@ kable(x = DemRespParams, digits = 4, row.names = F,
 ```
 
 
-### Select a Single Scenario to Examine
+### Select a Single Technology Scenario and Year to Examine
 
 ```{r singleScenarioSelect, echo=echoWorking}
 CurrTechScen = 4
 CurrYear     = 2050
 
-CurrDemScen = "DS1"
+CurrDemScen = "DS1" # Unused
 ```
 
 Energy Intensity change is dependent on the Technology Scenario, and year of interest. For example consider Technology Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
@@ -894,8 +905,9 @@ VTCShrAlt = VTCShrBase %>% mutate(
 )
 # Reshape for column variables to be component cost-shares, and separate V_Class from VehType
 #  (latter differentiates between Lt Truck and Car within LDV)
-x = VTCShrAlt %>% select(-VTCost_shr) %>% gather(key = DemScen, value = VCRel, DS1:DS7)
-x = x %>% spread(key=CostCat, value = VCRel)
+x = VTCShrAlt %>% select(-VTCost_shr) %>% 
+  gather(key = DemScen, value = VCRel, DS1:DS7) %>% 
+  spread(key=CostCat, value = VCRel)
 
 # Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases and append to
 y = DemRespParams %>% select(-c(Zero, Med)) %>% 
@@ -909,16 +921,64 @@ x = left_join(x, select(DemScenCostChange, -Description), by=c("DemScen")) # app
 # x %>% select(VehType, VC, DemScen, Case, ElasVKT, C_deltaInsur, C_deltaInsurX, C_deltaVoTT, C_deltaVoTTX)
 VTCShrAlt = x
 
+# At this point, have an array of (base) cost share and demand-scenario related variables that can change cost shares,
+#  for rows indicating cases for (7 DemScen) x (3 VehType) x ( Cases (High and Low))
 ```
 
 
-4.4 Calculate Adjusted Travel Cost Components for Scenario Conditions
+4.4 Calculate Adjusted Travel Cost Components for Demand Scenario Conditions
 ---------------------------
 
-Updated cost component table based on Scenario VoTT and other costs.
+In concept, any of the cost components could vary under the "Demand" scenarios.
+In this case, we focus on the following parameters that change across demand scenarios
+(apart from variation across Vehicle Type):
+
+```{r reportDemScenParamVariations, echo=echoWorking}
+
+# show a table of parameters that vary across demand scnarios
+
+minvals = VTCShrAlt %>% 
+  # filter(VehType =="LDVAvgSedan") %>%
+  group_by(VehType) %>%
+  select(-VC, -DemScen, -Case) %>%
+  summarize_all(funs(min)) %>%
+  mutate(variable = "minval")
+
+maxvals = VTCShrAlt %>% 
+  # filter(VehType =="LDVAvgSedan") %>%
+  group_by(VehType) %>%
+  select(-VC, -DemScen, -Case) %>%
+  summarize_all(funs(max)) %>%
+  mutate(variable = "maxval")
+
+rbind(maxvals, minvals) %>%
+#%>%
+  gather(key= costcat, value=value, -c(VehType, variable)) %>%
+  spread(key=variable, value=value) %>%
+  filter(maxval > minval) %>%
+  kable(caption="Table: Parameter that vary across current Demand Scenarios 'DemScen'")  
+  
+# # Alternative approach
+# maxminusmin <- function(x) {
+#   max(x) - min(x)
+# }
+# 
+# maxminusminvals = VTCShrAlt %>% 
+#   # filter(VehType =="LDVAvgSedan") %>%
+#   group_by(VehType) %>%
+#   select(-VC, -DemScen, -Case) %>%
+#   summarize_all(funs(maxminusmin)) %>%
+#   gather(key= variable, value="maxminusmin", -VehType)
+# 
+# maxminusminvals %>%
+#   filter(maxminusmin>0)
+
+```
+
+Updated cost component table based on *Demand* Scenario VoTT and other costs.
 Calculate cost component fractions (shares) for all demand scenarios. 
-The Technology (energy intensity) scenario is currently held 
-at number `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario.
+For the cost component calculations below, Technology (energy intensity) scenario is currently held 
+at number `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario. This determines the fuel cost.
 
 ```{r CalcTravelCostComponSharesAdjusted, echo=echoWorking}
 # Changed costs under different automation scenarios (scenarios in DemandScenarios sheet)
@@ -956,8 +1016,10 @@ RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
 ```{r CalcTravelCostComponSharesAdjusted2, echo=echoWorking}
 # Keep array of relative cost components for alternative Demand Scenarios. 
 #   (Same as RelTotCost, except has cost component shares, and no demand "Case" var)
+DemandCaseWanted = "Low"
+
 VTCShrAlt= VTCShrAlt %>% 
-  filter(Case=="Low") %>% # to this point the Low and High are the same (they only differ in the applied ElasVKT)
+  filter(Case==DemandCaseWanted) %>% # to this point the Low and High are the same (they only differ in the applied ElasVKT)
   select(DemScen, VehType, VC, AccAndIns:VehCapCost) %>% 
   gather(key = CostCat, value = VTCost_shr, AccAndIns:VehCapCost) %>% 
   arrange(DemScen, VehType)
@@ -981,12 +1043,12 @@ VTCShrAlt %>%
 # function to take dataframe of shares by demand scenario and VehType, and
 #   for specified demand scenario ds,
 #   plot stacked bar graph with one column for each VehType.
-plotStackedBarShares <- function(df, ds) {
+plotStackedBarShares <- function(df, ds, ts="/TS4") {
   df %>% filter(DemScen == ds) %>%
   filter(CostCat != "Total") %>%
   ggplot() + 
     geom_bar(aes(x=VehType, y=VTCost_shr, fill=CostCat), stat="identity") +
-    ggtitle(paste0("Fig: Alt Cost Components for Vehicle Travel, DemScen=",ds), subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
+    ggtitle(paste0("Fig: Alt Cost Components for Vehicle Travel, Scen=",ds,ts), subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
     ylab("Share") +
     scale_fill_brewer(palette="Spectral") +
     # scale_fill_brewer(palette="Blues")
@@ -1044,7 +1106,7 @@ plotStackedBarCostCompons(VTCostAlt, "DS3")
 plotStackedBarCostCompons(VTCostAlt, "DS4")
 ```
 
-4.5 Fractional VMT Changes in CAV Scenario
+4.5 Fractional VMT Changes in CAV Demand Scenario (Single Tech Case)
 -------------------
 
 Compute fractional increases in VKT from the changes in total generalized travel costs that result from automation.
@@ -1062,7 +1124,7 @@ The fractional increase in VKT
 
 $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj} )^{ElasVKT_{dv}}-1$$
 
-The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. This elasticity reflects the long-run response of road travel to travel cost changes, but is not meant to include the demand response of new/underserved uswer groups, or the VMT effects of ride hailing/pooling. Based on how they were generated, the parameter values selected may or may not include mode substitution/switching effects, and longer-run locational choices. The generalize vehicle travel costs considered here and in the cost-measure associated with this elasticity include vehicle capital and operation costs, including fuel, insurance, maintenance, fees, and travel-time costs.
+The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. This elasticity reflects the long-run response of road travel to travel cost changes, but is not meant to include the demand response of new/underserved user groups, or the VMT effects of ride hailing/pooling. Based on how they were generated, the parameter values selected may or may not include mode substitution/switching effects, and longer-run locational choices. The generalize vehicle travel costs considered here and in the cost-measure associated with this elasticity include vehicle capital and operation costs, including fuel, insurance, maintenance, fees, and travel-time costs.
 
 Current sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
 
@@ -1257,7 +1319,7 @@ cat("Check: Test output to Kaya (VMTIncrease table) matches examples for CombSce
     sum(abs(FracVMTIncreaseExample$y2050 - FracVMTIncreaseExample$fracVMTIncr)) )
 ```
 
-# 5. Policy and Scenario Calculations
+# 5. Policy and Combined Scenario Calculations
 
 Seeking to generate bar graphs of fractional changes in energy intensity, travel demand, energy use (each by LDV/HDV), and Total Energy Use (both sectors).
 (As in Policy + Scenario sheet)
@@ -1436,20 +1498,20 @@ CaseEffects <- CaseEffects %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
 ```{r}
 CombScen_Combinations <- read.delim(textConnection("
 CombScen :Year  :ElasCase :VC   :TechScen     :DemScen_Num :Notes
-CS1      :2050  :Low      :HDV  :1            :2           :Cost-base response (with ElasVKT) only
-CS2      :2050  :Low      :HDV  :2            :3           :Cost-base response (with ElasVKT) only
-CS3      :2050  :Low      :HDV  :3            :5           :Cost-base response (with ElasVKT) only
-CS4      :2050  :Low      :HDV  :4            :6           :Cost-base response (with ElasVKT) only
-CS5      :2050  :Low      :HDV  :5            :2           :HDV Same as DemScen 4
-CS6      :2050  :Low      :HDV  :6            :0           :HDV Same as DemScen 4
-CS7      :2050  :Low      :HDV  :7            :2           :HDV Same as DemScen 3
-CS1      :2050  :Low      :LDV  :1            :2           :Cost-base response (with ElasVKT) only
-CS2      :2050  :Low      :LDV  :2            :3           :Cost-base response (with ElasVKT) with Underserved multiplier effect option 1
-CS3      :2050  :Low      :LDV  :3            :5           :Cost-base response (with ElasVKT) with Underserved multiplier effect option 3
-CS4      :2050  :Low      :LDV  :4            :6           :Cost-base response (with ElasVKT) with Underserved multiplier effect option 4
-CS5      :2050  :Low      :LDV  :5            :2           :scenario 4 with higher LDV elasticity
-CS6      :2050  :Low      :LDV  :6            :0           :scenario 5 with shift to ridehailing_ridepooling
-CS7      :2050  :Low      :LDV  :7            :2           :scenario 3 with shift to ridehailing_ridepooling
+CS1      :2050  :Low      :HDV  :1            :2           :Cost-based response (with ElasVKT) only
+CS2      :2050  :Low      :HDV  :2            :3           :Cost-based response (with ElasVKT) only
+CS3      :2050  :Low      :HDV  :3            :5           :Cost-based response (with ElasVKT) only
+CS4      :2050  :Low      :HDV  :4            :6           :Cost-based response (with ElasVKT) only
+CS5      :2050  :Low      :HDV  :5            :2           :HDV dmnd mult Same as Scen 4
+CS6      :2050  :Low      :HDV  :6            :0           :HDV dmnd mult Same as Scen 4
+CS7      :2050  :Low      :HDV  :7            :2           :HDV dmnd mult Same as Scen 3
+CS1      :2050  :Low      :LDV  :1            :2           :Cost-based response (with ElasVKT) only
+CS2      :2050  :Low      :LDV  :2            :3           :Cost-based response (with ElasVKT) with Underserved mult option 1
+CS3      :2050  :Low      :LDV  :3            :5           :Cost-based response (with ElasVKT) with Underserved mult option 3
+CS4      :2050  :Low      :LDV  :4            :6           :Cost-based response (with ElasVKT) with Underserved mult option 4
+CS5      :2050  :Low      :LDV  :5            :2           :Scen 4 dmnd mult with higher LDV elasticity
+CS6      :2050  :Low      :LDV  :6            :0           :Scen 5 dmnd mult with shift to ridehailing_ridepooling
+CS7      :2050  :Low      :LDV  :7            :2           :Scen 3 dmnd mult with shift to ridehailing_ridepooling
 "),header=TRUE,sep=":",strip.white=TRUE) #
 CombScen_Combinations$VC = as.character(CombScen_Combinations$VC)
 ```
@@ -1464,7 +1526,6 @@ CaseWantedEffects = CaseEffects %>%
   semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen_Num"))
 
 ```
-XXX
 
 Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
 
@@ -2014,21 +2075,17 @@ $$A_2 = A_1 \left ( \frac{V_2}{V_1} \right )^2$$
 Consider a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.
 
 ```{r setDemandAndPoolingParams, echo=echoWorking}
-ElasPKT	= -1	            #	e_{PMT,CT}, elasticity of passenger travel demand w.r.t. cost/pass-km
+# ElasPKT	= -1	            #	e_{PMT,CT}, elasticity of passenger travel demand w.r.t. cost/pass-km
+# ReductCTAutomation	= 0.5	#	rho_A, reduction factor for the Cost of Travel Time (per hour)
 elas_VoTT_wrt_o	= 0.5	    #	elas_{C_T,o}, elasticity of Cost of Travel time C_T = VoTT, w.r.t. occupancy,
                           #    an assumption regarding how occupancy (pooling) increases time cost VoTT
-ReductCTAutomation	= 0.5	#	rho_A, reduction factor for the Cost of Travel Time (per hour)
-ReductPaceAutomation	= 1	#	PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
 Elas_TourLength_wrt_Pooling = 0.0     # elasticity of Vehicle tour length (for mult pooled trips) w.r.t. occupancy
 Elas_RiderDetour_wrt_Pooling = 0.0    # elasticity of Passenger trip length w.r.t. occupancy and pooling
 PacePi =1/39.98           # base or default pace, hr/mi
+ReductPaceAutomation	= 1	#	PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
 ```
 
-```{r initOccupancyEffects, echo=echoWorking}
-occupancyEffects = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
-```
-
-We establish estimates of vehicle travel cost per mile by component category (those related to fuel cost, non-fuel financial costs, and time costs). Gather these for Base assumptions and Alternative assumptions.
+We establish estimates of vehicle travel cost per mile by component category (those related to fuel cost, non-fuel financial costs, and time costs). Gather these for Base assumptions and Alternative scenario assumptions.
 
 ```{r poolingScenData, echo=echoWorking}
 
@@ -2037,7 +2094,9 @@ scenData = VTCostAlt %>% select(DemScen, VehType, CostCat, VTCost_cpm) # extract
 VTCostBase$DemScen="Base"              # label base as another scenario
 VTCostBase = VTCostBase[names(scenData)] # order cost to match alt cost scenario data, and bind
 scenData = rbind(scenData, VTCostBase) # conbine alt and base scenario data
+```
 
+```{r poolingScenDataSelectedCases, echo=echoWorking}
 # Focus on the base and alt scen cost components for LDV cars
 VehTypeWanted = "LDVAvgSedan"
 DemScenWanted = c("Base", "DS3")
@@ -2053,28 +2112,46 @@ scenData = scenData %>%
     C_V = C_F + C_H	          # vehicle costs, c/mi
     # c_V = C_V/C_V[DemScen=="Base"]		# normalized vehicle travel cost relative to base
   )
-# Keep only needed variables
-scenData = scenData %>% select(DemScen, C_F, C_H, C_T, C_V)
+
 ```
+Focus on the principal travel cost components for vehicles in the `r VehTypeWanted` class.
 
-**Note:** For the Demand Scenarios (DemScen) the only costs/km varying over Alt Scenario for each VehType are: 
-Time, AccAndIns (for 2 cases & small), and Total (not Fuel, Registration, Parking, Maintenance, TollsFees, VehCapCost)
+**Note:** For the current *Demand* Scenarios (DemScen) the only costs/km varying over Alt Scenario for each VehType are: 
+Time, AccAndIns (for 2 cases & small variation), and Total cost (not Fuel, Registration, Parking, Maintenance, TollsFees, VehCapCost)
 
-The differences in energy cost/mi arise separately as result of the technology scenarios.
+The differences in energy cost/mi arise separately as result of the *Technology* scenarios.
 Demand scenarios do include variation in the elasticity of VKT with respect to costs, though, 
 but that is not part of the VTCost data table.
 
 ### 8.1 Consider alternative occupancy levels, and their effects on costs, PMT, and VMT.
 
-```{r calcOccupancyEffects}
-# Keep only Base and the Alt scenario of interest
-#scenData = scenData %>% filter(DemScen == "Base" | DemScen == "DS3")
-scenData = scenData %>% filter(DemScen %in% DemScenWanted)
+(Note!: This section is based on is a variant case for demand scenarios `r DemScenWanted` and energy intensity in the alternative scenario case at *double* that of TechScen 4).
 
+```{r calcCostDataForOccupancyEffectsTest, echo=echoWorking}
+# Keep only needed summary cost variables, [in cents/mi]
+scenCostData = scenData %>% select(DemScen, C_F, C_H, C_T, C_V)
+# Get the travel cost components for scenarios of interest.
+scenCostData = scenCostData %>% filter(DemScen %in% DemScenWanted)
+
+# # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR # TEST!!:
+# scenCostData = scenCostData %>%
+#   mutate( # only alter the non-Base case fuel cost, and total # variable cost
+#     C_V = ifelse(DemScen=="Base",C_V, C_V + C_F),
+#     C_F = ifelse(DemScen=="Base",C_F, 2*C_F)
+#     )
+
+kable(scenCostData, caption="Table: Vehicle travel cost data [c/mi] for these test cases of alternative pooling.",
+      digits=3)
+```
+
+```{r initOccupancyEffects, echo=echoWorking}
+occupancyEffects = data.frame("o" = seq(from = 0.8, to = 1.5,by = 0.05)) #	occupancy, unitless (pass/veh, normalized)
+```
+```{r calcOccupancyEffects}
 # dplyr fn for full-join with no common vars (all combinations)
 # this gives a df with observations for all levels of occupancy o for each value of DemScen
 #  Cost component values are replicated for all occupancy levels, which is correct for costs/veh-mi
-occupancyEffects = crossing(scenData, occupancyEffects, )
+occupancyEffects = crossing(scenCostData, occupancyEffects)
 
 # TravTimeCostBasePars["average_speed.LDV","average"]
 
@@ -2098,7 +2175,8 @@ Obviously the response of travelers will be quite heterogenous and situation-dep
 
 
 ```{r}
-# Now compute VMT and PMT, given travel costs per passenger mile, the elasticity of PMT w.r.t. cost, and occupancy
+# Now compute VMT and PMT, given travel costs per passenger mile, the elasticity of PMT w.r.t. cost, and occupancy.
+# First extract the applicable ElasPKT for these demand scenarios
 ElasPKT = RelTotCost %>% filter(DemScen %in% DemScenWanted, VehType==VehTypeWanted, Case == "Low") %>%
   .$ElasVKT
 ```
@@ -2132,6 +2210,15 @@ occupancyEffects = occupancyEffects %>%
     EnergyUse = VMT * C_F/C_F[DemScen=="Base" & o==1.0]   # relative fuel cost/km indicates relative fuel intensity
     )
 
+occupancyEffects %>%
+  ungroup() %>%
+  select(C_Mpmt, o, DemScen) %>%
+  # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
+  mutate(
+    relC_Mpmt = (C_Mpmt/C_Mpmt[o==1.0 & DemScen=="Base"])
+  ) %>%
+  kable(caption="Table: check relative Cost per mile traveled at no-pooling level (occupancy=1.0")
+   
 occupancyEffects = occupancyEffects %>%
   group_by(DemScen) %>%
   mutate(  # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
@@ -2141,12 +2228,12 @@ occupancyEffects = occupancyEffects %>%
 ```
 
 ```{r plotOccupancyEffects, echo=echoWorking, dpi=300}
-TempoccupancyEffects = occupancyEffects %>% 
+occupancyTravelEffects = occupancyEffects %>% 
   select(DemScen, o, PMT, VMT, VMT_direct) %>%
   gather(key= travelEffect, value = value, PMT:VMT_direct)
 
 
-TempoccupancyEffects %>%
+occupancyTravelEffects %>%
   group_by(DemScen, travelEffect) %>%
   ggplot( aes(x=o, y=value , color=travelEffect, linetype=DemScen)) + 
     geom_line(size=1.0) +
@@ -2154,6 +2241,7 @@ TempoccupancyEffects %>%
     xlab("Pooling Level (base=1.0)") + 
     ylab("VMT and PMT Relative to Base")
 
+occupancyTravelEffects %>% filter(o==1.0)
 ```
 
 ```{r checkOccupancyEffects, echo=echoWorking}
