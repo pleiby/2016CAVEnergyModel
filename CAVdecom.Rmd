@@ -6,15 +6,15 @@ author:
   name: Paul N. Leiby
 date: "May 15, 2019"
 output:
-  html_document:
-    df_print: paged
-    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: mystyles.docx
+    toc: yes
+  html_document:
+    df_print: paged
     toc: yes
 file: CAVdecom.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -1582,8 +1582,8 @@ GatherScenInputsForOneTechScen <- function(CurrTS, CurrYr){
   )
   VTCShrAlt$Total = 0
   # note this summing operation relies on component cost share columns being in this alphabetic order, and Total = 0
-  VTCShrAltTot %>% select(AccAndIns:VehCapCost) %>% rowSums(na.rm=TRUE) -> VTCShrAlt$Total
-  VTCShrAlt = rbind(VTCShrAlt, VTCShrAltTot)
+  VTCShrAlt %>% select(AccAndIns:VehCapCost) %>% rowSums(na.rm=TRUE) -> VTCShrAlt$Total
+  VTCShrAlt = cbind(VTCShrAlt, VTCShrAlt$Total)
   # RelTotCost
   # Get main result (total relative cost) for all Demand scenarios, VehType, Cases, and elasticity of VKT
   # RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
@@ -1600,7 +1600,8 @@ GatherScenInputsForOneTechScen <- function(CurrTS, CurrYr){
     select(-VehType) %>%
     rename(ElasCase = Case) %>%     # actually, this Case could reflect sensitivity Case variations in other cost compons
     group_by(VC, DemScen, ElasCase) %>%
-    summarise(fracVMTIncr = mean(fracVMTIncr)) # this is an unweighted mean for Sedans and LtTrucks
+    summarise_at(vars(Fuel, Time, Total, ElasVKT, fracVMTIncr), .funs = mean
+              ) # this is an unweighted mean for Sedans and LtTrucks
   
   # Make additional (exog) adjustments in VMT demand based on shifts from Underserved population and Ride Hail/Pooling
   VMTIncrease = VMTIncrease  %>%
@@ -1636,6 +1637,7 @@ CaseEffects = data.frame() # simplest empty dataframe
 
 for (CurrTechScen in 1:7) {
   CaseEffects = rbind(CaseEffects, CombScenResultsForOneTechScen(CurrTechScen, CurrYear))
+  #CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, CurrYear))
 }
 
 ```
@@ -1643,7 +1645,7 @@ for (CurrTechScen in 1:7) {
 ```{r multCombScenarioAssumptionsLoop, echo=echoWorking}
 CurrYear     = 2050
 # CurrElasCase = "Low"
-CurrTechScen = 1
+# CurrTechScen = 1
 # CurrDemScen = "DS1"
 # CurrCombScen = "CS6"
 
@@ -1653,6 +1655,7 @@ CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, Cu
 for (CurrTechScen in 1:7) {
   CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, CurrYear))
 }
+CaseAssumps <- CaseAssumps %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
 ```
 Calculate fractional change in Energy Use by sector, for all cases.
 
@@ -1693,6 +1696,12 @@ Select Predefined combinations of Tech and Demand scenarios from the full set of
 # Note: semi_join(df1, df2) #keep only observations in df1 that match in df2 (inner_join without keeping df2).
 # Note: anti_join(df1, df2) #drops all observations in df1 that match in df2.
 CaseWantedEffects = CaseEffects %>% 
+  # filter(Year==CurrYear) %>%
+  semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen_Num"))
+
+```
+```{r}
+CaseWantedAssumps = CaseAssumps %>% 
   # filter(Year==CurrYear) %>%
   semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen_Num"))
 
@@ -2449,7 +2458,7 @@ AltVMT = AltVMT %>%
 AltVMT %>% filter(DemScen == "DS3") %>%
   select(-DemScen, -VMT, -PMT) %>%
   spread(key=ElasTourLengthWithPooling, value = EnergyUse) %>%
-  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Lenght Elasticity")
+  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Length Elasticity")
 
 ```
 
@@ -2472,7 +2481,7 @@ AltVMT %>% filter(DemScen == "DS3") %>%
   xlab("Occupancy/Pooling Level (1 = base)") +
   ylab("Relative Total Energy Use (1.0 = base)") + 
   # annotate("text", x = 1.0, y = 25, label = "Some text") +
-  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50, label = "Some text") +
+  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
   # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
   # ggtitle("") +
   theme(legend.position = c(0.8, 0.8),
