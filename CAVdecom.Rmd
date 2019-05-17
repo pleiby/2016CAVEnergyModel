@@ -1492,9 +1492,9 @@ CombScenResultsForOneTechScen <- function(CurrTS, CurrYr){
   
   # Case Effects on Demand (single Year, TechScen, multiple VC, DemScen, ElasCase)
   EffectsD <- VMTIncrease %>% ungroup %>% 
-    select(CombScen, DemScen, VC, ElasCase, fracVMTIncr) %>% 
-    mutate(CombScen_Num = as.integer(str_sub(CombScen,-1,-1))) %>%
-    mutate(DemScen_Num  = as.integer(str_sub(DemScen, -1,-1)))
+    select(CombScen, DemScen, VC, ElasCase, fracVMTIncr)
+    # mutate(CombScen_Num = as.integer(str_sub(CombScen,-1,-1))) %>%
+    # mutate(DemScen_Num  = as.integer(str_sub(DemScen, -1,-1)))
   # add labels for year and TechScen, and associated Energy Intensity NIE
   EffectsD <- left_join(x = EffectsD, filter(CaseEffectsEI, TechScen == CurrTS, Year == CurrYr), by = c("VC"))
 
@@ -1586,22 +1586,34 @@ GatherScenInputsForOneTechScen <- function(CurrTS, CurrYr){
   VTCShrAlt = cbind(VTCShrAlt, VTCShrAlt$Total)
   # RelTotCost
   # Get main result (total relative cost) for all Demand scenarios, VehType, Cases, and elasticity of VKT
-  # RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
-  RelTotCost = VTCShrAlt # keep all data
-  
-  RelTotCost = RelTotCost %>% mutate(
-    fracVMTIncr = Total^ElasVKT-1.0  # fractional VMT increase base on elastic response to Total cost
-  )
+  RelTotCost = VTCShrAlt %>% 
+    # select(DemScen, VehType, VC, Case, Total, ElasVKT) %>% keep all input data along with total relative cost
+    mutate(
+      fracVMTIncr = Total^ElasVKT-1.0  # fractional VMT increase base on elastic response to Total cost
+    )
   
   # VMTIncrease
   # New Calculated Values: % increase LD personal vehicles in VMTdemand from cost-elastic response (averaging LDV Sedans and LtTrucks)
   VMTIncrease = RelTotCost %>% 
     #filter(Case=="Low") %>%
     select(-VehType) %>%
-    rename(ElasCase = Case) %>%     # actually, this Case could reflect sensitivity Case variations in other cost compons
+    rename(
+      ElasCase = Case,       # actually, this Case could reflect sensitivity Case variations in other cost compons
+      C_Fuel = Fuel,         # fuel costs, c/mi
+      C_Time = Time,         # time costs [c/mi]
+      C_Vcap = VehCapCost,
+      C_Total = Total        # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
+    ) %>%   
+    mutate(
+      # VehNonFuel includes VehCapCost, Maintenance, AccAndIns, TollsFees, Parking, Registration
+      C_VNonF = C_Total - C_Fuel - C_Time,  # non-fuel (and non-time) vehicle financial costs. Includes accident.
+      C_Veh = C_Fuel + C_VNonF 	            # vehicle capital and operating costs, c/mi (excl. time)
+    ) %>%    
     group_by(VC, DemScen, ElasCase) %>%
-    summarise_at(vars(Fuel, Time, Total, ElasVKT, fracVMTIncr), .funs = mean
-              ) # this is an unweighted mean for Sedans and LtTrucks
+    summarise_at(
+      vars(C_Fuel, C_Time, C_VNonF, C_Total, ElasVKT, fracVMTIncr),
+      .funs = mean
+    ) # this is an unweighted mean for Sedans and LtTrucks, wich are two VehTypes in VC=LDV
   
   # Make additional (exog) adjustments in VMT demand based on shifts from Underserved population and Ride Hail/Pooling
   VMTIncrease = VMTIncrease  %>%
@@ -1614,12 +1626,13 @@ GatherScenInputsForOneTechScen <- function(CurrTS, CurrYr){
   # Case Effects on Demand (single Year, TechScen, multiple VC, DemScen, ElasCase)
   AssumpsD <- VMTIncrease %>% ungroup %>% 
     # select(CombScen, DemScen, VC, ElasCase, fracVMTIncr) %>% 
-    mutate(CombScen_Num = as.integer(str_sub(CombScen,-1,-1))) %>%
-    mutate(DemScen_Num  = as.integer(str_sub(DemScen, -1,-1)))
+    # mutate(CombScen_Num = as.integer(str_sub(CombScen,-1,-1))) %>%
+    # mutate(DemScen_Num  = as.integer(str_sub(DemScen, -1,-1)))
   # add labels for year and TechScen, and associated Energy Intensity NIE
-  AssumpsD <- left_join(x = AssumpsD, 
-                        filter(EnergyIntensityCompons, TechScen == CurrTS, Year == CurrYr),
-                        by = c("VC"))
+    left_join(
+      filter(EnergyIntensityCompons, TechScen == CurrTS, Year == CurrYr), 
+      by = c("VC"))
+  return(AssumpsD)
 
 } # GatherScenInputsForOneTechScen
 ```
@@ -1640,6 +1653,20 @@ for (CurrTechScen in 1:7) {
   #CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, CurrYear))
 }
 
+CaseEffects <- CaseEffects %>% # reorder the columns to put the scenario selection indices first
+  select(c(CombScen, DemScen, ElasCase, TechScen, VC, Year), everything())
+```
+
+Calculate fractional change in Energy Use by sector, for all cases.
+
+```{r}
+# Join Energy Effects (by Year) and Demand Effects (by ElasCase) and 
+# compute  fractional change in Energy Use
+#  by Year, VC, CombScen, DemScen, Scenario_Number, ElasCase 
+# Note: these Demand results are specific to the Currently select TechScen, since that alters energy costs.
+# Compute Energy Use impact from fractional intensity change and fractional VMT change
+CaseEffects <- CaseEffects %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
+
 ```
 
 ```{r multCombScenarioAssumptionsLoop, echo=echoWorking}
@@ -1650,61 +1677,61 @@ CurrYear     = 2050
 # CurrCombScen = "CS6"
 
 CaseAssumps = data.frame() # simplest empty dataframe
-CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, CurrYear))
 
 for (CurrTechScen in 1:7) {
   CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, CurrYear))
 }
-CaseAssumps <- CaseAssumps %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
-```
-Calculate fractional change in Energy Use by sector, for all cases.
 
-```{r}
-# Join Energy Effects (by Year) and Demand Effects (by ElasCase) and 
-# compute  fractional change in Energy Use
-#  by Year, VC, CombScen, DemScen, Scenario_Number, ElasCase 
-# Note: these Demand results are actually only valid for the Currently select TechScen
 # Compute Energy Use impact
-CaseEffects <- CaseEffects %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
+CaseAssumps <- CaseAssumps %>% mutate(EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0)
 
+# To move specific columns to the beginning or end of a data.frame, 
+# use select from the dplyr package and its everything() function.
+# In this example we are sending to the end:
+CaseAssumps <- CaseAssumps %>% select(names(CaseEffects), everything())
 ```
 
 ```{r}
 CombScen_Combinations <- read.delim(textConnection("
-CombScen :Year  :ElasCase :VC   :TechScen     :DemScen_Num :Notes
-CS1      :2050  :Low      :HDV  :1            :2           :Cost-based response (with ElasVKT) only
-CS2      :2050  :Low      :HDV  :2            :3           :Cost-based response (with ElasVKT) only
-CS3      :2050  :Low      :HDV  :3            :5           :Cost-based response (with ElasVKT) only
-CS4      :2050  :Low      :HDV  :4            :6           :Cost-based response (with ElasVKT) only
-CS5      :2050  :Low      :HDV  :5            :2           :HDV dmnd mult Same as Scen 4
-CS6      :2050  :Low      :HDV  :6            :0           :HDV dmnd mult Same as Scen 4
-CS7      :2050  :Low      :HDV  :7            :2           :HDV dmnd mult Same as Scen 3
-CS1      :2050  :Low      :LDV  :1            :2           :Cost-based response (with ElasVKT) only
-CS2      :2050  :Low      :LDV  :2            :3           :Cost-based response (with ElasVKT) with Underserved mult option 1
-CS3      :2050  :Low      :LDV  :3            :5           :Cost-based response (with ElasVKT) with Underserved mult option 3
-CS4      :2050  :Low      :LDV  :4            :6           :Cost-based response (with ElasVKT) with Underserved mult option 4
-CS5      :2050  :Low      :LDV  :5            :2           :Scen 4 dmnd mult with higher LDV elasticity
-CS6      :2050  :Low      :LDV  :6            :0           :Scen 5 dmnd mult with shift to ridehailing_ridepooling
-CS7      :2050  :Low      :LDV  :7            :2           :Scen 3 dmnd mult with shift to ridehailing_ridepooling
+CombScen :Year  :ElasCase :VC   :TechScen     :DemScen     :Notes
+CS1      :2050  :Low      :HDV  :1            :DS2         :Cost-based response (with ElasVKT) only
+CS2      :2050  :Low      :HDV  :2            :DS3         :Cost-based response (with ElasVKT) only
+CS3      :2050  :Low      :HDV  :3            :DS5         :Cost-based response (with ElasVKT) only
+CS4      :2050  :Low      :HDV  :4            :DS6         :Cost-based response (with ElasVKT) only
+CS5      :2050  :Low      :HDV  :5            :DS2         :HDV dmnd mult Same as Scen 4
+CS6      :2050  :Low      :HDV  :6            :DS0         :HDV dmnd mult Same as Scen 4
+CS7      :2050  :Low      :HDV  :7            :DS2         :HDV dmnd mult Same as Scen 3
+CS1      :2050  :Low      :LDV  :1            :DS2         :Cost-based response (with ElasVKT) only
+CS2      :2050  :Low      :LDV  :2            :DS3         :Cost-based response (with ElasVKT) with Underserved mult option 1
+CS3      :2050  :Low      :LDV  :3            :DS5         :Cost-based response (with ElasVKT) with Underserved mult option 3
+CS4      :2050  :Low      :LDV  :4            :DS6         :Cost-based response (with ElasVKT) with Underserved mult option 4
+CS5      :2050  :Low      :LDV  :5            :DS2         :Scen 4 dmnd mult with higher LDV elasticity
+CS6      :2050  :Low      :LDV  :6            :DS0         :Scen 5 dmnd mult with shift to ridehailing_ridepooling
+CS7      :2050  :Low      :LDV  :7            :DS2         :Scen 3 dmnd mult with shift to ridehailing_ridepooling
 "),header=TRUE,sep=":",strip.white=TRUE) #
-CombScen_Combinations$VC = as.character(CombScen_Combinations$VC)
+CombScen_Combinations = CombScen_Combinations %>% 
+  mutate( # this is an annoying step
+    VC = as.character(VC),
+    ElasCase = as.character(ElasCase),
+    DemScen = as.character(DemScen)
+  )
 ```
 
 Select Predefined combinations of Tech and Demand scenarios from the full set of cross-combinations
+
+(Note: so far, ran all combinations, and just choose ones wanted to report.)
 
 ```{r}
 # Note: semi_join(df1, df2) #keep only observations in df1 that match in df2 (inner_join without keeping df2).
 # Note: anti_join(df1, df2) #drops all observations in df1 that match in df2.
 CaseWantedEffects = CaseEffects %>% 
   # filter(Year==CurrYear) %>%
-  semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen_Num"))
+  semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
 
 ```
 ```{r}
 CaseWantedAssumps = CaseAssumps %>% 
-  # filter(Year==CurrYear) %>%
-  semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen_Num"))
-
+  semi_join(CombScen_Combinations, by=c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
 ```
 
 Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
@@ -2485,8 +2512,10 @@ AltVMT %>% filter(DemScen == "DS3") %>%
   # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
   # ggtitle("") +
   theme(legend.position = c(0.8, 0.8),
-        axis.text=element_text(size=12),
-        axis.title=element_text(size=14,face="bold"))
+        axis.text=element_text(size=14),
+        axis.title=element_text(size=16,face="bold"),
+        legend.title=element_text(size=14),
+        legend.text=element_text(size=12))
     
 ```
 
