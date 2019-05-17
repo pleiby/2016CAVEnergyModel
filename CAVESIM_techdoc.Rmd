@@ -1,0 +1,111 @@
+---
+title: "CAVESIM Technical Documentation"
+author: "Paul Leiby"
+date: "May 17, 2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Purpose:
+------------------
+
+This file describes some of the data structures and functions in CAVESIM (CAVdecom.Rmd), for internal purposes.
+
+Data Structures
+------------------
+- msa[TechScen, VC, Year, Mech, "EffectCase", IM]
+- EffectCase \in Zero, Pess, Mid, Opt
+
+-> EnergyIntensityChanges[Year, VC, TechScen, NIE]
+   - NIE is product of IM over Mech
+
+- ElasVKT
+
+- DemRespParams[VC, Parameter, Zero, Low, Med, High]
+- DemRespParamsm[Parameter, VC, "EffectCase", value]
+  - EffectCase \in {Zero, Low, Med, High}
+
+  - Parameter \in
+
+      ElasVKT          : Elas of travel w.r.t generalized cost,
+      ExclVehCapCost   : Exclude Veh Capital Cost (wear & ownership costs) (Choose 0 or 1),
+      C_deltaMaint     : Fractional Incr cost from automation (Maintenance, cost/mi),
+      C_deltaInsur     : Fractional Incr cost from automation (Insurance, cost/mi),
+      C_deltaCapCost   : Fractional Incr cost from automation (vehicle Capital Cost, wear and ownership cost/mi),
+      C_deltaTolls     : Fractional Incr cost from automation (Tolls, cost/mi),
+      C_deltaPrkng     : Fractional Incr cost from automation (Parking, cost/mi),
+      C_deltaRegis     : Fractional Incr cost from automation (Registration, cost/mi),
+      C_deltaVoTT      : Fractional Incr cost from automation (VoTT cost/hr),
+      ShrECostInt      : Share of energy effic cost gains internalized (visible) to driver (fraction, 0 to 1),
+      I_deltaCAV       : Fuel energy cost reduction (from effic, fraction, computed from intensity mechanisms)
+
+- VTCShrAlt[DemScen, VehType, VC, CostCat, VTCost_shr]
+    - reflect cost adjustments in DermRespParams
+- RelTotCost[DemScen, VehType, VC, Case, Total, ElasVKT, fracVMTIncr]
+    - cost components aggregated to total (relative to Base MV), and fractVMTIncr base on ElasVKT w.r.t. RelTotCost
+    - results by VehType
+
+- CaseEffects[CombScen, DemScen, VC, ElasCase, fracVMTIncr, CombScen_Num, DemScen_Num, TechScen, Year, NIE, EnergyUse]
+  - Binding of results across cases
+  - Includes [7 DemScen] x [7 TechScen] x [2 ElasCase] x [2 VC] x [1 Year]
+  - Primary results are NIE, fracVMTIncr, EnergyUse
+  - EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0
+
+```{r}
+table(CaseEffects$DemScen, CaseEffects$TechScen)
+
+```
+
+      1 2 3 4 5 6 7
+  DS1 4 4 4 4 4 4 4
+  DS2 4 4 4 4 4 4 4
+  DS3 4 4 4 4 4 4 4
+  DS4 4 4 4 4 4 4 4
+  DS5 4 4 4 4 4 4 4
+  DS6 4 4 4 4 4 4 4
+  DS7 4 4 4 4 4 4 4
+```{r}
+table(CaseEffects$VC, CaseEffects$ElasCase)
+
+```
+
+    
+      High Low
+  HDV   49  49
+  LDV   49  49
+  
+- CaseEffectsEI[TechScen, Year, VC, NIE]
+
+- CombScen_Combinations[CombScen, Year, ElasCase, VC, TechScen, DemScen_Num, Notes] 
+    - # specifies, for each CombScen and VC: combined cases wanted (TechScen, DemScen, ElasCase, Year)
+
+- CaseWantedEffects[CombScen, DemScen, VC, ElasCase, fracVMTIncr, CombScen_Num, - DemScen_Num, TechScen, Year, NIE, EnergyUse]
+    - selects the combined scenarios in CaseEffects that match the ones desribed in - CombScen_Combinations by ["Year", "ElasCase", "VC", "TechScen", "DemScen_Num"]
+    - this is 12 of 198 combined cases
+
+```{r}
+paste0("CaseEffects[",paste(names(CaseEffects), collapse = ", "),"]")
+paste0("CaseEffectsEI[",paste(names(CaseEffectsEI), collapse = ", "),"]")
+paste0("CombScen_Combinations[",paste(names(CombScen_Combinations), collapse = ", "),"]")
+paste0("CaseWantedEffects[",paste(names(CaseWantedEffects), collapse = ", "),"]")
+paste0("CaseEffectsEI[",paste(names(CaseEffectsEI), collapse = ", "),"]")
+
+```
+
+- CaseEffectsEl
+
+Functions
+---------------------
+- CombScenResultsForOneTechScen <- function(CurrTS, CurrYr)
+  - For a single TechScen CurrTS, and year CurrYr, compute combined scenario outcomes for combinations with all 
+      - demand scenarios DemScen
+      - elasticity cases ElasCase
+      - vehicle clases VC
+  - combines TechScen and other inputs needed to compute 
+      - NIE, 
+      - fracVMTIncr (based on elastic response to cost)
+      - EnergyUse
+
