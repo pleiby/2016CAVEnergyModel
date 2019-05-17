@@ -6,15 +6,15 @@ author:
   name: Paul N. Leiby
 date: "May 15, 2019"
 output:
+  html_document:
+    df_print: paged
+    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: mystyles.docx
-    toc: yes
-  html_document:
-    df_print: paged
     toc: yes
 file: CAVdecom.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -401,14 +401,22 @@ EnergyIntensityChanges = msa %>%
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170709.xlsx]Energy Intensity Impacts'!$A$1:$Q$26
 EnergyIntensityChanges = arrange(EnergyIntensityChanges, TechScen, VC, Year)
 ```
+```{r constructIntensityComponsByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
+# get all energy intensity changed by scenario
+EnergyIntensityCompons = msa %>%
+  select(-EffectCase) %>%
+  spread(key=Mech, value=IM) %>%
+  left_join(EnergyIntensityChanges, by=c("TechScen", "VC", "Year"))
 
-!!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved for TechScen 2 (for both LDVs and HDVs)
+```
+!!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved for TechScen 4 (for both LDVs and HDVs)
 
 ```{r fixVariantTechCaseIntensity, echo=echoWorking}
 # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved
-EnergyIntensityChangesX = EnergyIntensityChanges %>%
+EnergyIntensityChanges = EnergyIntensityChanges %>%
   mutate( # only alter the TechScen==2 energy intensity (doubling
-    NIE = ifelse((TechScen==2) & (VC=="LDV"), (1+NIE)*2.44-1, NIE)
+#    NIE = ifelse((TechScen==2) & (VC=="LDV"), (1+NIE)*2.44-1, NIE)
+    NIE = ifelse((TechScen==4) & (VC=="LDV"), (1+NIE)*2-1, NIE)
     )
 
 ```
@@ -426,10 +434,35 @@ NetEnergyIntensityChangeTable = EnergyIntensityChanges %>%
   spread(key=VC_Year, value = NIE)
 
 kable(x = NetEnergyIntensityChangeTable, 
-      caption= "Net Energy Intensity Change by Technology Scenario, Vehicle-type, and Year")
+      caption= "Table: Net Energy Intensity Change by Technology Scenario, Vehicle-type, and Year")
 ```
 
 This table is the fractional change in vehicle energy use per mile-travelled, as a result of the combined effect of the (`r length(unique(IEffects$Mech))`) identified technological mechanisms by which automation alters vehicle energy intensity.
+
+```{r netEnergyIntensityChangeBarPlot, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+# # color with RcolorBrewer
+# ggplot(data, aes(x=CombScen, calcValue, fill=condition, y=value, x=specie)) + 
+#     geom_bar( stat="identity", position="fill") +    
+#     scale_fill_brewer(palette = "Set1")
+#  
+# Faceting
+EnergyIntensityChanges %>% 
+  ungroup() %>% 
+  unite(col=VC_Year, Year, VC, sep="_",remove = F) %>%
+  mutate(Year = as.character(Year)) %>%   # need this to be a discrete value
+  # filter(VC == "LDV") %>%
+  # mutate(varx = factor(varx, levels=names(sort(table(varx),decreasing=TRUE)))  ) %>%
+  ggplot(
+    #aes(x=reorder(varx, c("Intensity", "VMT", "Energy")),
+    aes(x=VC_Year,
+             y=NIE, color=VC, fill=VC)) + 
+    geom_bar( stat="identity") +    
+    facet_wrap(~TechScen) +
+    # scale_fill_brewer(palette="Spectral") +
+    ggtitle("Fig: Energy-Intensity Change by Technology Scenario", subtitle = "LDV and HDV CAVs") +
+    ylab("Fractional Change")
+    # scale_fill_brewer(palette="Blues")
+```
 
 ```{r testIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # CHECK: This table should match NetEnergyIntensityChangeTable
@@ -1033,7 +1066,7 @@ VTCShrAlt %>%
   # arrange(factor(CostCat, levels = costComponOrder$CostCat)) %>%
   arrange(DemScen) %>%
   kable(., row.names = F, digits=3,
-      caption= "Alt Travel Cost Components Relative to Base, by Demand Scenario & Vehicle Type")
+      caption= "Table: Alt Travel Cost Components Relative to Base, by Demand Scenario & Vehicle Type")
 
 ```
 
@@ -1352,6 +1385,11 @@ Select Combined Scenario
 #   in the full combined scenario.
 
 CombScenResultsForOneTechScen <- function(CurrTS, CurrYr){
+  # For a single TechScen CurrTS, and year CurrYr,
+  #   compute combined scenario outcomes for combinations with all 
+  #   - demand scenarios DemScen
+  #   - elasticity cases ElasCase
+  #   - vehicle clases VC
   
   # Update I_DeltaCAV in DemRespParams
   
@@ -1466,11 +1504,130 @@ CombScenResultsForOneTechScen <- function(CurrTS, CurrYr){
 # This completes the calculation of VMT fractional change for one TechScen and the set of DemScen
 ```
 
+```{r gatherAndReportCombScenInputs}
+GatherScenInputsForOneTechScen <- function(CurrTS, CurrYr){
+  # For a single TechScen CurrTS, and year CurrYr,
+  #   gather combined scenario input params for combinations with all 
+  #   - demand scenarios DemScen
+  #   - elasticity cases ElasCase
+  #   - vehicle clases VC
+  # Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
+  nie = EnergyIntensityChanges  %>% ungroup() %>% 
+    filter(TechScen == CurrTS, Year == CurrYr) %>% 
+    select(VC, NIE) # leaves a small df with net intensity changes for each vehicle class
+
+  # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
+  # Transcribe current (computed) net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
+  # This assignment is awkward, due to non-ideal organization of data tables.
+  #DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
+  DemRespParams %>% gather(key = Sens, value = value, -c(VC, Parameter)) %>%  # following assigns the same 
+    mutate(value = ifelse((VC=="LDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="LDV",]$NIE, value),
+           value = ifelse((VC=="HDV" & Parameter=="I_deltaCAV"), nie[nie$VC=="HDV",]$NIE, value)) %>%
+    spread(key=Sens, value=value) ->
+    DemRespParams
+  
+  DemRespParams = DemRespParams[,c( "VC","Parameter", "Zero", "Low", "Med", "High")] # reorder columns after gather/spread
+  
+  # Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases
+  y = DemRespParams %>% select(-c(Zero, Med)) %>% 
+    gather(key=Case, value=value, Low:High) %>%      # for two cases (Low and High)
+    spread(key = Parameter, value=value)
+  # select(-InsurCostRed)  # UGLY: **Unused** Insurance cost reduction determined by Demand Scenario
+  
+  # VTCShrAlt
+  
+  # Start with dataframe replicates the Base Vehicle Travel Cost Shares for each Demand Scenario
+  VTCShrAlt = VTCShrBase %>% 
+    mutate(
+      DS1 = VTCost_shr,  # initialize to base cost shares (4 Demand Scenarios)
+      DS2 = VTCost_shr,
+      DS3 = VTCost_shr,
+      DS4 = VTCost_shr,
+      DS5 = VTCost_shr,
+      DS6 = VTCost_shr,
+      DS7 = VTCost_shr,
+      VC = substr(as.character(VehType), 1, 3)
+    ) %>%
+    select(-VTCost_shr) # could also keep as Base case, DS0
+    # rename(Base = VTCost_Shr)
+    
+  # Reshape for column variables to be component cost-shares, and separate V_Class from VehType
+  #  (latter differentiates between Lt Truck and Car within LDV)
+  x = VTCShrAlt %>% 
+    gather(key = DemScen, value = VCRel, DS1:DS7) %>% 
+    spread(key = CostCat, value = VCRel)
+  
+  # combine base cost shares in x and Demand Reponse Parameters (Fractional Adjustments) in y for their adjustment
+  x = left_join(x, y, by=c("VC"))  # note this also duplicates x (base shares) rows by Sensitivity Case in y
+  # append correct Dem Scen multipliers for other vars (VoTT and Insurance) 
+  x = left_join(x, select(DemScenCostChange, -Description), by=c("DemScen")) # currently _not_ Sensitivity Case-dependent
+  # x %>% select(VehType, VC, DemScen, Case, ElasVKT, C_deltaInsur, C_deltaInsurX, C_deltaVoTT, C_deltaVoTTX)
+  VTCShrAlt = x
+  
+  # Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
+  # Note that this is perceived/internalized cost (may not include all energy gains)
+  # **ToDo**: generalize to include potential shifts on _all_ cost components
+  VTCShrAlt = VTCShrAlt %>% mutate(
+    Fuel         = Fuel        * (1.0 + I_deltaCAV*ShrECostInt), 
+    # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
+    # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
+    Maintenance  = Maintenance * (1.0 + C_deltaMaint),
+    AccAndIns    = AccAndIns   * (1.0 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
+    VehCapCost   = VehCapCost  * (1.0 + C_deltaCapCost),  # (1+CapitalCostChange)
+    TollsFees    = TollsFees   * (1.0 + C_deltaTolls),
+    Parking      = Parking     * (1.0 + C_deltaPrkng),
+    Time         = Time        * (1.0 + C_deltaVoTT ), #(1-VoTTChang[DemScen]) # = "DemandScenarios!N3" 
+    Registration = Registration* (1.0 + C_deltaRegis)
+  # Total = CostMult weighted by base CostFraction
+  )
+  VTCShrAlt$Total = 0
+  # note this summing operation relies on component cost share columns being in this alphabetic order, and Total = 0
+  VTCShrAltTot %>% select(AccAndIns:VehCapCost) %>% rowSums(na.rm=TRUE) -> VTCShrAlt$Total
+  VTCShrAlt = rbind(VTCShrAlt, VTCShrAltTot)
+  # RelTotCost
+  # Get main result (total relative cost) for all Demand scenarios, VehType, Cases, and elasticity of VKT
+  # RelTotCost = VTCShrAlt %>% select(DemScen, VehType, VC, Case, Total, ElasVKT)
+  RelTotCost = VTCShrAlt # keep all data
+  
+  RelTotCost = RelTotCost %>% mutate(
+    fracVMTIncr = Total^ElasVKT-1.0  # fractional VMT increase base on elastic response to Total cost
+  )
+  
+  # VMTIncrease
+  # New Calculated Values: % increase LD personal vehicles in VMTdemand from cost-elastic response (averaging LDV Sedans and LtTrucks)
+  VMTIncrease = RelTotCost %>% 
+    #filter(Case=="Low") %>%
+    select(-VehType) %>%
+    rename(ElasCase = Case) %>%     # actually, this Case could reflect sensitivity Case variations in other cost compons
+    group_by(VC, DemScen, ElasCase) %>%
+    summarise(fracVMTIncr = mean(fracVMTIncr)) # this is an unweighted mean for Sedans and LtTrucks
+  
+  # Make additional (exog) adjustments in VMT demand based on shifts from Underserved population and Ride Hail/Pooling
+  VMTIncrease = VMTIncrease  %>%
+      left_join(select(DemScenAdjustments, -Comments), by=c("VC","DemScen"))     # combines cost-based VMT change with shift factors
+  VMTIncrease = VMTIncrease %>% 
+    mutate(fracVMTIncr = (1+fracVMTIncr) * USDmult * (1+RidePoolAdj) - 1)  # apply demand shifts
+  
+  # Select other cost and demand response parameters for the current Technology and Demand Scenario and Year
+  
+  # Case Effects on Demand (single Year, TechScen, multiple VC, DemScen, ElasCase)
+  AssumpsD <- VMTIncrease %>% ungroup %>% 
+    # select(CombScen, DemScen, VC, ElasCase, fracVMTIncr) %>% 
+    mutate(CombScen_Num = as.integer(str_sub(CombScen,-1,-1))) %>%
+    mutate(DemScen_Num  = as.integer(str_sub(DemScen, -1,-1)))
+  # add labels for year and TechScen, and associated Energy Intensity NIE
+  AssumpsD <- left_join(x = AssumpsD, 
+                        filter(EnergyIntensityCompons, TechScen == CurrTS, Year == CurrYr),
+                        by = c("VC"))
+
+} # GatherScenInputsForOneTechScen
+```
+
 Loop over all Tech Scenarios (TechScen) and develop table of all combinations of Tech Scenarios and Demand Scenarios
 
 ```{r multCombScenarioLoop, echo=echoWorking}
 CurrYear     = 2050
-CurrElasCase = "Low"
+# CurrElasCase = "Low"
 # CurrTechScen = 1
 # CurrDemScen = "DS1"
 # CurrCombScen = "CS6"
@@ -1483,7 +1640,21 @@ for (CurrTechScen in 1:7) {
 
 ```
 
-Calculate fractional change in Energy Use by sector.
+```{r multCombScenarioAssumptionsLoop, echo=echoWorking}
+CurrYear     = 2050
+# CurrElasCase = "Low"
+CurrTechScen = 1
+# CurrDemScen = "DS1"
+# CurrCombScen = "CS6"
+
+CaseAssumps = data.frame() # simplest empty dataframe
+CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, CurrYear))
+
+for (CurrTechScen in 1:7) {
+  CaseAssumps = rbind(CaseAssumps, GatherScenInputsForOneTechScen(CurrTechScen, CurrYear))
+}
+```
+Calculate fractional change in Energy Use by sector, for all cases.
 
 ```{r}
 # Join Energy Effects (by Year) and Demand Effects (by ElasCase) and 
@@ -1969,7 +2140,7 @@ Relative to a sober driver travelling at the speed limit of 60 km/h.
 
 
 
-### 7.1 **Severity of crash injuries**
+### 7.1 Severity of crash injuries
 
 - Speed has an exponentially detrimental effect on
 safety. As speeds increase, so do the number and
@@ -2140,7 +2311,7 @@ scenCostData = scenCostData %>% filter(DemScen %in% DemScenWanted)
 #     C_F = ifelse(DemScen=="Base",C_F, 2*C_F)
 #     )
 
-kable(scenCostData, caption="Table: Vehicle travel cost data [c/mi] for these test cases of alternative pooling.",
+kable(scenCostData, caption="Table: Vehicle travel cost data [c/mi] at Base occupancy, for these test cases of alternative pooling.",
       digits=3)
 ```
 
@@ -2278,7 +2449,7 @@ AltVMT = AltVMT %>%
 AltVMT %>% filter(DemScen == "DS3") %>%
   select(-DemScen, -VMT, -PMT) %>%
   spread(key=ElasTourLengthWithPooling, value = EnergyUse) %>%
-  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Length Elasticity")
+  kable(digits=4, caption="Energy Use Relative to Base (DS3), by Occupancy and Route Lenght Elasticity")
 
 ```
 
@@ -2301,14 +2472,12 @@ AltVMT %>% filter(DemScen == "DS3") %>%
   xlab("Occupancy/Pooling Level (1 = base)") +
   ylab("Relative Total Energy Use (1.0 = base)") + 
   # annotate("text", x = 1.0, y = 25, label = "Some text") +
-  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
+  annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50, label = "Some text") +
   # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
   # ggtitle("") +
   theme(legend.position = c(0.8, 0.8),
-        axis.text=element_text(size=14),
-        axis.title=element_text(size=16,face="bold"),
-        legend.title=element_text(size=14),
-        legend.text=element_text(size=12))
+        axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"))
     
 ```
 
