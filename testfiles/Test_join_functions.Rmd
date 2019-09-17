@@ -1,0 +1,36 @@
+---
+title: "Test join functions"
+author: "Paul Leiby"
+date: "4/11/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r joinTestdfs, echo=echoWorking}
+df1 = data.frame(CustomerId = c(1:6), Product = c(rep("Toaster", 3), rep("Radio", 3)))
+df2 = data.frame(CustomerId = c(2, 4, 6, 7), State = c(rep("Alabama", 2), rep("Ohio", 2)))
+```
+
+```{r joinTestdf1, echo=echoWorking}
+df1
+```
+
+```{r joinTestdf2, echo=echoWorking}
+df2
+```
+
+```{r joinTests, echo=echoWorking}
+# Following combine the columns of both tables
+inner_join(df1,df2)  # Return only the rows in which the left table have matching keys in the right table.
+left_join(df1, df2)  # Return all rows from the left table, and any rows with matching keys from the right table
+right_join(df1, df2) # Return all rows from the right table, and any rows with matching keys from the left table.
+full_join(df1, df2)  # returns all rows from both tables, join records from the left which have matching keys in the right table
+
+# Following "Filtering joins": filter out rows in df1, don't modify columns of df1
+semi_join(df1, df2)  # keep only observations in df1 that match in df2.
+anti_join(df1, df2)  # drops all observations in df1 that match in df2.
+```
+
