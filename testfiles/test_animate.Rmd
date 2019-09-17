@@ -1,0 +1,64 @@
+---
+title: "test animate"
+author: "Paul Leiby"
+date: "9/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## see [Animating Your Data Visualizations Like a Boss Using R](https://towardsdatascience.com/animating-your-data-visualizations-like-a-boss-using-r-f94ae20843e3) 
+A Review and Tutorial of Animation Libraries in R, Isaac Faber, Dec 6, 2018.
+
+The Packages
+-----------
+
+There are four package options typical for animating data in R:
+
+- animate: can be used to animate any plot type, written by Yihui Xie
+- gganimate: used to specifically animate ggplot graphics, written by Thomas Lin Pedersen
+- plotly: an interactive plotting library which has animation features
+- googlevis: has a flash based motion chart option
+
+Generally speaking, the animate package provides the most control and is great for base plots but can be verbose. On the other hand, the gganimate package is limited to one plotting library but makes building motion into ggplot extremely easy (one or two extra lines of code in your plot). 
+
+```{r}
+# install.packages("animation")
+
+## Configuration failed because Magick++ was not found. Try installing:
+##  - deb: 'libmagick++-dev' (Debian, Ubuntu)
+
+## sudo apt-get install -y libmagick++-dev #???
+```
+
+
+```{r animateDemo}
+library(animation)
+desc = c("This is a super cool example of Gradient Descent")
+saveHTML({
+  f1 = function(x, y) x^2 + 3 * sin(y)
+  xx = grad.desc(f1, pi * c(-2, -2, 2, 2), c(-2 * pi, 2))
+ 
+ xx$persp(col = "lightblue", theta = 30, phi = 30)
+},title = "Demo of Gradient Descent", description = desc, verbose = FALSE)
+```
+
+
+Using gganimate
+---------------
+With gganimate, the default export is a GIF (using gifski, you must have rust installed) but there are also other options depending on your specific requirements. The first animation example in this article is built using the gganimate package (indeed it is the only complete real data example in the package’s README). Here is another example from the packages wiki (Author Tom Westlake) rendered as a video file. A fun take on Anscombe’s Quartet, this animation is of a series of plots that all have the same summary statistics, and one of them is a dinosaur! All this with only a few lines of additional code to a basic ggplot.
+  
+```{r}
+library(datasauRus)
+library(ggplot2)
+library(gganimate)
+
+ggplot(datasaurus_dozen, aes(x=x, y=y))+
+  geom_point()+
+  theme_minimal() +
+  transition_states(dataset, 3, 1) + 
+  ease_aes('cubic-in-out')
+```
+
