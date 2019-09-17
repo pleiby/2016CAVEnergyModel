@@ -1,20 +1,21 @@
 ---
 title: "CAV Energy and Demand Decomposition at the Aggregated National Level"
+subtitle: "A compact integrated assessment"
 author:
-- affiliation: Oak Ridge National Laboratory
-  email: leibypn@ornl.gov
   name: Paul N. Leiby
-date: "May 15, 2019"
+  affiliation: Oak Ridge National Laboratory
+  email: leibypn@ornl.gov
+date: 2019-09-14, Printed `r Sys.Date()`
 output:
+  html_document:
+    df_print: paged
+    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: mystyles.docx
-    toc: yes
-  html_document:
-    df_print: paged
     toc: yes
 file: CAVdecom.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -25,7 +26,7 @@ address:
 abstract: A compact and aggregated model of road vehicle travel and energy use is
   constructed to consider the interactions of multiple relevant identified mechanisms
   (Wadud et al. 2016, Stephens et al. 2016) by which automation can alter efficiency
-  and activity. Travel demand and vehicle use derives from a standard utility-theoretic
+  and travel activity. Travel demand and vehicle use derives from a standard utility-theoretic
   specification of driver/traveler behavior. Vehicle efficiency, travel (vehicle-kilometers
   traveled), average travel speed, congestion, and travel time are endogenous. Following
   Small and Verhoef (2007) and others, utility derives from travel, aggregate goods
@@ -57,26 +58,35 @@ echoTests   = TRUE  # set TRUE to see printed test values ("Check: ...")
 
 # 1. Introduction, Main Points, Key Factors
 
-#### Goals for and Potential value of compact/aggregate model: 
-* explore affects of costs and tecnological progress on outcomes
-* determine minimum cost to achieve some level of energy use and level of mobility
-    * large simulation models would have to do many simulations
-* approximate influence of some factors not yet in detailed ABM/Microsimulation models
-* simulate effect of changing costs from technological advances through vehicle automation, electrification, and sharing. 
+#### Goals for and Potential value of compact/aggregate model
+
+The goals of this analysis are to:
+
+* develop improved scenarios that summarize travel demand and energy use outcomes accounting for the impact of new automation and ride-sharing technologies on efficiency, travel demand, and travel behavior, within a compact integrated economic framework;
+    * replicate and benchmark to scenarios of larger, e.g. ABM models;
+* explore the effects of changing costs and technological progress on outcomes;
+* determine minimum cost or incentives to achieve some level of energy use and level of mobility;
+    * (large simulation models would have to do many simulations for this sort of goal-seeking or optimizing analysis)
+* approximate the influence of some factors not yet in detailed ABM/Microsimulation models;
+* simulate the effect of changing costs from technological advances through vehicle automation, electrification, and sharing. 
 
 #### Important factors driving energy and travel outcomes have an economic dimension
+
 * Demand response to automation and shared mobility
-    * consumer behavior model drives demand response
-    * particularly, following Small & Verhoef, others, consumer behavior model determines choice of travel VKT, vehicle efficiency, and travel time
-    * In our formulation, consumer utility derives from travel, goods, leisure.
-    * Utility maximization is subject to joint constraints on budget and time.
-* Endogenous interactions (identified, in development)
-    * Speed - (highway free-flow) endogenous to trade-off between energy cost, time and safety costs
+    * A consumer behavior model drives demand response.
+    * particularly in our approach, following Small & Verhoef and others, consumer behavior 
+      model determines choice of travel VKT, vehicle efficiency, and travel time
+    * In our formulation, consumer utility derives from the consumption of travel, goods, and leisure.
+    * Utility maximization is subject to joint constraints on financial budget and time.
+* Endogenous interactions (identified, and in development)
+    * Speed - (highway free-flow) is endogenous to trade-off between energy cost, time and safety costs
     * Congestion – (determines average achieved speed in traffic) endogenous to vehicle mix, VKT, automation
-    * Travel demand - endogenous to costs, including energy, congestion and safety, as well as travel time utility (VTT)
+    * Travel demand - endogenous to travel costs, including energy, congestion and safety, as well as travel time utility (VTT)
     * Ride-hailing and pooling - Distinguish between VKT and PKT, given ride-hailing and ride-pooling
         * Compact representation of ride pooling choice
-* CAV fuel efficiency follows one of three models
+    * Vehicle efficiency - technology determines potential, but achieved level can
+      reflects historical elasticity of fuel economy with respect to costs
+* CAV fuel efficiency could follow one of three models
     * The technically feasible case
         - This provides an upper bound on achieved fuel savings, assuming system optimization with respect to energy.
     * CAFE-binding case
@@ -85,9 +95,10 @@ echoTests   = TRUE  # set TRUE to see printed test values ("Check: ...")
         - AVs may be more efficient than standard, _if_ further efficiency reductions are cost-effective from a private perspective
 
 #### Key Questions (in order of attention paid here)
-* How may vehicle fuel intensity/economy change? 
+1. How may vehicle fuel intensity/economy change? 
     * [technical and behavioral factors]
     * [dependence on infrastructure, and degree of penetration]
+    * [market economic response (technology supply and demand)]
 * How will travel demand change?
     * See EEMS2017 study of travel demand for different VOTT reports 30-50% increase in energy, mostly from demand, depending on VOTT
         * [ToDo: see what this implies for VKTDemandElas]
@@ -97,11 +108,11 @@ echoTests   = TRUE  # set TRUE to see printed test values ("Check: ...")
 * What are the implications of shared-mobility for energy use and VKT?
     - Important to differentiate shared vehicles (aTaxi or *ride-hailing*) and shared rides (*ride-pooling*)
     - Model through occupancy, incremental VKT from re-positioning, and implications to travelers' cost
-* To what extent can CAVs enable fuel switching or electrification?
-* How/when will CAVs be adopted? (not addressed endogenously)
-* What are the special challenges of the transitional period, when a mix of manual, partially automated, and automated vehicles will share the roadways? (not addressed)
 * HDV Automation: travel demand and energy intensity implications
     * Restricted focus on long-distance HD trucking
+* To what extent can CAVs enable fuel switching or electrification?
+* What are the special challenges of the transitional period, when a mix of manual, partially automated, and automated vehicles will share the roadways? (not addressed)
+* Not planned: How/when will CAVs be adopted? (not addressed endogenously)
 
 #### Contributions of this paper
 This paper describes a new aggregated framework, building on established travel demand literature, that accounts for key features of vehicle automation, and estimates demand and energy use implications. Unlike prior known aggregate work, which relied largely on fixed-coefficient scenario analysis or accounting, it integrates technological and economic factors, including fuel, vehicle and other travel costs, and incorporates energy and travel behavior responses to economic incentives. This work abstracts from much detail offered by micro and meso-simulation models, which estimate travel and energy implications of specific AV technologies using agent/micro/mesosimulation of travel and traffic in real-world spatial and road network models (MATSIM, BEAM, POLARIS, others). The aggregate approach here complements that evolving work and seeks to incorporate some of the insights from that detailed spatial travel modeling. Our framework also is novel in the integration of a utility-based behavioral framework with technological detail and private and public costs, emphasizing the role of financial incentives in the form of costs, fees or taxation/subsidy of transport energy or road use. It extends the private utility maximization framework for travel behavior of Small and Parry 2005, Small and Verhauf 2007, and Leiby and Rubin 2017, combining it with the vehicle efficiency and automated vehicle technological details of Wadud et al 2016. It seeks to address the important issue of how to promote the mobility and energy benefits of CAV technologies while deterring potential adverse outcomes (congestion, emissions) that can have large unaccounted social costs.
@@ -115,7 +126,7 @@ This paper describes a new aggregated framework, building on established travel 
 
 The energy and GHG emissions of CAV transportation result from the interaction of a wide range of mechanisms, including the impact of vehicle technologies and vehicle design changes on vehicle operations and efficiency; system-level changes in infrastructure that alter traffic coordination, speeds, and patterns; and consumer behavioral responses that determine the number, length, and nature of trips demanded. An aggregate representation of the composition of the effects of many of these mechanisms can be conveniently accounted with a _Kaya Identity_, as used in transportation emissions by (McCollum & Yang, 2009, Greene and Plotkin, 2011) or equivalently the _Schipper ASIF framework_ (Schipper et al. 2000, 2011). Mechanistic and scenario-base approaches of this type have been used to explore CAV impacts by Wadud, MacKenzie and Leiby (2016) and by Stephens et al. 2016. While this approch assumes a degree of separability in the impact of certain identified mechanisms on energy use, e.g. weight reduction versus aerodynamic load reduction through platooning, this is supported in some cases by more detailed models and experimental data [cite XXX].
 
-From this *Kaya* or *ASIF* approach the total GHG emissions are the product of
+From this *Kaya* or *ASIF* decomposition approach the total GHG emissions are the product of
 
 1. the level of **A**ctivity (e.g., passenger miles of travel), 
 2. the **S**hare of activity for each mode, vehicle, and fuel type, 
@@ -409,7 +420,7 @@ EnergyIntensityCompons = msa %>%
   left_join(EnergyIntensityChanges, by=c("TechScen", "VC", "Year"))
 
 ```
-!!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved for TechScen 4 (for both LDVs and HDVs)
+!!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: LDV Energy Intensity Reduction is halved for TechScen 4 (for both LDVs and HDVs)
 
 ```{r fixVariantTechCaseIntensity, echo=echoWorking}
 # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved
@@ -1961,52 +1972,56 @@ More generally, the travel time can  be expected to vary in response to travel c
 ---------------
 
 ```{r constants, echo=echoWorking}
-JoulePerBTU  = 1054.8  # approx 1055. https://www.aps.org/policy/reports/popa-reports/energy/units.cfm
-BTUPerJoule  = 1/JoulePerBTU
-BTUPerBOE    = 5.45E6   # (barrel of oil equivalent) =  BTU.
-BTUPerGalGaso = BTUPerBOE/42
-BTUPerCFNatgas = 983 # 1 cubic feet of natural gas = 983 BTU.
-# 1 exajoule = 174 million barrels of oil equivalent.
-kmPerMile    = 1.60934
-literPerGal  = 3.78541178
-kplPerMpg    = kmPerMile/literPerGal
-MJPerGalGaso = 131.76 # http://www.convertunits.com/from/gallon/to/megajoule
-MJPerLiterGaso = MJPerGalGaso/literPerGal
-MJPerkWh     = 3.6    # exact, definitional
+PhysConst = tibble(
+  JoulePerBTU  = 1054.8,  # approx 1055. https://www.aps.org/policy/reports/popa-reports/energy/units.cfm
+  BTUPerJoule  = 1/JoulePerBTU,
+  BTUPerBOE    = 5.45E6,   # (barrel of oil equivalent) =  BTU.
+  BTUPerGalGaso = BTUPerBOE/42,
+  BTUPerCFNatgas = 983, # 1 cubic feet of natural gas = 983 BTU.
+  # 1 exajoule = 174 million barrels of oil equivalent.
+  kmPerMile    = 1.60934,
+  literPerGal  = 3.78541178,
+  kplPerMpg    = kmPerMile/literPerGal,
+  MJPerGalGaso = 131.76, # http://www.convertunits.com/from/gallon/to/megajoule
+  MJPerLiterGaso = MJPerGalGaso/literPerGal,
+  MJPerkWh     = 3.6,    # exact, definitional
+  # Exajoule (EJ): EJ = 10^18 J. A quad and an ExaJoule are about the same, as are 1 BTU and a kJ
+  EJPerquad    = 1.055,  # Quadrillion Btu(quad): 1 quad = 10^15 Btu = 1.055 EJ
+  quadPerTWyr  = 29.89  # Terawatt-year (TWyr): 1 TWyr = 8.76 x 1012 kWh = 31.54 EJ = 29.89 quad
+)
 
-# Exajoule (EJ): EJ = 10^18 J. A quad and an ExaJoule are about the same, as are 1 BTU and a kJ
-EJPerquad    = 1.055  # Quadrillion Btu(quad): 1 quad = 10^15 Btu = 1.055 EJ
-quadPerTWyr  = 29.89  # Terawatt-year (TWyr): 1 TWyr = 8.76 x 1012 kWh = 31.54 EJ = 29.89 quad
-
-
+t(PhysConst)
 ```
 
 5.5 Vehicle Scenario Parameters
 --------------
 ```{r setParameters, echo=echoWorking}
 
-# Activity/Demand
-# TEDB U.S. Cars and Trucks in Use, 1970–2014(http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_04.xls)
-LDVStock = 2.5E8    # US LD vehicle stock, Cars and (Lt) Trucks
-# TEDB: [Annual Mileage for Cars and Light Trucks by Vehicle Age](http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_13.xls)
-VKTPerLDVyear = kmPerMile*(12.337E3 + 14.081E3)/2  # ref travel demand/LDV, km/yr (ave of cars & trks @ age 5)
-
-# Energy Intensity
-AveLDVFuelEconomy_MPG = 25  # base year ave LDV MPG
-AveLDVFuelIntensity_Lp100k = 100/(AveLDVFuelEconomy_MPG*kplPerMpg) # MPG kpl to L/100k)
-# [Carbon Intensity for Gasoline & Substitutes, g CO2 e/MJ](http://www.energy.ca.gov/ab118/documents/2009-04-09_meeting/2009-04-09_Carbon_Emission_Graphs.pdf)
-
-# Carbon Intensity
-gCO2ePerMJGaso   = 96       # for CA RFG, 
-gCO2ePerMJCAElec = 41       # for CA electricity, ave gen mix "(gCO2/unit energy adjusted for energy economy ratio [EER])"
-
-# Computed paramters, reference conditions
-FuelUsePerLDVYear_L = VKTPerLDVyear * AveLDVFuelIntensity_Lp100k/100 # Liters/LDV/yr
-LDVFuelUsePerYear_L = LDVStock * FuelUsePerLDVYear_L  # total LDV fuel use
-
-# Summarize Calc Parameters
-FuelUsePerLDVYear_L
-LDVFuelUsePerYear_L
+VehParams = tibble(
+  # Activity/Demand
+  # TEDB U.S. Cars and Trucks in Use, 1970–2014(http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_04.xls)
+  LDVStock = 2.5E8,    # US LD vehicle stock, Cars and (Lt) Trucks
+  # TEDB: [Annual Mileage for Cars and Light Trucks by Vehicle Age](http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_13.xls)
+  VKTPerLDVyear = PhysConst$kmPerMile*(12.337E3 + 14.081E3)/2,  # ref travel demand/LDV, km/yr (ave of cars & trks @ age 5)
+  
+  # Energy Intensity
+  AveLDVFuelEconomy_MPG = 25,  # base year ave LDV MPG
+  AveLDVFuelIntensity_Lp100k = 100/(AveLDVFuelEconomy_MPG*PhysConst$kplPerMpg), # MPG kpl to L/100k)
+  # [Carbon Intensity for Gasoline & Substitutes, g CO2 e/MJ](http://www.energy.ca.gov/ab118/documents/2009-04-09_meeting/2009-04-09_Carbon_Emission_Graphs.pdf)
+  
+  # Carbon Intensity
+  gCO2ePerMJGaso   = 96,       # for CA RFG, 
+  gCO2ePerMJCAElec = 41,       # for CA electricity, ave gen mix "(gCO2/unit energy adjusted for energy economy ratio [EER])"
+  
+  # Computed paramters, reference conditions
+  FuelUsePerLDVYear_L = VKTPerLDVyear * AveLDVFuelIntensity_Lp100k/100, # Liters/LDV/yr
+  LDVFuelUsePerYear_L = LDVStock * FuelUsePerLDVYear_L,  # total LDV fuel use
+)
+  
+#  # Summarize Calc Parameters
+#  FuelUsePerLDVYear_L,
+#  LDVFuelUsePerYear_L
+t(VehParams)
 ```
 
 
@@ -2077,7 +2092,7 @@ a_2 = 0.0000742969 # "Coeff on squared term in FC ratio curve"
 
 s_optkph = 127.2  # "Optimal speed" km/h
 # s_optmph = 79.1  # "Optimal speed" mi/hr
-s_optmph = s_optkph/kmPerMile # "Optimal speed" mi/hr
+s_optmph = s_optkph/PhysConst$kmPerMile # "Optimal speed" mi/hr
 
 #I_sopt = 9.16 # "FC @ optimal speed" l/100km
 I_sopt = I_r*(a_0 + a_1*s_optkph + a_2*s_optkph^2) # "FC @ optimal speed" l/100km
@@ -2094,9 +2109,9 @@ TCdf = data.frame(Speed_mph = seq(40,150,5))
 
 TCdf = TCdf %>% 
   mutate(
-    Speed_kph = Speed_mph * kmPerMile,
+    Speed_kph = Speed_mph * PhysConst$kmPerMile,
     FC_lper100km =  I_r*(a_0 + a_1*Speed_kph + a_2*Speed_kph^2), # l/100-km
-    FC_galpermi = (FC_lper100km/100)*kplPerMpg, # gal/mi
+    FC_galpermi = (FC_lper100km/100)*PhysConst$kplPerMpg, # gal/mi
     FE_mpg = 1/FC_galpermi,
     Pace_hrpermi = 1/Speed_mph,                    # (hr/mi)
     FuelCost_dpm = FC_galpermi* P_gasdpg,          # ($/mi)
@@ -2123,7 +2138,7 @@ TotalTimeAndFuelCost <- function(speed_mph, FC_dpg=3.5, TC_dph) {
   # 
     S = speed_mph * kmPerMile
     FC_lper100km =  I_r*(a_0 + a_1*S + a_2*S^2) # l/100-km
-    FC_galpermi = (FC_lper100km/100)*kplPerMpg  # gal/mi
+    FC_galpermi = (FC_lper100km/100)*PhysConst$kplPerMpg  # gal/mi
     FE_mpg = 1/FC_galpermi
     FuelCost_dpm = FC_galpermi* P_gasdpg        # ($/mi)
     TimeCost_dpm = C_timedph/speed_mph         # ($/mi)
