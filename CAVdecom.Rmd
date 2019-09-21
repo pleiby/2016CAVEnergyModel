@@ -5,17 +5,17 @@ author:
   name: Paul N. Leiby
   affiliation: Oak Ridge National Laboratory
   email: leibypn@ornl.gov
-date: 2019-09-14, Printed `r Sys.Date()`
+date: Rev. 2019-09-14, Printed `r Sys.Date()`
 output:
-  html_document:
-    df_print: paged
-    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: mystyles.docx
+    toc: yes
+  html_document:
+    df_print: paged
     toc: yes
 file: CAVdecom.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -420,16 +420,20 @@ EnergyIntensityCompons = msa %>%
   left_join(EnergyIntensityChanges, by=c("TechScen", "VC", "Year"))
 
 ```
+<!---
 !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: LDV Energy Intensity Reduction is halved for TechScen 4 (for both LDVs and HDVs)
+-->
 
 ```{r fixVariantTechCaseIntensity, echo=echoWorking}
+variantTechScen4 = F
+if (variantTechScen4) {
 # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved
 EnergyIntensityChanges = EnergyIntensityChanges %>%
   mutate( # only alter the TechScen==2 energy intensity (doubling
 #    NIE = ifelse((TechScen==2) & (VC=="LDV"), (1+NIE)*2.44-1, NIE)
     NIE = ifelse((TechScen==4) & (VC=="LDV"), (1+NIE)*2-1, NIE)
     )
-
+}
 ```
 
 ```{r displayNetIntensityChangeByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
@@ -487,7 +491,7 @@ NEIC_test = NEIC_test[,names(NetEnergyIntensityChangeTable)] # make column order
 NEIC_test_err = sum(abs(NEIC_test - NetEnergyIntensityChangeTable))
 ```
 ```{r reportTestIntensityByScenario, echo=echoWorking, include=echoTests}
-cat("Note/Aside: Constructed Net Energy Intensity Changes match old workbook to within",
+cat("Check: Calculated Net Energy Intensity Changes match old workbook test values to within",
     NEIC_test_err, "total absolute error.\n")
 ```
 
@@ -657,7 +661,7 @@ row.names(TravTimeCostBasePars) = paste(TravTimeCostBasePars$var,TravTimeCostBas
 ```{r checkTravelTimeCost, echo=echoWorking, include=echoTests}
 # Following calculation yields LDV Time cost per mile
 # Test computed vs. specified values in table
-cat("Check: VoTT for LDV average value matches VMT-weighted average to within",
+cat("Check: Calculated VoTT for LDV average value matches VMT-weighted average to within",
   TravTimeCostBasePars["VoTT.LDV","average"] - 
     (TravTimeCostBasePars["VMTtot.LDV","local"]*    TravTimeCostBasePars["VoTT.LDV","local"] +
      TravTimeCostBasePars["VMTtot.LDV","intercity"]*TravTimeCostBasePars["VoTT.LDV","intercity"])/
@@ -704,6 +708,7 @@ Source                :HERS-ST/2005 :AAA/2012    :AAA/2012       :ATRI/2012 :ATR
 ```
 
 ```{r showVehCostComponsData, echo=echoWorking, include=echoWorking}
+# only display this in Working/debugging phase
 kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)), 
       caption= "Table: Original Base Vehicle Travel Cost Components by Vehicle Type")
 ```
@@ -711,9 +716,8 @@ kable(x = select(VehTravelCostCompons, -c(LDVAlt, HDVOther, Note)),
 ``` {r calcVTCostBaseCompons, echo=echoWorking}
 # reshape base cost component data to VTCostBase dataframe, dropping notes and assuring all values are numeric
 VTCostBase = VehTravelCostCompons %>% 
-  # filter(CostCat != "Source") %>%   # drop text metatag for each column
-  select(-c(LDVAlt, HDVOther, Units, Note)) %>%
-  filter(!CostCat %in% c("MilesDriven", "Total", "Source")) %>%
+  select(-c(LDVAlt, HDVOther, Units, Note)) %>% 
+  filter(!CostCat %in% c("MilesDriven", "Total", "Source")) %>% # drop text metatag for each column
   # May be an error message here from gathering different categorical (Factor) variables into one
   gather(key = VehType, value = VTCost_cpm, -CostCat) %>%
   mutate(VTCost_cpm = as.numeric(VTCost_cpm))  # all costs in cents/mi
@@ -734,6 +738,8 @@ cat("Check: Input VTCostBase Time cost for LDVs and HDV matches Average TTC per 
 ```
 
 ```{r updateTravCostPerMile, echo=echoWorking}
+# Note: this step is unneeded if the above Time cost comparison yields minimal difference.
+
 # Update unit Time cost per mile in the Vehicle Travel Cost matrix for MVs (base),
 #   according to current Base Assumption set for Trav Time Cost
 #   I.e., TravTimeCostBasePars supersedes VTCost_cpm
@@ -746,17 +752,18 @@ VTCostBase = VTCostBase %>%
 
 # sum across categories (excl miles and total) to check total cost by VehType
 
-# this approach to add totals by group did not work
-# x = VTCostBase %>% 
-#   filter(!CostCat %in% c("MilesDriven", "Source", "Total"))  # may be redundant, these are already gone
-#   group_by(VehType) %>% 
-#   bind_rows(summarise_all(., funs(if(is.numeric(.)) sum(., na.rm = T) else "Total")))
+# Note this approach to add totals also works
+library(janitor)
+y = VTCostBase %>%
+  spread(key = VehType,value = VTCost_cpm) %>% # pivot wide
+  adorn_totals() %>%  # append sum for rows for each column but first (each VehType)
+  gather(key = VehType, value = VTCost_cpm, -CostCat) # pivot long
 
 x = VTCostBase %>% 
   # filter(!CostCat %in% c("MilesDriven", "Source", "Total")) %>%  # redunant, these are already gone
   group_by(VehType) %>% 
   summarize(Total = sum(VTCost_cpm, na.rm = T)) %>% # treat NA cost components as zero
-  gather(key = CostCat, value = VTCost_cpm, Total) # this allows appending to other costs
+  gather(key = CostCat, value = VTCost_cpm, Total) # this creates Total entry in CostCat, allows appending to other costs
 
 VTCostBase = rbind(VTCostBase, x) # append total rows to travel cost array
 ```
@@ -788,24 +795,26 @@ Note: these values are the average of local and intercity.
 
 ### Base Vehicle Travel Cost Shares by Component
 
-The base costs components are normalized to cost shares, establishing a reference point for the relative cost changes from vehicle automation.
+The base cost components are normalized to cost shares, establishing a reference point for the relative cost changes from vehicle automation.
+Base cost component shares apply to base vehicle, manually driven with conventional drivetrain.
 
 ```{r calcCostSharesbyComponentBase, echo=echoWorking}
 
 # divide every cost element by Total (cost in cpm) to get shares
 VTCShrBase = VTCostBase %>% spread(key = CostCat, value = VTCost_cpm) %>%
-  mutate_at(vars(-c(VehType,Total)), funs( ./Total)) %>%
+  # mutate_at(vars(-c(VehType,Total)), funs( ./Total)) %>% # deprecated syntax
+  mutate_at(vars(-c(VehType,Total)), list(~ ./Total)) %>%
   mutate(Total = 1.0) %>%
-  gather(key = CostCat, value=VTCost_shr, -VehType)  # gather for pivot from cols as CostCat to cols as VehType
+  gather(key = CostCat, value = VTCost_shr, -VehType)  # gather for pivot from cols as CostCat to cols as VehType
 
 # spread so columns are VehType and re-organize the row order to be consistent with prior displays
 VTCShrBase %>%  
-  spread(key = VehType, value=VTCost_shr) %>%
+  spread(key = VehType, value = VTCost_shr) %>%
   arrange(factor(CostCat, levels = costComponOrder$CostCat)) %>%   # re-order rows to desired order
 # rownames(VTCShrBase) = as.character(VTCShrBase$CostCat)
 # VTCShrBase = VTCShrBase[costComponOrder$CostCat,] # re-order to desired order
-  kable(x=., row.names = F, digits=3,
-      caption= "Base Vehicle Travel Cost: Components Share by Vehicle Type, Year=2018")
+  kable(x = ., row.names = F, digits=3,
+      caption = "Base Vehicle Travel Cost: Components Share by Vehicle Type, Year=2018")
               
 ```
 
@@ -820,7 +829,7 @@ VTCShrBase %>% filter(CostCat != "Total") %>%
     # scale_fill_brewer(palette="Blues")
 # Bar charts are automatically stacked when multiple bars are placed at the same location.
 #   The order of the fill is designed to match the legend
-# For RColorBrewer pallettes, seehttp://www.sthda.com/english/wiki/colors-in-r
+# For RColorBrewer pallettes, see http://www.sthda.com/english/wiki/colors-in-r
 
 ```
 
@@ -1358,7 +1367,7 @@ FracVMTIncreaseExample = FracVMTIncreaseExample %>% select(CombScen, VC, y2050) 
   left_join(VMTIncreaseCurrCase, by=c("VC", "CombScen"))
 ```
 ```{r reportCheckVMTAdjustments, echo=echoWorking, include=echoTests}
-cat("Check: Test output to Kaya (VMTIncrease table) matches examples for CombScen in",
+cat("Check: Calculated test output to Kaya (VMTIncrease table) matches examples for CombScen in",
     combScenWanted, "to within", 
     sum(abs(FracVMTIncreaseExample$y2050 - FracVMTIncreaseExample$fracVMTIncr)) )
 ```
@@ -1898,12 +1907,12 @@ CWE_test = CaseWantedEffects %>%
   right_join(SR_test, by=c("VC", "TechScen", "varname")) %>%
   mutate(testDiff = calcValue - testValue)
 
-cat("Calculated values match Scenario test values to within total absolute error ",sum(abs(CWE_test$testDiff)), ".\n")
+cat("Check: Calculated values match Scenario Results test values (intensity, VMT, EUse) to within total absolute error ",sum(abs(CWE_test$testDiff)), ".\n")
 ```
 
 ```{r mirrorExtSummaryScenarioResults, echo=echoWorking}
 kable(summaryScenarioResultsTableExample, 
-      caption="Summary Scenario Results from Example in Worksheet", digits=4)
+      caption="Table: Summary Scenario Results from Example in Worksheet", digits=4)
 ```
 
 
