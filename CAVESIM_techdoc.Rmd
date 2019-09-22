@@ -1,7 +1,10 @@
 ---
 title: "CAVESIM Technical Documentation"
-author: "Paul Leiby"
-date: "May 17, 2019"
+author:
+  name: Paul N. Leiby
+  affiliation: Oak Ridge National Laboratory
+  email: leibypn@ornl.gov
+date: Rev. 2019-09-14, Printed `r Sys.Date()`
 output: word_document
 ---
 
@@ -14,18 +17,52 @@ Purpose:
 
 This file describes some of the data structures and functions in CAVESIM (CAVdecom.Rmd), for internal purposes.
 
+Note: It should be executed after `CAVdecom.Rmd`, so that the data structures are defined and can be summarized.
+
 Data Structures
 ------------------
-- msa[TechScen, VC, Year, Mech, "EffectCase", IM]
-- EffectCase \in Zero, Pess, Mid, Opt
 
--> EnergyIntensityChanges[Year, VC, TechScen, NIE]
-   - NIE is product of IM over Mech
+### Listing of Case-related Input and Output Dataframes
 
-- ElasVKT
+```{r def)varNameAndIndices_fn}
+varNameAndIndices <-function(x) {
+  # display the variable (dataframe) name and its indices
+  #   See https://stackoverflow.com/questions/10520772/in-r-how-to-get-an-objects-name-after-it-is-sent-to-a-function
+  paste0(deparse(substitute(x)), "[", paste(names(x), collapse = ", "),"]")
+}
+```
+
+```{r}
+cat("-", varNameAndIndices(IM), "\n")
+cat("-", varNameAndIndices(msa), "\n")
+cat("-", varNameAndIndices(scenAssumps), "\n")
+cat("-", varNameAndIndices(EnergyIntensityChanges), "\n")
+cat("-", varNameAndIndices(DemRespParams), "\n")
+cat("-", varNameAndIndices(DemRespParamsm), "\n")
+head(msa)
+
+```
+
+- IM[VC, Year, Mech, Opt, Mid, Pess, Zero] 
+    - Intensity Multipliers by Vehicle-type, Year, Mechanism and EffectCase or Sensitivity Case
+
+- msa[TechScen, VC, Year, Mech, EffectCase, IM]
+    - Intensity Multipliers for mechanism, based on EffectCase associated with each TechScen
+    - EffectCase \in {Zero, Pess, Mid, Opt}
+
+- scenAssumps[VC, Mech, Year, 1, 2, 3, 4, 5, 6, 7] 
+    - Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario
+    - This table governs the Tech-scenario-based selection of each mechanism effects, by specifing the EffectCase for each mechanism from the set of potential mechanism effects.
+
+- EnergyIntensityChanges[Year, VC, TechScen, NIE]
+    - NIE is product of IM (Intensity Multiplier) over Mech
+
+- ElasVKT - input parameter, elasticity of travel demand w.r.t. full (generalized) cost of travel
+- ElasPKT - input parameter, elasticity of Passenger travel demand w.r.t. full (generalized) cost of travel
+    - extract the applicable ElasPKT from ElasVKT for (non-pooling) demand scenarios
 
 - DemRespParams[VC, Parameter, Zero, Low, Med, High]
-- DemRespParamsm[Parameter, VC, "EffectCase", value]
+- DemRespParamsm[Parameter, VC, EffectCase, value]
   - EffectCase \in {Zero, Low, Med, High}
 
   - Parameter \in
@@ -48,6 +85,24 @@ Data Structures
     - cost components aggregated to total (relative to Base MV), and fractVMTIncr base on ElasVKT w.r.t. RelTotCost
     - results by VehType
 
+### Listing of Case-related Input and Output Dataframes
+
+```{r}
+varNameAndIndices <-function(x) {
+  # display the variable (dataframe) name and its indices
+  #   See https://stackoverflow.com/questions/10520772/in-r-how-to-get-an-objects-name-after-it-is-sent-to-a-function
+  paste0(deparse(substitute(x)), "[", paste(names(x), collapse = ", "),"]")
+}
+
+cat("-", varNameAndIndices(CaseEffects), "\n")
+cat("-", varNameAndIndices(CaseEffectsEI), "\n")
+cat("-", varNameAndIndices(CombScen_Combinations), "\n")
+cat("-", varNameAndIndices(CaseAssumps),"\n")
+cat("-", varNameAndIndices(CaseWantedAssumps), "\n")
+cat("-", varNameAndIndices(CaseWantedEffects), "\n")
+
+```
+
 - CaseEffects[CombScen, DemScen, VC, ElasCase, fracVMTIncr, CombScen_Num, DemScen_Num, TechScen, Year, NIE, EnergyUse]
   - Binding of results across cases
   - Includes [7 DemScen] x [7 TechScen] x [2 ElasCase] x [2 VC] x [1 Year]
@@ -59,23 +114,22 @@ table(CaseEffects$DemScen, CaseEffects$TechScen)
 
 ```
 
-      1 2 3 4 5 6 7
-  DS1 4 4 4 4 4 4 4
-  DS2 4 4 4 4 4 4 4
-  DS3 4 4 4 4 4 4 4
-  DS4 4 4 4 4 4 4 4
-  DS5 4 4 4 4 4 4 4
-  DS6 4 4 4 4 4 4 4
-  DS7 4 4 4 4 4 4 4
+        1 2 3 4 5 6 7
+    DS1 4 4 4 4 4 4 4
+    DS2 4 4 4 4 4 4 4
+    DS3 4 4 4 4 4 4 4
+    DS4 4 4 4 4 4 4 4
+    DS5 4 4 4 4 4 4 4
+    DS6 4 4 4 4 4 4 4
+    DS7 4 4 4 4 4 4 4
+
 ```{r}
 table(CaseEffects$VC, CaseEffects$ElasCase)
-
 ```
 
-    
-      High Low
-  HDV   49  49
-  LDV   49  49
+        High Low
+    HDV   49  49
+    LDV   49  49
   
 - CaseEffectsEI[TechScen, Year, VC, NIE]
 
@@ -86,26 +140,34 @@ table(CaseEffects$VC, CaseEffects$ElasCase)
     - selects the combined scenarios in CaseEffects that match the ones desribed in - CombScen_Combinations by ["Year", "ElasCase", "VC", "TechScen", "DemScen_Num"]
     - this is 12 of 198 combined cases
 
-```{r}
-paste0("CaseEffects[",paste(names(CaseEffects), collapse = ", "),"]")
-paste0("CaseEffectsEI[",paste(names(CaseEffectsEI), collapse = ", "),"]")
-paste0("CombScen_Combinations[",paste(names(CombScen_Combinations), collapse = ", "),"]")
-paste0("CaseWantedEffects[",paste(names(CaseWantedEffects), collapse = ", "),"]")
-paste0("CaseEffectsEI[",paste(names(CaseEffectsEI), collapse = ", "),"]")
-
-```
-
-- CaseEffectsEl
 
 Functions
 ---------------------
+- plotStackedBarShares <- function(df, ds, ts = "/TS4") 
+    - # function to take dataframe of shares by demand scenario and VehType, and
+        - #   for specified demand scenario ds,
+        - #   plot stacked bar graph with one column for each VehType.
+- plotStackedBarCostCompons <- function(df, ds) {
+    - # function to take dataframe of shares by demand scenario and VehType, and
+        - #   for specified demand scenario ds,
+        - #   plot stacked bar graph with one column for each VehType.
+
 - CombScenResultsForOneTechScen <- function(CurrTS, CurrYr)
-  - For a single TechScen CurrTS, and year CurrYr, compute combined scenario outcomes for combinations with all 
+  - For a single TechScen, CurrTS, and year CurrYr, compute combined scenario outcomes for combinations with all 
       - demand scenarios DemScen
       - elasticity cases ElasCase
       - vehicle clases VC
-  - combines TechScen and other inputs needed to compute 
+  - combines TechScen and other inputs needed to compute primary scenario results
       - NIE, 
       - fracVMTIncr (based on elastic response to cost)
       - EnergyUse
+
+- GatherScenInputsForOneTechScen <- function(CurrTS, CurrYr) {
+
+    # For a single TechScen CurrTS, and year CurrYr,
+    #   gather combined scenario input params for combinations with all
+    #   - demand scenarios DemScen
+    #   - elasticity cases ElasCase
+    #   - vehicle clases VC
+    # Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
 
