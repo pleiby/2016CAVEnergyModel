@@ -7,15 +7,15 @@ author:
   email: leibypn@ornl.gov
 date: Rev. 2019-09-14, Printed `r Sys.Date()`
 output:
+  html_document:
+    df_print: paged
+    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: mystyles.docx
-    toc: yes
-  html_document:
-    df_print: paged
     toc: yes
 file: CAVdecom.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -44,7 +44,7 @@ rm(list = ls())
 
 # Logical Flags to indicate which chunks should be displayed in RMarkdown output
 # echoWorking = TRUE # set to FALSE for an exported (non-working version) of output
-echoWorking <- FALSE # set to FALSE for an exported (non-working version)
+echoWorking <- TRUE # set to FALSE for an exported (non-working version)
 echoMaximal <- FALSE # set TRUE only if you want echo just about everything
 echoTests <- TRUE # set TRUE to see printed test values ("Check: ...")
 ```
@@ -133,11 +133,14 @@ From this *Kaya* or *ASIF* decomposition approach the total GHG emissions are th
 3. the energy **I**ntensity of the mode and vehicle type (e.g., energy use per vehicle mile), and 
 4. the **F**uel carbon intensity (ghg emission mass per unit energy)
 
-Energy use for particular vehicle type is given by total activity (travel demand) level $A_{tv}$, 
-the share of travel on mode *m* and the average share-weighted energy intensity of travel by vehicle type and mode.
+Energy use for a particular vehicle type is given by total activity (passenger travel demand) level $A_{tv}$ 
+divided by vehicle occupancy level $o_{tv}$ to yield vehicle travel (VMT), 
+the share $\sigma_{tmv}$ of travel on mode *m* and the average share-weighted
+energy intensity $I_{tmv}$ of travel by vehicle type and mode.
 
 $$E_{tvf} = (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I({\vec x}_{tmv}) \phi_{tmvf}$$
-Vehicle energy intensity *I* is a function of a vector $\vec x_{tmv}$ of CAV mechanism/technology levels.
+Vehicle energy intensity *I* is a function of a vector $\vec x_{tmv}$ of CAV mechanism/technology levels,
+as well as the mix of fuel-drivetrains used (extent of electrification) $\phi_{tmvf}$.
 
 Transportation GHG emissions are then the sum over all transportation modes, vehicle types, and fuels of the product of {Transportation Services Activity^[We differentiate between transportation services (PKT) and vehicle travel (VKT).]} x {Shares of each mode-vehicle-fuel type} x {Energy Intensity} x {Fuel GHG Intensity}.
 
@@ -157,7 +160,7 @@ for sets[^2]
 - F = set of fuel types *f*
 - T = set of time periods *t*
 
-[^2]: Additional potential disaggregations include by region, vehicle size class, drivetrain type, and time of day (e.g. operating costs vary by time of day, as described in Bösch et al. 2017).
+[^2]: Additional potential disaggregations include by region, vehicle size class, drivetrain type, and time of day (e.g. operating behavior and costs vary by time of day, as described in Bösch et al. 2017).
 
 The variables are
 
@@ -195,11 +198,11 @@ Alternatively, in the form of a vector expression over vehicle types *v*,
 $$\vec {G_{t}} = \boldsymbol {E_t} \vec {g_t}$$
 
 for $\vec {G_t}$ v x 1, $\boldsymbol {E_t}$ v x f and $\vec {g_t}$ f x 1.
-And
+And total emissions
 $$G_t = \vec {G_{t}} \cdot \boldsymbol {1}$$
 
 In the work here, road travel demand $A_{tv}$ is divided into LDV and HDV (passenger and freight), at the minimum, 
-and can be further decomposed into vehicle size classes, and drivetrain classes.
+and could be further decomposed into vehicle size classes, and drivetrain classes.
 
 Mechanisms by Which CAVs Can Alter Energy Use and Emissions
 ---------------------------
@@ -336,7 +339,7 @@ IM <- IM[, c(colnames(IEffects))]
 
 kable(
   x = IM,
-  caption = "Intensity Multipliers by Vehicle-type, Year, and Case"
+  caption = "Intensity Multipliers by Vehicle-type, Year, Mechanism, and Case"
 )
 ```
 
@@ -344,7 +347,7 @@ kable(
 
 ### 3.2 Energy Intensity by Vehicle Type and Technology Scenario, by Composing Mechanism Effects
 
-We construct Scenario Multipliers $\mu_{jtv}$ (supressing subscripts *m, f*) for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v*. These overeall intensity multipliers for technology scenario *j* reflect the combined the effect of all the mechanisms on vehicle energy intensity.
+We construct Scenario Multipliers $\mu_{jtv}$ (supressing subscripts *m, f*) for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v*. These overall intensity multipliers for technology scenario *j* reflect the combined the effect of all the mechanisms on vehicle energy intensity.
 
 For each technology scenario *j*, year *t*, vehicle class *v*, the estimated "EffectCase" or effect sensitivity case *s* is specified for each mechanism *k*, i.e. 
 
@@ -1775,7 +1778,7 @@ for (CurrTechScen in 1:7) {
 CaseAssumps <- CaseAssumps %>% mutate(EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0)
 
 # To move specific columns to the beginning or end of a data.frame,
-# use select from the dplyr package and its everything() function.
+# use select from the dplyr package and its everything() fn.
 # In this example we are sending to the end:
 CaseAssumps <- CaseAssumps %>% select(names(CaseEffects), everything())
 ```
@@ -2130,6 +2133,7 @@ We can calculate the percentage decrease in MPG for a range of speed changes usi
 
 ```{r getPctMPGdect, echo=echoWorking}
 percentMPGdecreaseTHWH2014 <- function(S, refMPG = 25.0) {
+  # MPG vs. Speed in mph - Thomas et al. Approach
   # Based on Thomas, J., Hwang, H., West, B. and Huff, S., "Predicting Light-Duty Vehicle Fuel Economy as a
   # Function of Highway Speed," SAE Int. J. Passeng. Cars - Mech. Syst. 6(2):2013.
   # Model 1 (depends reference MPG for vehicle)

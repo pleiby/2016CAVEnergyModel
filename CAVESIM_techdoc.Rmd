@@ -25,47 +25,75 @@ Data Structures
 ### Listing of Case-related Input and Output Dataframes
 
 ```{r def)varNameAndIndices_fn}
-varNameAndIndices <-function(x) {
+varNameAndIndices <- function(x = FALSE) {
   # display the variable (dataframe) name and its indices
   #   See https://stackoverflow.com/questions/10520772/in-r-how-to-get-an-objects-name-after-it-is-sent-to-a-function
+  #   Default param value FALSE just assures return for empty call w/o x.
   paste0(deparse(substitute(x)), "[", paste(names(x), collapse = ", "),"]")
 }
+
 ```
 
+#### 3. Estimating Energy Impacts
+
+These are the primary tables for this section:
 ```{r}
 cat("-", varNameAndIndices(IM), "\n")
 cat("-", varNameAndIndices(msa), "\n")
 cat("-", varNameAndIndices(scenAssumps), "\n")
 cat("-", varNameAndIndices(EnergyIntensityChanges), "\n")
-cat("-", varNameAndIndices(DemRespParams), "\n")
-cat("-", varNameAndIndices(DemRespParamsm), "\n")
-head(msa)
+cat("-", varNameAndIndices(NetEnergyIntensityChangeTable), "\n")
 
 ```
 
 - IM[VC, Year, Mech, Opt, Mid, Pess, Zero] 
-    - Intensity Multipliers by Vehicle-type, Year, Mechanism and EffectCase or Sensitivity Case
+    - Intensity Multipliers $mu_{vtks}$ by Vehicle-type, Year, Mechanism and EffectCase or Sensitivity Case
 
 - msa[TechScen, VC, Year, Mech, EffectCase, IM]
     - Intensity Multipliers for mechanism, based on EffectCase associated with each TechScen
-    - EffectCase \in {Zero, Pess, Mid, Opt}
+    - EffectCase in {Zero, Pess, Mid, Opt}
 
 - scenAssumps[VC, Mech, Year, 1, 2, 3, 4, 5, 6, 7] 
     - Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario
     - This table governs the Tech-scenario-based selection of each mechanism effects, by specifing the EffectCase for each mechanism from the set of potential mechanism effects.
 
 - EnergyIntensityChanges[Year, VC, TechScen, NIE]
-    - NIE is product of IM (Intensity Multiplier) over Mech
+    - NIE change $\Delta I_{jtv}$ is product of IM (Intensity Multiplier) over Mechanisms (for TechScen applicable EffectCase)
+
+- NetEnergyIntensityChangeTable[TechScen, HDV_2035, HDV_2050, LDV_2035, LDV_2050] 
+    - TechScen summary table for display, bar plot, and comparison with prior test values only.
+
+#### 4. Demand Response to CAVs
+
+These are the primary tables for this section:
+```{r}
+cat("-", varNameAndIndices(DemRespParamNotes), "\n")
+cat("-", varNameAndIndices(DemRespParams), "\n")
+cat("-", varNameAndIndices(DemRespParamsm), "\n")
+cat("-", varNameAndIndices(TravTimeCostBasePars), "\n")
+cat("-", varNameAndIndices(VTCostBase), "\n")
+cat("-", varNameAndIndices(VTCShrBase), "\n")
+cat("-", varNameAndIndices(VTCShrAlt), "\n")
+cat("-", varNameAndIndices(RelTotCost), "\n")
+cat("-", varNameAndIndices(VMTIncrease), "\n")
+
+cat("-", varNameAndIndices(VMTIncreaseCurrCase), "\n")
+cat("-", varNameAndIndices(), "\n")
+```
 
 - ElasVKT - input parameter, elasticity of travel demand w.r.t. full (generalized) cost of travel
 - ElasPKT - input parameter, elasticity of Passenger travel demand w.r.t. full (generalized) cost of travel
     - extract the applicable ElasPKT from ElasVKT for (non-pooling) demand scenarios
 
+- DemRespParamNotes[DemParam, DemParamNote]
+    - descriptive notes on demand response parameters
 - DemRespParams[VC, Parameter, Zero, Low, Med, High]
+    - Key Parameters for LDV Demand Response (for all Demand Scenarios)
 - DemRespParamsm[Parameter, VC, EffectCase, value]
-  - EffectCase \in {Zero, Low, Med, High}
-
-  - Parameter \in
+    - Key Parameters for LDV Demand Response (for all Demand Scenarios), by EffectCase, long form.
+    - **Note: Energy Intensity change is dependent on the Technology Scenario, and year of interest.**
+    - EffectCase in {Zero, Low, Med, High}
+    - Parameter in
 
       ElasVKT          : Elas of travel w.r.t generalized cost,
       ExclVehCapCost   : Exclude Veh Capital Cost (wear & ownership costs) (Choose 0 or 1),
@@ -79,36 +107,67 @@ head(msa)
       ShrECostInt      : Share of energy effic cost gains internalized (visible) to driver (fraction, 0 to 1),
       I_deltaCAV       : Fuel energy cost reduction (from effic, fraction, computed from intensity mechanisms)
 
+#### 4.2 Establish Base Travel Costs for Each Cost Component
+
+- Notes on scenario calculation:
+    - Energy Intensity change is dependent on the Technology Scenario, and year of interest. 
+    - Demand response is a function of full (generalized) travel cost, and energy intensity affects the energy component of travel cost.5 The full scenario requires updating Demand Response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario and year, and updating other costs (travel time cost, accident/insurance costs, vehicle capital and maintenance costs) based on the Demand Scenario assumptions.
+    - Unit travel time cost per mile $\underline c_{T,v}$ is differentiated by vehicle class, and depends on average speed and hourly time cost.
+
+- TravTimeCostBasePars[var, V_Class, local, intercity, average, Units, Source_Notes]  
+    - "Base Travel Time Cost Parameters"
+- VTCostBase[DemScen, VehType, CostCat, VTCost_cpm]
+    - "Base Vehicle Travel Cost: Components Share by Vehicle Type, Year=2018" 
+        - (VehType in {LDVAvgSedan, LDVAvgLtTruck, HDVClass8})
+    - Note: these values are the average of local and intercity.
+    - Note: In these original (base) vehicle cost component data, VehType differentiates between 2 classes of LDV (car & light truck)
+- VTCShrBase[VehType, CostCat, VTCost_shr] 
+    - "Base Vehicle Travel Cost: Components Share by VehType, Year=2018", $\sigma_{vit}^B$ for each cost component *i*
+
+#### 4.4 Calculate Adjusted Travel Cost Components for Demand Scenario Conditions
+
 - VTCShrAlt[DemScen, VehType, VC, CostCat, VTCost_shr]
-    - reflect cost adjustments in DermRespParams
+    - "Table: Alt Travel Cost Components Relative to Base, by Demand Scenario & Vehicle Type"
+    - relative cost "shares", $\sigma_{vitdj}$, or actually $\sigma_{dv,vc,i,(tj)}$ because *t* and *j* are implicit, 
+    - reflect relative cost adjustments in DemRespParams, need not sum to 1.0
 - RelTotCost[DemScen, VehType, VC, Case, Total, ElasVKT, fracVMTIncr]
     - cost components aggregated to total (relative to Base MV), and fractVMTIncr base on ElasVKT w.r.t. RelTotCost
     - results by VehType
 
-### Listing of Case-related Input and Output Dataframes
+#### 4.5 Fractional VMT Changes in CAV Demand Scenario (Single Tech Case)
 
+- VMTIncrease[VC, DemScen, ElasCase, fracVMTIncr, CombScen, USOption, RidePoolAdj, USDmult]
+    - fracVMTIncr here is the cost-elastic value from RelTotCost, adjusted by exogenous Underserved Demand or Pooling effects
+    - Fractional VMT increase for LDV vehicles is currently taken as an unweighted mean for Sedans and LtTrucks.
+- VMTIncreaseCurrCase[VC, DemScen, ElasCase, fracVMTIncr, CombScen, USOption, RidePoolAdj, USDmult]
+    - this is the specific set of Combined scenarios wanted with the chosen ElasCase, for comparison with test values
+
+Relative total cost $c_{rel,vtdj}$
+The fractional increase in VKT $m_{vtdj}(c_{rel,vtdj})$
+
+#### 5. Policy and Combined Scenario Calculations
+
+These are the primary tables for this section:
 ```{r}
-varNameAndIndices <-function(x) {
-  # display the variable (dataframe) name and its indices
-  #   See https://stackoverflow.com/questions/10520772/in-r-how-to-get-an-objects-name-after-it-is-sent-to-a-function
-  paste0(deparse(substitute(x)), "[", paste(names(x), collapse = ", "),"]")
-}
-
-cat("-", varNameAndIndices(CaseEffects), "\n")
 cat("-", varNameAndIndices(CaseEffectsEI), "\n")
+cat("-", varNameAndIndices(CaseEffects), "\n")
 cat("-", varNameAndIndices(CombScen_Combinations), "\n")
 cat("-", varNameAndIndices(CaseAssumps),"\n")
-cat("-", varNameAndIndices(CaseWantedAssumps), "\n")
 cat("-", varNameAndIndices(CaseWantedEffects), "\n")
+cat("-", varNameAndIndices(CaseWantedAssumps), "\n")
 
 ```
 
+- CaseEffectsEI[TechScen, Year, VC, NIE]
+    - all (exog) vehicle energy intensity changes for all values of TechScen, Year, and Vehicle Class
 - CaseEffects[CombScen, DemScen, VC, ElasCase, fracVMTIncr, CombScen_Num, DemScen_Num, TechScen, Year, NIE, EnergyUse]
-  - Binding of results across cases
-  - Includes [7 DemScen] x [7 TechScen] x [2 ElasCase] x [2 VC] x [1 Year]
-  - Primary results are NIE, fracVMTIncr, EnergyUse
-  - EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0
+    - basic results from running many combinations of TechScen, DemSend
+    - Binding of results across cases
+    - Includes [7 DemScen] x [7 TechScen] x [2 ElasCase] x [2 VC] x [1 Year]
+    - Primary results are NIE, fracVMTIncr, EnergyUse
+    - EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0
 
+Count of cases in CaseEffects for each Demand Scenario and TechScenario:
 ```{r}
 table(CaseEffects$DemScen, CaseEffects$TechScen)
 
@@ -131,29 +190,34 @@ table(CaseEffects$VC, CaseEffects$ElasCase)
     HDV   49  49
     LDV   49  49
   
-- CaseEffectsEI[TechScen, Year, VC, NIE]
+- CaseAssumps[CombScen, DemScen, ElasCase, TechScen, VC, Year, fracVMTIncr, NIE, EnergyUse, C_Fuel, C_Time, C_VNonF, C_Total, ElasVKT, USOption, RidePoolAdj, USDmult, Congestion_mitigation, De_emphasized_performance, Eco_driving, Higher_highway_speeds, Improved_crash_avoidance, Increased_feature_load, Platooning, Right_sizing]
+  - Same cases and result variables as CaseEffects, with 15 more variables documenting case assumptions
+  - Note: sum(CaseAssumps[names(CaseEffects)]!=CaseEffects) ==0
 
 - CombScen_Combinations[CombScen, Year, ElasCase, VC, TechScen, DemScen_Num, Notes] 
     - # specifies, for each CombScen and VC: combined cases wanted (TechScen, DemScen, ElasCase, Year)
 
-- CaseWantedEffects[CombScen, DemScen, VC, ElasCase, fracVMTIncr, CombScen_Num, - DemScen_Num, TechScen, Year, NIE, EnergyUse]
+- CaseWantedEffects[CombScen, DemScen, ElasCase, TechScen, VC, Year, fracVMTIncr, NIE, EnergyUse] 
     - selects the combined scenarios in CaseEffects that match the ones desribed in - CombScen_Combinations by ["Year", "ElasCase", "VC", "TechScen", "DemScen_Num"]
     - this is 12 of 198 combined cases
 
+- CaseWantedAssumps[CombScen, DemScen, ElasCase, TechScen, VC, Year, fracVMTIncr, NIE, EnergyUse, C_Fuel, C_Time, C_VNonF, C_Total, ElasVKT, USOption, RidePoolAdj, USDmult, Congestion_mitigation, De_emphasized_performance, Eco_driving, Higher_highway_speeds, Improved_crash_avoidance, Increased_feature_load, Platooning, Right_sizing] 
+    - Same thing as CaseWantedEffects, but including all relevant assumptions
 
 Functions
 ---------------------
-- plotStackedBarShares <- function(df, ds, ts = "/TS4") 
+- plotStackedBarShares <- function(df, ds, ts = "TS4") 
     - # function to take dataframe of shares by demand scenario and VehType, and
         - #   for specified demand scenario ds,
         - #   plot stacked bar graph with one column for each VehType.
-- plotStackedBarCostCompons <- function(df, ds) {
+- plotStackedBarCostCompons <- function(df, ds, ts = "TS4")
     - # function to take dataframe of shares by demand scenario and VehType, and
         - #   for specified demand scenario ds,
         - #   plot stacked bar graph with one column for each VehType.
 
 - CombScenResultsForOneTechScen <- function(CurrTS, CurrYr)
-  - For a single TechScen, CurrTS, and year CurrYr, compute combined scenario outcomes for combinations with all 
+  - For a single TechScen, CurrTS, and year CurrYr,
+    compute combined scenario outcomes for combinations with all 
       - demand scenarios DemScen
       - elasticity cases ElasCase
       - vehicle clases VC
@@ -165,9 +229,45 @@ Functions
 - GatherScenInputsForOneTechScen <- function(CurrTS, CurrYr) {
 
     # For a single TechScen CurrTS, and year CurrYr,
-    #   gather combined scenario input params for combinations with all
+    # gather combined scenario input params for combinations with all
     #   - demand scenarios DemScen
     #   - elasticity cases ElasCase
     #   - vehicle clases VC
     # Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
 
+- percentMPGdecreaseTHWH2014 <- function(S, refMPG = 25.0)
+    - # MPG vs. Speed in mph - Thomas et al. Approach
+    
+    
+#### 8. Examination of VMT and PMT Given Various Levels of Pooling
+
+These are the primary tables for this section:
+
+```{r}
+cat("-", varNameAndIndices(scenData), "\n")
+cat("-", varNameAndIndices(scenCostData), "\n")
+cat("-", varNameAndIndices(occupancyEffects), "\n")
+cat("-", varNameAndIndices(occupancyTravelEffects),"\n")
+cat("-", varNameAndIndices(AltVMT), "\n")
+cat("-", varNameAndIndices(), "\n")
+```
+
+- scenData[DemScen, VehType, AccAndIns, C_F, Maintenance, Parking, Registration, C_T, TollsFees, C_Total, C_K, C_H, C_V] 
+- scenCostData[DemScen, C_F, C_H, C_T, C_V] 
+- occupancyEffects[DemScen, C_F, C_H, C_T, C_V, o, C_Vpmt, rho, C_Tpmt, Pi, C_Tdph, C_Mpmt, PMT, VMT, EnergyUse, VMT_direct, TourContraction, RideDetourExpansion] 
+- occupancyTravelEffects[DemScen, o, travelEffect, value] 
+- AltVMT[DemScen, o, VMT, PMT, EnergyUse, ElasTourLengthWithPooling] 
+    - "Energy Use Relative to Base (DS3), by Occupancy and Route Length Elasticity"
+    
+
+-----------------------------
+
+- Next steps for CombScenResultsForOneTechScen() and GatherScenInputsForOneTechScen()
+    - use _local_ vars to make iteratively make calculations of many dataframes
+        - nie
+        - DemRespParams (need DemRespParamsBase)
+        - VTCShrAlt (needs VTCShrBase)
+        - RelTotCost (needs VTCShrAlt)
+        - VMTIncrease (needs) RelTotCost)
+        - VMTIncrease
+    - collapse the two long, largely duplicative, functions into 1, or have the second call the first
