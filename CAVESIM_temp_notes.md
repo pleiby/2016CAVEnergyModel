@@ -42,6 +42,50 @@ Completed 20190922 CAVdecom version
     - Too many place require manual (literal) listing of Cases, e.g. initialization of VTCShrAlt
     - Need to consider multiple levels of Sharing impact on VMT
 
+ToDo Next 20190922
+--------------------
+1. Establish technology and demand scenario assump starting points in CAVdecom code
+    - Eliminate refs to spreadsheet tests, reading and melding of spreadsheet params
+2. Break out key parameter dataframes and save as CSVs
+2. Save as CAVESIMver10.Rmd
+3. Establish new set of scenarios: Base, B-Low, B-High, C-low, C-high
+4. Include Accessory Load Energy use 
+    - (convert kW to fraction of base vehicle average energy use (V [MPH] / E [MPG]) * kWh/Gal * EngineEffiency= kWh/h 
+    - or get estimate of ave power use by vehicle
+5. Update VoTT to conform to the scenarios
+6. Update vehicle categories and stock-related data to conform to the analysis
+    - K_CSDAO
+        - C Class: LDV vs MDHDV
+        - S Subclass: {Car vs LtTruck}, {Class8 vs Other}
+            - Car {CAR_COMPACT, CAR_MID, CAR_FULL}
+            - LtTruck {SUC_COMPACT ... SUV_FULL_SIZE, TRUCK_MID, TRUCK_FULL}
+        - F Fuel/Drivetrain technology
+            - Conventional (Conventional, Conv-48V)
+            - HEV
+            - PHEV
+            - BEV
+        - Automation
+            - No (Manual)
+            - Partial
+            - Full
+        - O Ownership/Operation
+            - Private
+            - Shared
+    - AV vs MV shares
+    - Partial vs. Full AV shares
+    - shares/quantities of vehicls by class: 
+        - LDV (Cars, LtTrucks) and HDV Stock
+    - Electric vehicle vs "conventional" drivetrain
+- Update reference ride sharing in each scenario
+    - XXX
+- Update Base impact of automation/sharing on VMT (repositioning empty ZOV miles)
+    - see comparison with POLARIS
+- Results
+    - Produce Bar charts of AV cost components and shares
+    - Produce Bar charts of energy intensity, VMT and energy
+    - Produce Graphs of energy, VMT, PMT vs occupancy, for 
+    - Produce Graphs of energy use vs cost (by mile and gallon)
+        
 Next Steps for Benchmarking and Refining
 -----------------------------------------
 - Include vehicle type shifts in TechScen
