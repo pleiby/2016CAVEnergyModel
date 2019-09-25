@@ -7,15 +7,15 @@ author:
   email: leibypn@ornl.gov
 date: Rev. 2019-09-14, Printed `r Sys.Date()`
 output:
+  html_document:
+    df_print: paged
+    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: Template_CAVs_CapstoneReport_20190701.docx
-    toc: yes
-  html_document:
-    df_print: paged
     toc: yes
 file: CAVESimV10.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -222,15 +222,18 @@ SetK_Mechs <- c( # mechanisms k by which automation alters energy and/or demand
   "Eco_driving",
   "Congestion_mitigation",
   "Increased_feature_load",
+  "Automation_accessory_load",
   "Higher_highway_speeds"
   # "Ride_hailing",    # Q: should Mechanism set include this?
   # "Ride_pooling",    # Q: should Mechanism set include this?
+  # "Electrification_BEV",
+  # "Electrification_PHEV"
 )
 
 SetV_Class <- c("LDV", "HDV") # Vehicle Classes v
 SetT_Years <- c(2035, 2050) # Years t
-SetJ_TechScen <- 1:8 # Scenarios j
-SetD_DemScen <- 1:7
+SetJ_TechScen <- 1:9 # Scenarios j ??? ToDo: make this a result of read tables
+SetD_DemScen <- 1:7 # ??? ToDo: make this a result of read tables
 SetS_Sense <- c( # Sensitivity cases s for mechanism effects
   "Opt",
   "Mid",
@@ -274,6 +277,7 @@ LDV  2035   Congestion_mitigation        -3.4    -1.7     0.0
 LDV  2035   Right_sizing                -45.0   -33.0   -21.0
 LDV  2035   Higher_highway_speeds         7.0    14.5    22.0
 LDV  2035   Increased_feature_load        0.0     5.0    10.0
+LDV  2035   Automation_accessory_load     0.0     3.0    12.0
 LDV  2050   Platooning                  -24.8   -14.4    -4.0
 LDV  2050   De_emphasized_performance   -23.0   -14.0    -5.0
 LDV  2050   Improved_crash_avoidance    -22.9   -14.2    -5.5
@@ -282,6 +286,7 @@ LDV  2050   Congestion_mitigation        -4.2    -2.1     0.0
 LDV  2050   Right_sizing                -45.0   -33.0   -21.0 
 LDV  2050   Higher_highway_speeds         7.0    14.5    22.0
 LDV  2050   Increased_feature_load        0.0     5.0    10.0
+LDV  2050   Automation_accessory_load     0.0     3.0    12.0
 HDV  2035   Platooning                  -25.0   -17.5   -10.0
 HDV  2035   De_emphasized_performance     0.0     0.0     0.0
 HDV  2035   Improved_crash_avoidance      0.0     0.0     0.0
@@ -290,6 +295,7 @@ HDV  2035   Congestion_mitigation        -3.4    -1.7     0.0
 HDV  2035   Right_sizing                  0.0     0.0     0.0
 HDV  2035   Higher_highway_speeds         0.0     0.0     0.0
 HDV  2035   Increased_feature_load        0.0     0.0     0.0
+HDV  2035   Automation_accessory_load     0.0     2.0     5.0
 HDV  2050   Platooning                  -25.0   -17.5   -10.0
 HDV  2050   De_emphasized_performance     0.0     0.0     0.0
 HDV  2050   Improved_crash_avoidance      0.0     0.0     0.0
@@ -298,12 +304,12 @@ HDV  2050   Congestion_mitigation        -4.2    -2.1     0.0
 HDV  2050   Right_sizing                  0.0     0.0     0.0
 HDV  2050   Higher_highway_speeds         0.0     0.0     0.0
 HDV  2050   Increased_feature_load        0.0     0.0     0.0
+HDV  2050   Automation_accessory_load     0.0     2.0     5.0
 "), header = TRUE, sep = "", strip.white = TRUE) # ;
 # Default delimiter is white space.  If there is a header and the first row contains one fewer field than the number of columns,
 # the first column in the input is used for the row names. Otherwise if row.names is missing, the rows are numbered
 # Source: "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024.xlsx]Energy Intensity Impacts'!$A$1:$M$26"
 # Note: Mid is average of Opt and Pess
-# LDV  2035   Automation_accessory_load     0.0    11.0    15.0
 
 IEffects$Zero <- 0.0 # include additional case of no-impact for each mechanism
 ```
@@ -367,6 +373,7 @@ mechScenAssumps <- read_csv(paste0("./Data/", "CAV_Scenario_Master.csv"), commen
 mechScenDescriptors <- mechScenAssumps %>%
   select(TechScen, Demand_Scenario, Scenario_Name, Scenario_Description)
 
+
 msa <- mechScenAssumps %>%
   # select(-c(LDV_Multipliers.2035:Scenario_Description)) %>% # if a result CSV file, drop aggregated result for scenario and Name, Description
   select(-c(Scenario_Name:Scenario_Description)) %>% # drop scenario Name, Description
@@ -383,7 +390,24 @@ msa$Year <- as.integer(msa$Year)
 msa <- left_join(msa, IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
   select(-c(Demand_Scenario, IE)) # drop fractional reductions, keep multipliers
 ```
-
+```{r}
+TechScenAssumps <- read_csv(paste0("./Data/", "CAV_TechScenario_Master.csv"), comment = "#")
+msa <- TechScenAssumps %>%
+  gather(key = TechScen, value = EffectCase, -c(VC, Mech, Year)) %>%
+  mutate(
+    TechScen = as.integer(TechScen),
+    Year = as.integer(Year)
+  )  %>%
+# Match Energy Intensity Impacts for each mechanism in the scenario to the
+#   Scenario Assumptions for that mechanism:
+#   IEffectsm$IM is the intensity multiplier for each VC, Year, Mech (mech) and EffectCase
+#   msa$EffectCase is one of (Zero, Opt, Mid, Pess) for each VC, Year, Mech
+# IEffectsm has 128 = 2 x 2 x 8 x 4, while msa has 224 rows
+# merge, keeping matching rows from second, bringing in IE and IM for each Mech
+  left_join(IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
+  select(-c(IE)) %>% # drop fractional reductions, keep multipliers
+  arrange(TechScen, VC, Mech, Year, EffectCase)
+```
 ```{r reportScenarioAssumps, echo=echoWorking, warning=FALSE, message=FALSE}
 scenAssumps <- msa %>%
   select(-IM) %>%
@@ -1659,11 +1683,12 @@ Iterate, building a dataframe of Combined Scenario (CombScen) assumptions and re
 
 ```{r multCombScenarioResultsAndAssumptionsLoop, echo=echoWorking}
 CurrYear <- 2050
+techScensWanted = unique(msa$TechScen)
 
 # This loop builds a dataframe of Combined Scenario (CombScen) assumptions and results
 CaseAssumpsResults <- data.frame() # simplest empty dataframe
 
-for (CurrTechScen in 1:7) {
+for (CurrTechScen in techScensWanted) {
   CaseAssumpsResults <- rbind(CaseAssumpsResults, CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear))
 }
 
@@ -1677,6 +1702,10 @@ CaseEffects <- CaseAssumpsResults %>% # extract a key set of results and identif
 # use select from the dplyr package and its everything() fn.
 # In this example we are sending (assumptions) to the end:
 CaseAssumpsResults <- CaseAssumpsResults %>% select(names(CaseEffects), everything())
+```
+
+```{r saveCombScenResultsAndAssumptions, echo=echoWorking}
+write_csv(CaseAssumpsResults,path = "CAV_Scenario_results.csv")
 ```
 
 Define the Combined Scenarios `CombScen`, in terms of name, year, vehicle class,
@@ -1694,10 +1723,10 @@ CS4      :2050  :Low      :HDV  :4            :DS6         :Cost-based response 
 CS5      :2050  :Low      :HDV  :5            :DS2         :HDV dmnd mult Same as Scen 4
 CS6      :2050  :Low      :HDV  :6            :DS0         :HDV dmnd mult Same as Scen 4
 CS7      :2050  :Low      :HDV  :7            :DS2         :HDV dmnd mult Same as Scen 3
-CS_B_low :2050  :Low      :HDV  :4            :B_low       :
-CS_B_high:2050  :Low      :HDV  :4            :B_high      :
-CS_C_low :2050  :Low      :HDV  :4            :C_low       :
-CS_B_high:2050  :Low      :HDV  :4            :C_high      :
+CS_B_low :2050  :Low      :HDV  :8            :B_low       :
+CS_B_high:2050  :Low      :HDV  :9            :B_high      :
+CS_C_low :2050  :Low      :HDV  :8            :C_low       :
+CS_B_high:2050  :Low      :HDV  :9            :C_high      :
 CS1      :2050  :Low      :LDV  :1            :DS2         :Cost-based response (with ElasVKT) only
 CS2      :2050  :Low      :LDV  :2            :DS3         :Cost-based response (with ElasVKT) with Underserved mult option 1
 CS3      :2050  :Low      :LDV  :3            :DS5         :Cost-based response (with ElasVKT) with Underserved mult option 3
@@ -1705,10 +1734,10 @@ CS4      :2050  :Low      :LDV  :4            :DS6         :Cost-based response 
 CS5      :2050  :Low      :LDV  :5            :DS2         :Scen 4 dmnd mult with higher LDV elasticity
 CS6      :2050  :Low      :LDV  :6            :DS0         :Scen 5 dmnd mult with shift to ridehailing_ridepooling
 CS7      :2050  :Low      :LDV  :7            :DS2         :Scen 3 dmnd mult with shift to ridehailing_ridepooling
-CS_B_low :2050  :Low      :LDV  :4            :B_low       :
-CS_B_high:2050  :Low      :LDV  :4            :B_high      :
-CS_C_low :2050  :Low      :LDV  :4            :C_low       :
-CS_C_high:2050  :Low      :LDV  :4            :C_high      :
+CS_B_low :2050  :Low      :LDV  :8            :B_low       :
+CS_B_high:2050  :Low      :LDV  :9            :B_high      :
+CS_C_low :2050  :Low      :LDV  :8            :C_low       :
+CS_C_high:2050  :Low      :LDV  :9            :C_high      :
 "), header = TRUE, sep = ":", strip.white = TRUE) #
 
 CombScen_Combinations <- CombScen_Combinations %>%
