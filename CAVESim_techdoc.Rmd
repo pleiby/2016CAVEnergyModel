@@ -1,11 +1,13 @@
 ---
 title: "CAVESIM Technical Documentation"
 author:
-  name: Paul N. Leiby
   affiliation: Oak Ridge National Laboratory
   email: leibypn@ornl.gov
-date: Rev. 2019-09-14, Printed `r Sys.Date()`
-output: word_document
+  name: Paul N. Leiby
+date: "Rev. 2019-09-14, Printed `r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Purpose:
 ------------------
 
-This file describes some of the data structures and functions in CAVESIM (CAVdecom.Rmd), for internal purposes.
+This file describes some of the data structures and functions in CAVESIM (CAVSimV10.Rmd), for internal purposes.
 
 Note: It should be executed after `CAVdecom.Rmd`, so that the data structures are defined and can be summarized.
 
@@ -24,7 +26,7 @@ Data Structures
 
 ### Listing of Case-related Input and Output Dataframes
 
-```{r def)varNameAndIndices_fn}
+```{r def_varNameAndIndices_fn, include=FALSE}
 varNameAndIndices <- function(x = FALSE) {
   # display the variable (dataframe) name and its indices
   #   See https://stackoverflow.com/questions/10520772/in-r-how-to-get-an-objects-name-after-it-is-sent-to-a-function
@@ -37,7 +39,7 @@ varNameAndIndices <- function(x = FALSE) {
 #### 3. Estimating Energy Impacts
 
 These are the primary tables for this section:
-```{r}
+```{r, eval=FALSE}
 cat("-", varNameAndIndices(IM), "\n")
 cat("-", varNameAndIndices(msa), "\n")
 cat("-", varNameAndIndices(scenAssumps), "\n")
@@ -66,7 +68,7 @@ cat("-", varNameAndIndices(NetEnergyIntensityChangeTable), "\n")
 #### 4. Demand Response to CAVs
 
 These are the primary tables for this section:
-```{r}
+```{r, eval=FALSE}
 cat("-", varNameAndIndices(DemRespParamNotes), "\n")
 cat("-", varNameAndIndices(DemRespParams), "\n")
 cat("-", varNameAndIndices(DemRespParamsm), "\n")
@@ -148,7 +150,7 @@ The fractional increase in VKT $m_{vtdj}(c_{rel,vtdj})$
 #### 5. Policy and Combined Scenario Calculations
 
 These are the primary tables for this section:
-```{r}
+```{r, eval=FALSE}
 cat("-", varNameAndIndices(CaseEffectsEI), "\n")
 cat("-", varNameAndIndices(CaseEffects), "\n")
 cat("-", varNameAndIndices(CombScen_Combinations), "\n")
@@ -168,7 +170,7 @@ cat("-", varNameAndIndices(CaseWantedAssumps), "\n")
     - EnergyUse = (1+NIE)*(1+fracVMTIncr) - 1.0
 
 Count of cases in CaseEffects for each Demand Scenario and TechScenario:
-```{r}
+```{r, eval=FALSE}
 table(CaseEffects$DemScen, CaseEffects$TechScen)
 
 ```
@@ -182,7 +184,7 @@ table(CaseEffects$DemScen, CaseEffects$TechScen)
     DS6 4 4 4 4 4 4 4
     DS7 4 4 4 4 4 4 4
 
-```{r}
+```{r, eval=FALSE}
 table(CaseEffects$VC, CaseEffects$ElasCase)
 ```
 
@@ -195,7 +197,7 @@ table(CaseEffects$VC, CaseEffects$ElasCase)
   - Note: sum(CaseAssumps[names(CaseEffects)]!=CaseEffects) ==0
 
 - CombScen_Combinations[CombScen, Year, ElasCase, VC, TechScen, DemScen_Num, Notes] 
-    - # specifies, for each CombScen and VC: combined cases wanted (TechScen, DemScen, ElasCase, Year)
+    - specifies, for each CombScen and VC: combined cases wanted (TechScen, DemScen, ElasCase, Year)
 
 - CaseWantedEffects[CombScen, DemScen, ElasCase, TechScen, VC, Year, fracVMTIncr, NIE, EnergyUse] 
     - selects the combined scenarios in CaseEffects that match the ones desribed in - CombScen_Combinations by ["Year", "ElasCase", "VC", "TechScen", "DemScen_Num"]
@@ -207,13 +209,13 @@ table(CaseEffects$VC, CaseEffects$ElasCase)
 Functions
 ---------------------
 - plotStackedBarShares <- function(df, ds, ts = "TS4") 
-    - # function to take dataframe of shares by demand scenario and VehType, and
-        - #   for specified demand scenario ds,
-        - #   plot stacked bar graph with one column for each VehType.
+    - function to take dataframe of shares by demand scenario and VehType, and
+        - for specified demand scenario ds,
+        - plot stacked bar graph with one column for each VehType.
 - plotStackedBarCostCompons <- function(df, ds, ts = "TS4")
-    - # function to take dataframe of shares by demand scenario and VehType, and
-        - #   for specified demand scenario ds,
-        - #   plot stacked bar graph with one column for each VehType.
+    - function to take dataframe of shares by demand scenario and VehType, and
+        - for specified demand scenario ds,
+        - plot stacked bar graph with one column for each VehType.
 
 - CombScenResultsForOneTechScen <- function(CurrTS, CurrYr)
   - For a single TechScen, CurrTS, and year CurrYr,
@@ -236,14 +238,14 @@ Functions
     # Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
 
 - percentMPGdecreaseTHWH2014 <- function(S, refMPG = 25.0)
-    - # MPG vs. Speed in mph - Thomas et al. Approach
+    - MPG vs. Speed in mph - Thomas et al. Approach
     
     
 #### 8. Examination of VMT and PMT Given Various Levels of Pooling
 
 These are the primary tables for this section:
 
-```{r}
+```{r, eval=FALSE}
 cat("-", varNameAndIndices(scenData), "\n")
 cat("-", varNameAndIndices(scenCostData), "\n")
 cat("-", varNameAndIndices(occupancyEffects), "\n")
@@ -271,3 +273,69 @@ cat("-", varNameAndIndices(), "\n")
         - VMTIncrease (needs) RelTotCost)
         - VMTIncrease
     - collapse the two long, largely duplicative, functions into 1, or have the second call the first
+
+
+---------------------------------------
+
+## Diaggregating Energy Intensity and Demand responses by subcategory
+
+### Vehicle/Travel Categories
+
+We have the following subcategories of passenger road vehicle travel
+
+- r: Region or Roadtype, $r \in \{ Arterial, Highway \}$
+- c: Class of vehicle, $c in \{ Car, LtTruck, HDV \}$
+- A: Automation=, $A \in \{ None, Partial, Full \}$
+- F: Fuel, $F \in \{ Gas, Elec \}$
+- U: Use (Ownership), $U \in \{ Private, Shared \}$
+
+Thus vehicle type, vehicle energy intensity *I*, travel demand (miles) *D* and energy use *E* are all indexed, or subscripted by $r,c,a,f,u$ as well as year $y$
+
+#### Energy as Product of Vehicle Energy Intensity and VMT
+
+Demand scenarios are largely specified by the fraction of vehicle stock, or fraction of trips satisfied, by vehicles of eack type $K_{y,r,c,a,f,u}$.
+
+The energy use by each vehicle type is determined by its intensity and travel demand (VMT or $D$):
+
+$$E_{y,r,c,a,f,u} = I_{y,r,c,a,f,u} \cdot D_{y,r,c,a,f,u}$$
+
+#### Vehicle Energy Intensity 
+
+For full CAV penetration scenarios, without electrification, we computed fuel intensity relative to the base vehicle travel (average Region/Road)
+$$\rho^I_{y,r,c,a,f,u} \equiv I_{y,r,c,a,f,u} /I_{c,base}$$
+more specifically, the results are based on year and Class, and apply to a fully automated vehicle, gasoline drivetrain,  in average private (non-shared) use:
+
+$$I_{y,r=ave,c,a=F,f=G,u=P}  = I_{y,c,base} \cdot (1+\Delta I_{y,c})$$
+
+$$\rho^I_{y,c} \equiv I_{y,r=ave,c,a=F,f=G,u=P} /I_{y,c,base} = 1+\Delta I_{y,c}$$
+
+Where 
+$$I_{c,base} = I_{y, r=ave, c, a=None, f=Gas, u=Private} $$
+
+More generally, each vehicle's intensity will depend on the adjustments to the base for the vehicle type (Class, Fuel, Automation) and use case (Region). That is
+
+$$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (1+\Delta I_{r})(1+\Delta I_{c})(1+\Delta I_{a})(1+\Delta I_{f})(1+\Delta I_{u})$$
+$$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (\rho_{r})(\rho_{c})(\rho_{a})(\rho_{f})(\rho_{u})$$
+although the intensity adjustment factors $\rho^I$ also depend to some degree on the vehicle/driving categories. 
+
+#### Similarly, for Travel:
+
+fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1
+
+$$D_{y,r,c,a,f,u} = $$
+
+#### With combined effect on Energy use
+$$E_{y,r,c,a,f,u} = I_{y,r,c,a,f,u} \cdot D_{y,r,c,a,f,u}$$
+
+$$\rho^E_{y,r,c,a,f,u} \equiv \frac {E_{y,r,c,a,f,u}} {E_{y,r,c,a,f,u}}$$
+
+$$\rho^E_{y,r,c,a,f,u} = \frac {I_{y,r,c,a,f,u} \cdot D_{y,r,c,a,f,u}} {I_{y,r,c,a,f,u} \cdot D_{y,r,c,a,f,u}}$$
+
+Note: some important parameters are correctly indexed by these vehicle/travel types:
+
+- VoTT depend on *r* region, *a, u* (not *f*)
+- Vehicle non-energy operating costs depends on Vehicle Class *c, a, f*
+- Vehicle energy intensity depends on *c, r, a, f,* (but not *u*)
+
+
+
