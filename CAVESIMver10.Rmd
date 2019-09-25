@@ -1744,122 +1744,9 @@ CaseWantedAssumpsResults <- CaseAssumpsResults %>%
   right_join(CombScen_Combinations, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
 ```
 
-#### Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
-
-Transportation Energy Use - Estimated Reference Scenario  (trillions BTU)
-
-Drawing from AEO Table 45.  Transportation Sector Energy Use by Mode and Type
-
-Transportation Energy Use Estimated Automated Vehicle Scenario = RefEnergyUse*((1+Modal Efficiency Factors)^Rebound Elasticities)*(1+Fuel Carbon Intensities)*(1+Modal Shares/Activity Factors)
-
-LDV Total Energy = LDV Total Energy Ref*((1+Light-Duty Vehicle)^Light-Duty Vehicle)*(1+ Jet Fuel)*(1+Light-Duty Vehicle)
-
-Commercial Light Trucks Motor Gasoline =  Motor Gasoline*((1+Commercial Light Trucks 1/)^Commercial Light Trucks 1/)*(1+ Motor Gasoline)*(1+Commercial Light Trucks 1/)
-
-Commercial Light Trucks Distillate Fuel Oil (diesel) =  Distillate Fuel Oil (diesel)*((1+Commercial Light Trucks 1/)^Commercial Light Trucks 1/)*(1+ Ethanol)*(1+Commercial Light Trucks 1/)
-
-CLT Total Energy =  Motor Gasoline+ Distillate Fuel Oil (diesel)
-
-Freight Trucks Motor Gasoline =  Motor Gasoline*((1+Freight Trucks)^Freight Trucks)*(1+ Motor Gasoline)*(1+Freight Trucks)
-
-Freight Trucks Distillate Fuel Oil (diesel) =  Distillate Fuel Oil (diesel)*((1+Freight Trucks)^Freight Trucks)*(1+ Ethanol)*(1+Freight Trucks)
-
-Freight Trucks Compressed Natural Gas =  Compressed Natural Gas*((1+Freight Trucks)^Freight Trucks)*(1+ Compressed Natural Gas)*(1+Freight Trucks)
-
-Freight Trucks Liquefied Petroleum Gases =  Liquefied Petroleum Gases*((1+Freight Trucks)^Freight Trucks)*(1+ Liquefied Petroleum Gases)*(1+Freight Trucks)
-
-HDV Total Energy =  Motor Gasoline+ Distillate Fuel Oil (diesel)+ Compressed Natural Gas+ Liquefied Petroleum Gases
-
-Formula: SUM(LDV Total Energy, CLT Total Energy, HDV Total Energy)/SUM(LDV Total Energy Ref, CLT Total Energy Ref, HDV Total Energy Ref)-1
-
-```{r}
-
-```
-
-VMT Demand Response: pick up chosen Demand and Technology Scenario, and values for chosen scenario, for years 2035 & 2050
-
-
-```{r exogCAVPenetrationShare, echo=echoWorking}
-# fully automated vehicles/total stock
-ExogCAVPenetrationShare <- read.delim(textConnection("
-Year  :LDV    :HDV
-2020  :0.00   :0.00   
-2035  :0.40   :0.40
-2050  :1.00   :1.00
-"), header = TRUE, sep = ":", strip.white = TRUE) #
-# Temporarily assume same HDV penetration as LDV.
-# linearly increases to 2035 and 2050 value input by user
-
-rownames(ExogCAVPenetrationShare) <- ExogCAVPenetrationShare$Year
-
-# compute the PolicyScen projection table
-PolicyScen <- tibble(Year = 2007:2050)
-
-# Exogenous CAV penetration (assumed Highly-automated)
-#  based on interpolation of specified points in
-PolicyScen$LDV_Penetration <- 0
-PolicyScen$LDV_Penetration[(2020:2035) - 2007 + 1] <-
-  seq(ExogCAVPenetrationShare[["2020", "LDV"]], ExogCAVPenetrationShare[["2035", "LDV"]], length.out = 2035 - 2020 + 1)
-PolicyScen$LDV_Penetration[(2035:2050) - 2007 + 1] <-
-  seq(ExogCAVPenetrationShare[["2035", "LDV"]], ExogCAVPenetrationShare[["2050", "LDV"]], length.out = 2050 - 2035 + 1)
-
-PolicyScen$HDV_Penetration <- 0
-PolicyScen$HDV_Penetration[(2020:2035) - 2007 + 1] <-
-  seq(ExogCAVPenetrationShare[["2020", "LDV"]], ExogCAVPenetrationShare[["2035", "LDV"]], length.out = 2035 - 2020 + 1)
-PolicyScen$HDV_Penetration[(2035:2050) - 2007 + 1] <-
-  seq(ExogCAVPenetrationShare[["2035", "LDV"]], ExogCAVPenetrationShare[["2050", "LDV"]], length.out = 2050 - 2035 + 1)
-```
-
-
-```{r readPolicyScen_Testdata}
-Years <- 2007:2050
-PolicyScen_Test_filename <- "PolicyAndScenarioData_Test20161014.csv"
-ScenAndPolicyProj_Test <- read_csv(paste0("./Data/", PolicyScen_Test_filename), comment = "#")
-```
-
-VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050        
-  Dem Scenario  2035  2050    Notes
-LDV Demand impact (depends on scenario choice in B3)  6  0.671  0.671    Dmnd change Per CAV, or at total demand impact at full penetration
-HDV Demand impact (depends on scenario choice in B3)  6  0.683  0.683    Dmnd change Per CAV, or at total demand impact at full penetration
-
-LDV Demand impact (depends on scenario choice in B3) (not year t dependent)
-HDV Demand impact (depends on scenario choice in B3) (not year t dependent)
-LDV penetration: total automated/total stock in 2050
-HDV penetration: total automated/total stock in 2050
-
-
-LDV Penetration rate=fullyauto/totalstock
-LDV Increase in VMT for each automated vehicle
-LDV VMT increase ratio/this is linked to calculation sheets
-
-HDV Penetration rate=fullyauto/totalstock
-HDV Increase in VMT for each automated vehicle
-HDV VMT increase ratio/this is linked to calculation sheets
-
-LDV Energy Intensity Multiplier, scaled by penetration
-HDV Energy Intensity Fractional Increase at full adoption - from above
-LDV Energy Intensity Multiplier, scaled by penetration
-HDV Energy Intensity Multiplier, scaled by penetration
-
-
-```{r policyAndScenarioCalcs1, echo=echoWorking}
-# See '[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170809.xlsx]Policy+Scenario'"
-CAVmod <- data.frame(Year = 2007:2050)
-CAVmod$CAVpenetration <- 0.0
-CAVmod$CAVpenetration <- # Fractional Increase in VMT for Demand Scenarios
-c(
-  rep(0, sum(CAVmod$Year < 2020)),
-  seq(from = 0.040, to = 1.00, length.out = sum(CAVmod$Year >= 2020))
-)
-```
-
 
 5.1 Final Scenario Results Table for 2050
 ------------------------
-
-$$TranspEnergyUse_{AVScenario} = 
-   TranspEnergyUse_{Ref} \cdot (1+ModalEfficiencyFactors)^{ReboundElas} \cdot (1+FuelCarbonIntensities) \cdot
-   (1+ \frac {Modal Shares}{Activity Factors})$$
 
 ```{r specifyTestScenarioSummary, echo=echoWorking, include=echoTests}
 # Scenario Summary 2050 Energy Intensity, VMP and Energy Use Changes at Full Adoption
@@ -1966,348 +1853,7 @@ table(CWE_test$TechScen, CWE_test$DemScen)
 save(list = ls(), file = "CAVESIMdecom.sav")
 ```
 
-
-
-5.3 Travel Time Budget
--------------------
-BGR2014:144 (referencing Shaefer et al. 2009) apply a Travel Time Budget constraint in the following straight-forward way:
-$$D/S = D_r/S_r$$
-Travel time (distance _D_ over speed _S_) must equal reference travel time.  (Appears that they apply this to all travel based on average speed, and assume a 50% increase in average speed.)
-
-More generally, the travel time can  be expected to vary in response to travel costs and income.
-
-
-5.4 Physical Constants
----------------
-
-```{r constants, echo=echoWorking}
-PhysConst <- tibble(
-  JoulePerBTU = 1054.8, # approx 1055. https://www.aps.org/policy/reports/popa-reports/energy/units.cfm
-  BTUPerJoule = 1 / JoulePerBTU,
-  BTUPerBOE = 5.45E6, # (barrel of oil equivalent) =  BTU.
-  BTUPerGalGaso = BTUPerBOE / 42,
-  BTUPerCFNatgas = 983, # 1 cubic feet of natural gas = 983 BTU.
-  # 1 exajoule = 174 million barrels of oil equivalent.
-  kmPerMile = 1.60934,
-  literPerGal = 3.78541178,
-  kplPerMpg = kmPerMile / literPerGal,
-  MJPerGalGaso = 131.76, # http://www.convertunits.com/from/gallon/to/megajoule
-  MJPerLiterGaso = MJPerGalGaso / literPerGal,
-  MJPerkWh = 3.6, # exact, definitional
-  # Exajoule (EJ): EJ = 10^18 J. A quad and an ExaJoule are about the same, as are 1 BTU and a kJ
-  EJPerquad = 1.055, # Quadrillion Btu(quad): 1 quad = 10^15 Btu = 1.055 EJ
-  quadPerTWyr = 29.89 # Terawatt-year (TWyr): 1 TWyr = 8.76 x 1012 kWh = 31.54 EJ = 29.89 quad
-)
-
-t(PhysConst)
-```
-
-5.5 Vehicle Scenario Parameters
---------------
-```{r setParameters, echo=echoWorking}
-
-VehParams <- tibble(
-  # Activity/Demand
-  # TEDB U.S. Cars and Trucks in Use, 1970–2014(http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_04.xls)
-  LDVStock = 2.5E8, # US LD vehicle stock, Cars and (Lt) Trucks
-  # TEDB: [Annual Mileage for Cars and Light Trucks by Vehicle Age](http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_13.xls)
-  VKTPerLDVyear = PhysConst$kmPerMile * (12.337E3 + 14.081E3) / 2, # ref travel demand/LDV, km/yr (ave of cars & trks @ age 5)
-
-  # Energy Intensity
-  AveLDVFuelEconomy_MPG = 25, # base year ave LDV MPG
-  AveLDVFuelIntensity_Lp100k = 100 / (AveLDVFuelEconomy_MPG * PhysConst$kplPerMpg), # MPG kpl to L/100k)
-  # [Carbon Intensity for Gasoline & Substitutes, g CO2 e/MJ](http://www.energy.ca.gov/ab118/documents/2009-04-09_meeting/2009-04-09_Carbon_Emission_Graphs.pdf)
-
-  # Carbon Intensity
-  gCO2ePerMJGaso = 96, # for CA RFG,
-  gCO2ePerMJCAElec = 41, # for CA electricity, ave gen mix "(gCO2/unit energy adjusted for energy economy ratio [EER])"
-
-  # Computed paramters, reference conditions
-  FuelUsePerLDVYear_L = VKTPerLDVyear * AveLDVFuelIntensity_Lp100k / 100, # Liters/LDV/yr
-  LDVFuelUsePerYear_L = LDVStock * FuelUsePerLDVYear_L, # total LDV fuel use
-)
-
-#  # Summarize Calc Parameters
-#  FuelUsePerLDVYear_L,
-#  LDVFuelUsePerYear_L
-t(VehParams)
-```
-
-
-# 6. Simple functions for MPG as a function of highway speed
-
-6.1 Fuel Consumption vs. Speed - Thomas et al. Approach
-----------------------
-
-* Source: Thomas, J., Hwang, H.-L., West, B., & Huff, S. (2013). Predicting Light-Duty Vehicle Fuel Economy as a Function of Highway Speed. SAE International Journal of Passenger Cars - Mechanical Systems, 6(2), 2013-01-1113. doi:10.4271/2013-01-1113
-
-  > Thomas et al. performed "analysis of dynamometer testing results for 74 vehicles at steady-state speeds from 50 to 80 mph [80 to 129 km/h].  Data has been collected for 23 light-duty vehicles at ORNL's vehicle research laboratory and a valuable data set for 51 vehicles was loaned to ORNL by Chrysler, LLC under a non-disclosure agreement. Vehicles were tested in dynamometer laboratories at steady speeds from 40 to 80 mph [64 to 129 km/h], with the proper road-load applied. ... The study includes various sizes of sedans, wagons, and SUVs, as well as pickup trucks, minivans and a few "muscle" and sports cars. Vehicles from model years 2003 to 2012 with a wide variety of powertrains were represented" [ORNL researchers quantify the effect of increasing highway speed on fuel economy](http://www.greencarcongress.com/2013/01/thomas-20130117.html) Jan 18, 2013
-
-**Summary of MPG vs. Speed data:
-Percent mpg decrease for a given 10 mph increase based on 74 vehicles.**
-
-Speed increase             | Average   | Data range    | Std. deviation | Middle 2/3s of vehicle data
----------------------------|-----------|---------------|----------------|----------------------
-50 to 60 mph               | 12.4      | 6.9-18.3      | 2.2            | 10.0-14.3
-60 to 70 mph               | 14.0      | 8.8-19.5      | 2.6            | 11.2-16.1
-70 to 80 mph               | 15.4      | 10.8-26.0     | 3.0            | 12.5-17.5
-All three speed increments | 13.9      | 6.9-26.0      | 2.9            | N/A
-
-We can calculate the percentage decrease in MPG for a range of speed changes using the methodology Thomas, Hwang, West and Huff 2013.
-
-```{r getPctMPGdect, echo=echoWorking}
-percentMPGdecreaseTHWH2014 <- function(S, refMPG = 25.0) {
-  # MPG vs. Speed in mph - Thomas et al. Approach
-  # Based on Thomas, J., Hwang, H., West, B. and Huff, S., "Predicting Light-Duty Vehicle Fuel Economy as a
-  # Function of Highway Speed," SAE Int. J. Passeng. Cars - Mech. Syst. 6(2):2013.
-  # Model 1 (depends reference MPG for vehicle)
-  f_a <- (0.0533 * refMPG^2 - 0.3580 * refMPG)
-  f_b <- (-0.0062 * refMPG^2 + 0.01345 * refMPG - 0.34192)
-  MPG <- f_a + f_b * S
-  if (S < 50) {
-    return(NA)
-  } # function not defined for  speeds below this min
-  else {
-    return((refMPG - MPG) / refMPG)
-  }
-}
-
-mSet <- seq(15, 45, 5) # alternative reference MPGs
-sSet <- seq(40, 100, 10) # alternative speeds
-pmd <- matrix(NA, nrow = length(mSet), ncol = length(sSet), dimnames = list(mSet, sSet))
-# pmd = data.frame(matrix(NA,nrow=length(mSet),ncol=length(sSet), dimnames = list(mSet, sSet)))
-for (i in 1:nrow(pmd)) {
-  for (j in 1:ncol(pmd)) {
-    pmd[i, j] <- percentMPGdecreaseTHWH2014(sSet[j], mSet[i])
-  }
-}
-
-# pmd # percent MPG decreases
-kable(
-  x = round(pmd, 2),
-  caption = "Table: Percent MPG Decreases With Speed (Rows are Ref Speed)"
-)
-```
-
-6.2 Fuel Consumption vs Speed - Berry Approach
----------------------------------------
-
-```{r FCvsSpeedBerry, echo=echoWorking, dpi=300}
-S_r <- 71 # "Reference speed" km/h
-f_r <- 0.5 # "Aero losses fraction of total @ reference speed" unitless
-I_r <- 4.7 # "FC_r, Fuel consumption @ reference speed" l/100km
-P_gasdpg <- 3.50 # "Gasoline Price $/gallon"
-P_gasdpl <- 0.92 # "Gasoline Price $/litre"
-P_gasdpl <- P_gasdpg / 3.785
-C_timedph <- 18 # "Cost of Travel Time $/hr"
-a_0 <- 0.143171 # "Intercept term in FC ratio curve"
-a_1 <- 0.00474448 # "Coeff on linear term in FC ratio curve"
-a_2 <- 0.0000742969 # "Coeff on squared term in FC ratio curve"
-
-s_optkph <- 127.2 # "Optimal speed" km/h
-# s_optmph = 79.1  # "Optimal speed" mi/hr
-s_optmph <- s_optkph / PhysConst$kmPerMile # "Optimal speed" mi/hr
-
-# I_sopt = 9.16 # "FC @ optimal speed" l/100km
-I_sopt <- I_r * (a_0 + a_1 * s_optkph + a_2 * s_optkph^2) # "FC @ optimal speed" l/100km
-
-C_tot <- 0.2331 # "Total Cost" $/km
-C_tot <- I_sopt / 100 + C_timedph / s_optkph # Total Cost $/km (fuel and time)
-MPG_sopt <- 25.66 # "MPG @ optimal speed" mpg
-MPG_sopt <- 235.2 / I_sopt
-
-# FC rel. to 65 mph   1.34
-# FC rel. to 70 mph   1.20
-
-TCdf <- data.frame(Speed_mph = seq(40, 150, 5))
-
-TCdf <- TCdf %>%
-  mutate(
-    Speed_kph = Speed_mph * PhysConst$kmPerMile,
-    FC_lper100km = I_r * (a_0 + a_1 * Speed_kph + a_2 * Speed_kph^2), # l/100-km
-    FC_galpermi = (FC_lper100km / 100) * PhysConst$kplPerMpg, # gal/mi
-    FE_mpg = 1 / FC_galpermi,
-    Pace_hrpermi = 1 / Speed_mph, # (hr/mi)
-    FuelCost_dpm = FC_galpermi * P_gasdpg, # ($/mi)
-    TimeCost_dpm = C_timedph / Speed_mph, # ($/mi)
-    TotalCost_dpm = FuelCost_dpm + TimeCost_dpm # ($/mi)
-  )
-
-# TCdf
-
-# Plot the cost components, per mile
-TCdf %>%
-  select(Speed_mph, FuelCost_dpm, TimeCost_dpm, TotalCost_dpm) %>%
-  gather(variable, value, FuelCost_dpm:TotalCost_dpm) %>%
-  ggplot(aes(Speed_mph, value)) + geom_line(aes(color = variable), size = 1) +
-  ggtitle("Example Tradeoff of Energy Costs with Time Costs (TTC = $18/hr, $3.5/gal)")
-```
-
-6.3 Compute the Optimum Highway Speed for a Range of Time Costs and Fuel Costs
---------------------
-
-```{r computeOptHighwaySpeeds, echo=echoWorking}
-
-TotalTimeAndFuelCost <- function(speed_mph, FC_dpg = 3.5, TC_dph) {
-  # computes total travel costs (time and fuel) as a function of speed in mph
-  #
-  S <- speed_mph * kmPerMile
-  FC_lper100km <- I_r * (a_0 + a_1 * S + a_2 * S^2) # l/100-km
-  FC_galpermi <- (FC_lper100km / 100) * PhysConst$kplPerMpg # gal/mi
-  FE_mpg <- 1 / FC_galpermi
-  FuelCost_dpm <- FC_galpermi * P_gasdpg # ($/mi)
-  TimeCost_dpm <- C_timedph / speed_mph # ($/mi)
-  TotalCost_dpm <- FuelCost_dpm + TimeCost_dpm # ($/mi)
-}
-
-# nlm(f=, p, ..., hessian = FALSE, typsize = rep(1, length(p)),
-#     fscale = 1, print.level = 0, ndigit = 12, gradtol = 1e-6,
-#     stepmax = max(1000 * sqrt(sum((p/typsize)^2)), 1000),
-#     steptol = 1e-6, iterlim = 100, check.analyticals = TRUE)
-
-timeCostRange_dph <- 10.0 * seq(from = 0.1, to = 2.0, by = 0.1) # $/hr
-fuelCostRange_dpg <- 2.0 * seq(from = 0.1, to = 2.0, by = 0.1) # $/gal
-```
-
-# 7. Safety Costs Associated with Speed
-
-* [Road safety - Speed](http://www.who.int/violence_injury_prevention/publications/road_traffic/world_report/speed_en.pdf) World Health Organization, 2004
-  - An increase in average speed of 1 km/h typically results in a 3% higher risk of a crash involving injury, with a 4-5% increase for crashes that result in fatalities.
-  - Speed also contributes to the severity of the impact when a collision does occur. For car occupants in a crash with an impact speed of 80 km/h, the likelihood of death is 20 times what it would have been at an impact speed
-of 30 km/h.
-* WHO 2004 World report on road traffic injury prevention
-** Crash Risk**
-    - WHO 2004 [World report on road traffic injury prevention](http://apps.who.int/iris/bitstream/10665/42871/1/9241562609.pdf)
-    - http://www.who.int/violence_injury_prevention/publications/road_traffic/world_report/en/
-    - The probability of a crash involving an injury is proportional to the square of the speed. The probability of a serious crash is proportional to the cube of the speed. The probability of a fatal crash is related to the fourth power of
-the speed (38, 39). [Chap 3, Crash Risk, p.78]
-    - Empirical evidence from speed studies in various countries has shown that an increase of 1 km/h in mean traffic speed typically results in a 3% increase in the incidence of injury crashes (or an increase of 4-5% for fatal crashes), and a decrease of 1 km/h in mean traffic speed will result in a 3% decrease in
-the incidence of injury crashes (or a decrease of 4-5% for fatal crashes) (40).
-    - Taylor et al. (41, 42), in their study on different types of roads in the United Kingdom, concluded that for every 1 mile/h (1.6 km/h) reduction in average traffic speed, the highest reduction achievable in the volume of
-crashes was 6% (in the case of urban roads with low average speeds). These are typically busy main roads in towns with high levels of pedestrian activity, wide variations in speeds and high frequencies of crashes.
-    - A meta-analysis of 36 studies on speed limit changes showed, at levels above 50 km/h, a decrease of 2% in the number of crashes for every 1 km/h reduction in the average speed (43).
-    - For car occupants in a crash with an impact speed of
-50 miles/h (80 km/h), the likelihood of death is 20 times
-what it would have been at an impact speed of 20 miles/h
-(32 km/h) (48).
-
-TABLE 3.4: Relative risks of involvement in a casualty crash for speed and alcohol
-
-Speed (km/h) | Speed (relative risk)
--------------|-----------------
-60  | 1.0
-65  | 2.0
-70  | 4.2
-75  | 10.6
-80  | 31.8
-
-Relative to a sober driver travelling at the speed limit of 60 km/h.
-(Source: Kloeden et al., 1997. See alos Kloeden et al. 2001)
-
-
-
-### 7.1 Severity of crash injuries
-
-- Speed has an exponentially detrimental effect on
-safety. As speeds increase, so do the number and
-severity of injuries. Studies show that the higher
-the impact speed, the greater the likelihood of serious
-and fatal injury:
-    - For car occupants, the severity of crash injury
-depends on the change of speed during the
-impact, usually denoted as $\delta$v. As $\delta$v increases
-from about 20 km/h to 100 km/h, the probability
-of fatal injuries increases from close to
-zero to almost 100% (46).
-    - The probability of serious injury for belted
-front-seat occupants is three times as great at
-30 miles/h (48 km/h) and four times as great
-at 40 miles/h (64 km/h), compared with the
-risk at 20 miles/h (32 km/h) (47).
-    - For car occupants in a crash with an impact
-speed of 50 miles/h (80 km/h), the likelihood
-of death is 20 times what it would have been at
-an impact speed of 20 miles/h (32 km/h) (48).
-    - Pedestrians have a 90% chance of surviving car
-crashes at 30 km/h or below, but less than a
-50% chance of surviving impacts at 45 km/h
-or above (49, 50) (see Figure 3.3).
-    - The probability of a pedestrian being killed rises
-by a factor of eight as the impact speed of the car
-increases from 30 km/h to 50 km/h (51).
-    - Older pedestrians are even more physically vulnerable as speeds increase (52) (see Figure 3.4).
-    - Excess and inappropriate speed contributes to around 30% of fatal crashes in high-income countries (53).
-  
-* Safety References
-    38. Wegman F, Elsenaar P. Sustainable solutions to
-improve road safety in the Netherlands. Leidschendam,
-Institute for Road Safety Research, 1997
-(SWOV Report D-097-8).
-    39. Ogden KW. Safer roads: a guide to road safety engineering.
-Melbourne, Ashgate Publishing Ltd, 1996.
-    40. Cities on the move: a World Bank urban strategy review.
-Washington, DC, The World Bank, 2002.
-    41. Handboek: categorisering wegen op duurzaam veilige
-basis. Deel I (Voorlopige): functionele en operationele eisen
-[Handbook: categorizing roads on long-lasting safe basis.
-Part I (Provisional): functional and operational demands].
-Ede, Stichting centrum voor regelgeving en
-onderwoek in de grond-, water- en wegenbouw
-en de verkeerstechniek, 1997 (CROW
-Report 116).
-    42. Zone guide for pedestrian safety shows how to make systematic improvements. Washington, DC, National Highway
-Traffic Safety Administration, 1998 (Technology
-Transfer Series Number 181) (http://
-www.nhtsa.dot.gov/people/outreach/traftech/
-pub/tt181.html, accessed 5 December 2003).
-    43. Towards a sustainable safe traffic system in the Netherlands. Leidschendam, Institute for Road Safety
-Research, 1993. 
-    47. Safety of vulnerable road users. Paris, Organisation
-for Economic Co-operation and Development, 1998 (DSTI/DOT/RTR/RS7(98)1/FINAL) (http:
-//www.oecd.org/dataoecd/24/4/2103492.pdf,
-accessed 17 November 2003).
-    48. Ossenbruggen PJ, Pendharkar J, Ivan J. Roadway
-safety in rural and small urbanized areas.
-Accident Analysis and Prevention, 2001, 33:485-498.
-    49. Khan FM et al. Pedestrian environment and
-behavior in Karachi, Pakistan. Accident Analysis
-and Prevention, 1999, 31:335-339.
-    50. Herrstedt L. Planning and safety of bicycles
-in urban areas. In: Proceedings of the Traffic Safety
-on Two Continents Conference, Lisbon, 22-24 September 1997. Linköping, Swedish National Road and
-Transport Research Institute, 1997:43-58.
-    51. Kjemtrup K, Herrstedt L. Speed management and
-traffic calming in urban areas in Europe: a historical
-view. Accident Analysis and Prevention, 1992, 24:57-65.
-    52. Brilon W, Blanke H. Extensive traffic calming:
-results of the accident analyses in six model
-towns. In: ITE 1993 Compendium of Technical Papers.
-Washington, DC, Institute of Transportation
-Engineers, 1993:119-123.
-
-7.2 Speed and Accident Risk
--------------------
-* Notes from [Speed and Accident Risk](https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_accident_risk_en), European Road Safety Observatory
-
-- https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_road_safety_en
-
-  > Assessing potential effectiveness of speed reduction measures
-Based on work by Nilsson in Sweden, a change in average speed of 1 km/h will result in a change in accident numbers ranging between 2% for a 120 km/h road and 4% for a 50 km/h road. This result has been confirmed by many before and after studies of different speed reduction measures. This relationship is used by other Scandinavian countries and by Australian and Dutch safety engineers.
-
-  > A similar relationship is assumed in Britain, based on empirical studies by Taylor, where changes in accident numbers associated with a 1 km/h change in speed have been shown to vary between 1% and 4% for urban roads and 2.5% and 5.5% for rural roads, with the lower value reflecting good quality roads and the higher value poorer quality roads.
-
-  > Higher speeds: more accidents : High speed reduces the possibility to respond in time when necessary. People need time to process information, to decide whether or not to react and, finally to execute a reaction. At high speed the distance covered in this period is longer. At high speeds the distance between starting to brake and a complete stand still is longer as well. The braking distance is proportional to the square of speed (v2). Therefore, the possibility to avoid a collision becomes smaller as speed increases. This is well illustrated at a broad average level by Finch [24].
-
-  1 km/h increase in speed implies a 3% increase in accidents
- 
-  > In practice the relationship is more complex. ...The higher the speed, the steeper the increase in accident risk.  The relationship between speed and accident risk is a power function:
-
-  > Based on the principles of kinetic energy and validated by empirical data, Nilsson [[44](Nilsson, G. (1982) The effects of speed limits on traffic crashes in Sweden. In: Proceedings of the international symposium on the effects of speed limits on traffic crashes and fuel consumption, Dublin. Organisation for Economy, Co-operation, and Development (OECD), Paris)][[45](Nilsson, G. (2004) Traffic safety dimensions and the power model to describe the effect of speed on safety. Bulletin 221, Lund Institute of Technology, Lund)] developed the following formula:
-$$A_2 = A_1 \left ( \frac{V_2}{V_1} \right )^2$$
-
-  > In words: the number of injury accidents after the change in speed (A2) equals the number of accidents before the change (A1) multiplied by the new average speed (v2) divided by the former average speed (v1), raised to the square power.
-
-# 8. Examination of VMT and PMT Given Various Levels of Pooling
+# 6. Examination of VMT and PMT Given Various Levels of Pooling
 
 Consider a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.
 
@@ -2364,7 +1910,7 @@ The differences in energy cost/mi arise separately as result of the *Technology*
 Demand scenarios do include variation in the elasticity of VKT with respect to costs, though, 
 but that is not part of the VTCost data table.
 
-### 8.1 Consider alternative occupancy levels, and their effects on costs, PMT, and VMT.
+### 6.1 Consider alternative occupancy levels, and their effects on costs, PMT, and VMT.
 
 (Note!: This section is based on is a variant case for demand scenarios `r DemScenWanted` and energy intensity in the alternative scenario case at *double* that of TechScen 4).
 
@@ -2495,7 +2041,7 @@ occupancyTravelEffects %>% filter(o == 1.0)
 #   filter(DemScen=="DS3")
 ```
 
-### 8.2. Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
+### 6.2. Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
 
 ```{r calcPMTandVMT, echo=echoWorking}
 occupancyEffects <- occupancyEffects %>% mutate(
@@ -2557,6 +2103,464 @@ AltVMT %>%
     legend.title = element_text(size = 14),
     legend.text = element_text(size = 12)
   )
+```
+
+
+
+# Appendices
+
+# A1. Constants
+
+AX.1 Travel Time Budget
+-------------------
+BGR2014:144 (referencing Shaefer et al. 2009) apply a Travel Time Budget constraint in the following straight-forward way:
+$$D/S = D_r/S_r$$
+Travel time (distance _D_ over speed _S_) must equal reference travel time.  (Appears that they apply this to all travel based on average speed, and assume a 50% increase in average speed.)
+
+More generally, the travel time can  be expected to vary in response to travel costs and income.
+
+A1.1 Physical Constants
+---------------
+
+```{r constants, echo=echoWorking}
+PhysConst <- tibble(
+  JoulePerBTU = 1054.8, # approx 1055. https://www.aps.org/policy/reports/popa-reports/energy/units.cfm
+  BTUPerJoule = 1 / JoulePerBTU,
+  BTUPerBOE = 5.45E6, # (barrel of oil equivalent) =  BTU.
+  BTUPerGalGaso = BTUPerBOE / 42,
+  BTUPerCFNatgas = 983, # 1 cubic feet of natural gas = 983 BTU.
+  # 1 exajoule = 174 million barrels of oil equivalent.
+  kmPerMile = 1.60934,
+  literPerGal = 3.78541178,
+  kplPerMpg = kmPerMile / literPerGal,
+  MJPerGalGaso = 131.76, # http://www.convertunits.com/from/gallon/to/megajoule
+  MJPerLiterGaso = MJPerGalGaso / literPerGal,
+  MJPerkWh = 3.6, # exact, definitional
+  # Exajoule (EJ): EJ = 10^18 J. A quad and an ExaJoule are about the same, as are 1 BTU and a kJ
+  EJPerquad = 1.055, # Quadrillion Btu(quad): 1 quad = 10^15 Btu = 1.055 EJ
+  quadPerTWyr = 29.89 # Terawatt-year (TWyr): 1 TWyr = 8.76 x 1012 kWh = 31.54 EJ = 29.89 quad
+)
+
+t(PhysConst)
+```
+
+A1.2 Vehicle Scenario Parameters
+--------------
+```{r setParameters, echo=echoWorking}
+
+VehParams <- tibble(
+  # Activity/Demand
+  # TEDB U.S. Cars and Trucks in Use, 1970–2014(http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_04.xls)
+  LDVStock = 2.5E8, # US LD vehicle stock, Cars and (Lt) Trucks
+  # TEDB: [Annual Mileage for Cars and Light Trucks by Vehicle Age](http://cta.ornl.gov/data/tedb35/Spreadsheets/Table3_13.xls)
+  VKTPerLDVyear = PhysConst$kmPerMile * (12.337E3 + 14.081E3) / 2, # ref travel demand/LDV, km/yr (ave of cars & trks @ age 5)
+
+  # Energy Intensity
+  AveLDVFuelEconomy_MPG = 25, # base year ave LDV MPG
+  AveLDVFuelIntensity_Lp100k = 100 / (AveLDVFuelEconomy_MPG * PhysConst$kplPerMpg), # MPG kpl to L/100k)
+  # [Carbon Intensity for Gasoline & Substitutes, g CO2 e/MJ](http://www.energy.ca.gov/ab118/documents/2009-04-09_meeting/2009-04-09_Carbon_Emission_Graphs.pdf)
+
+  # Carbon Intensity
+  gCO2ePerMJGaso = 96, # for CA RFG,
+  gCO2ePerMJCAElec = 41, # for CA electricity, ave gen mix "(gCO2/unit energy adjusted for energy economy ratio [EER])"
+
+  # Computed paramters, reference conditions
+  FuelUsePerLDVYear_L = VKTPerLDVyear * AveLDVFuelIntensity_Lp100k / 100, # Liters/LDV/yr
+  LDVFuelUsePerYear_L = LDVStock * FuelUsePerLDVYear_L, # total LDV fuel use
+)
+
+#  # Summarize Calc Parameters
+#  FuelUsePerLDVYear_L,
+#  LDVFuelUsePerYear_L
+t(VehParams)
+```
+
+
+# A2. Simple functions for MPG as a function of highway speed
+
+A2.1 Fuel Consumption vs. Speed - Thomas et al. Approach
+----------------------
+
+* Source: Thomas, J., Hwang, H.-L., West, B., & Huff, S. (2013). Predicting Light-Duty Vehicle Fuel Economy as a Function of Highway Speed. SAE International Journal of Passenger Cars - Mechanical Systems, 6(2), 2013-01-1113. doi:10.4271/2013-01-1113
+
+  > Thomas et al. performed "analysis of dynamometer testing results for 74 vehicles at steady-state speeds from 50 to 80 mph [80 to 129 km/h].  Data has been collected for 23 light-duty vehicles at ORNL's vehicle research laboratory and a valuable data set for 51 vehicles was loaned to ORNL by Chrysler, LLC under a non-disclosure agreement. Vehicles were tested in dynamometer laboratories at steady speeds from 40 to 80 mph [64 to 129 km/h], with the proper road-load applied. ... The study includes various sizes of sedans, wagons, and SUVs, as well as pickup trucks, minivans and a few "muscle" and sports cars. Vehicles from model years 2003 to 2012 with a wide variety of powertrains were represented" [ORNL researchers quantify the effect of increasing highway speed on fuel economy](http://www.greencarcongress.com/2013/01/thomas-20130117.html) Jan 18, 2013
+
+**Summary of MPG vs. Speed data:
+Percent mpg decrease for a given 10 mph increase based on 74 vehicles.**
+
+Speed increase             | Average   | Data range    | Std. deviation | Middle 2/3s of vehicle data
+---------------------------|-----------|---------------|----------------|----------------------
+50 to 60 mph               | 12.4      | 6.9-18.3      | 2.2            | 10.0-14.3
+60 to 70 mph               | 14.0      | 8.8-19.5      | 2.6            | 11.2-16.1
+70 to 80 mph               | 15.4      | 10.8-26.0     | 3.0            | 12.5-17.5
+All three speed increments | 13.9      | 6.9-26.0      | 2.9            | N/A
+
+We can calculate the percentage decrease in MPG for a range of speed changes using the methodology Thomas, Hwang, West and Huff 2013.
+
+```{r getPctMPGdect, echo=echoWorking}
+percentMPGdecreaseTHWH2014 <- function(S, refMPG = 25.0) {
+  # MPG vs. Speed in mph - Thomas et al. Approach
+  # Based on Thomas, J., Hwang, H., West, B. and Huff, S., "Predicting Light-Duty Vehicle Fuel Economy as a
+  # Function of Highway Speed," SAE Int. J. Passeng. Cars - Mech. Syst. 6(2):2013.
+  # Model 1 (depends reference MPG for vehicle)
+  f_a <- (0.0533 * refMPG^2 - 0.3580 * refMPG)
+  f_b <- (-0.0062 * refMPG^2 + 0.01345 * refMPG - 0.34192)
+  MPG <- f_a + f_b * S
+  if (S < 50) {
+    return(NA)
+  } # function not defined for  speeds below this min
+  else {
+    return((refMPG - MPG) / refMPG)
+  }
+}
+
+mSet <- seq(15, 45, 5) # alternative reference MPGs
+sSet <- seq(40, 100, 10) # alternative speeds
+pmd <- matrix(NA, nrow = length(mSet), ncol = length(sSet), dimnames = list(mSet, sSet))
+# pmd = data.frame(matrix(NA,nrow=length(mSet),ncol=length(sSet), dimnames = list(mSet, sSet)))
+for (i in 1:nrow(pmd)) {
+  for (j in 1:ncol(pmd)) {
+    pmd[i, j] <- percentMPGdecreaseTHWH2014(sSet[j], mSet[i])
+  }
+}
+
+# pmd # percent MPG decreases
+kable(
+  x = round(pmd, 2),
+  caption = "Table: Percent MPG Decreases With Speed (Rows are Ref Speed)"
+)
+```
+
+A2.2 Fuel Consumption vs Speed - Berry Approach
+---------------------------------------
+
+```{r FCvsSpeedBerry, echo=echoWorking, dpi=300}
+S_r <- 71 # "Reference speed" km/h
+f_r <- 0.5 # "Aero losses fraction of total @ reference speed" unitless
+I_r <- 4.7 # "FC_r, Fuel consumption @ reference speed" l/100km
+P_gasdpg <- 3.50 # "Gasoline Price $/gallon"
+P_gasdpl <- 0.92 # "Gasoline Price $/litre"
+P_gasdpl <- P_gasdpg / 3.785
+C_timedph <- 18 # "Cost of Travel Time $/hr"
+a_0 <- 0.143171 # "Intercept term in FC ratio curve"
+a_1 <- 0.00474448 # "Coeff on linear term in FC ratio curve"
+a_2 <- 0.0000742969 # "Coeff on squared term in FC ratio curve"
+
+s_optkph <- 127.2 # "Optimal speed" km/h
+# s_optmph = 79.1  # "Optimal speed" mi/hr
+s_optmph <- s_optkph / PhysConst$kmPerMile # "Optimal speed" mi/hr
+
+# I_sopt = 9.16 # "FC @ optimal speed" l/100km
+I_sopt <- I_r * (a_0 + a_1 * s_optkph + a_2 * s_optkph^2) # "FC @ optimal speed" l/100km
+
+C_tot <- 0.2331 # "Total Cost" $/km
+C_tot <- I_sopt / 100 + C_timedph / s_optkph # Total Cost $/km (fuel and time)
+MPG_sopt <- 25.66 # "MPG @ optimal speed" mpg
+MPG_sopt <- 235.2 / I_sopt
+
+# FC rel. to 65 mph   1.34
+# FC rel. to 70 mph   1.20
+
+TCdf <- data.frame(Speed_mph = seq(40, 150, 5))
+
+TCdf <- TCdf %>%
+  mutate(
+    Speed_kph = Speed_mph * PhysConst$kmPerMile,
+    FC_lper100km = I_r * (a_0 + a_1 * Speed_kph + a_2 * Speed_kph^2), # l/100-km
+    FC_galpermi = (FC_lper100km / 100) * PhysConst$kplPerMpg, # gal/mi
+    FE_mpg = 1 / FC_galpermi,
+    Pace_hrpermi = 1 / Speed_mph, # (hr/mi)
+    FuelCost_dpm = FC_galpermi * P_gasdpg, # ($/mi)
+    TimeCost_dpm = C_timedph / Speed_mph, # ($/mi)
+    TotalCost_dpm = FuelCost_dpm + TimeCost_dpm # ($/mi)
+  )
+
+# TCdf
+
+# Plot the cost components, per mile
+TCdf %>%
+  select(Speed_mph, FuelCost_dpm, TimeCost_dpm, TotalCost_dpm) %>%
+  gather(variable, value, FuelCost_dpm:TotalCost_dpm) %>%
+  ggplot(aes(Speed_mph, value)) + geom_line(aes(color = variable), size = 1) +
+  ggtitle("Example Tradeoff of Energy Costs with Time Costs (TTC = $18/hr, $3.5/gal)")
+```
+
+A2.3 Compute the Optimum Highway Speed for a Range of Time Costs and Fuel Costs
+--------------------
+
+```{r computeOptHighwaySpeeds, echo=echoWorking}
+
+TotalTimeAndFuelCost <- function(speed_mph, FC_dpg = 3.5, TC_dph) {
+  # computes total travel costs (time and fuel) as a function of speed in mph
+  #
+  S <- speed_mph * kmPerMile
+  FC_lper100km <- I_r * (a_0 + a_1 * S + a_2 * S^2) # l/100-km
+  FC_galpermi <- (FC_lper100km / 100) * PhysConst$kplPerMpg # gal/mi
+  FE_mpg <- 1 / FC_galpermi
+  FuelCost_dpm <- FC_galpermi * P_gasdpg # ($/mi)
+  TimeCost_dpm <- C_timedph / speed_mph # ($/mi)
+  TotalCost_dpm <- FuelCost_dpm + TimeCost_dpm # ($/mi)
+}
+
+# nlm(f=, p, ..., hessian = FALSE, typsize = rep(1, length(p)),
+#     fscale = 1, print.level = 0, ndigit = 12, gradtol = 1e-6,
+#     stepmax = max(1000 * sqrt(sum((p/typsize)^2)), 1000),
+#     steptol = 1e-6, iterlim = 100, check.analyticals = TRUE)
+
+timeCostRange_dph <- 10.0 * seq(from = 0.1, to = 2.0, by = 0.1) # $/hr
+fuelCostRange_dpg <- 2.0 * seq(from = 0.1, to = 2.0, by = 0.1) # $/gal
+```
+
+# A3. Safety Costs Associated with Speed
+
+* [Road safety - Speed](http://www.who.int/violence_injury_prevention/publications/road_traffic/world_report/speed_en.pdf) World Health Organization, 2004
+  - An increase in average speed of 1 km/h typically results in a 3% higher risk of a crash involving injury, with a 4-5% increase for crashes that result in fatalities.
+  - Speed also contributes to the severity of the impact when a collision does occur. For car occupants in a crash with an impact speed of 80 km/h, the likelihood of death is 20 times what it would have been at an impact speed
+of 30 km/h.
+* WHO 2004 World report on road traffic injury prevention
+** Crash Risk**
+    - WHO 2004 [World report on road traffic injury prevention](http://apps.who.int/iris/bitstream/10665/42871/1/9241562609.pdf)
+    - http://www.who.int/violence_injury_prevention/publications/road_traffic/world_report/en/
+    - The probability of a crash involving an injury is proportional to the square of the speed. The probability of a serious crash is proportional to the cube of the speed. The probability of a fatal crash is related to the fourth power of
+the speed (38, 39). [Chap 3, Crash Risk, p.78]
+    - Empirical evidence from speed studies in various countries has shown that an increase of 1 km/h in mean traffic speed typically results in a 3% increase in the incidence of injury crashes (or an increase of 4-5% for fatal crashes), and a decrease of 1 km/h in mean traffic speed will result in a 3% decrease in
+the incidence of injury crashes (or a decrease of 4-5% for fatal crashes) (40).
+    - Taylor et al. (41, 42), in their study on different types of roads in the United Kingdom, concluded that for every 1 mile/h (1.6 km/h) reduction in average traffic speed, the highest reduction achievable in the volume of
+crashes was 6% (in the case of urban roads with low average speeds). These are typically busy main roads in towns with high levels of pedestrian activity, wide variations in speeds and high frequencies of crashes.
+    - A meta-analysis of 36 studies on speed limit changes showed, at levels above 50 km/h, a decrease of 2% in the number of crashes for every 1 km/h reduction in the average speed (43).
+    - For car occupants in a crash with an impact speed of
+50 miles/h (80 km/h), the likelihood of death is 20 times
+what it would have been at an impact speed of 20 miles/h
+(32 km/h) (48).
+
+TABLE 3.4: Relative risks of involvement in a casualty crash for speed and alcohol
+
+Speed (km/h) | Speed (relative risk)
+-------------|-----------------
+60  | 1.0
+65  | 2.0
+70  | 4.2
+75  | 10.6
+80  | 31.8
+
+Relative to a sober driver travelling at the speed limit of 60 km/h.
+(Source: Kloeden et al., 1997. See alos Kloeden et al. 2001)
+
+
+
+### A3.1 Severity of crash injuries
+
+- Speed has an exponentially detrimental effect on
+safety. As speeds increase, so do the number and
+severity of injuries. Studies show that the higher
+the impact speed, the greater the likelihood of serious
+and fatal injury:
+    - For car occupants, the severity of crash injury
+depends on the change of speed during the
+impact, usually denoted as $\delta$v. As $\delta$v increases
+from about 20 km/h to 100 km/h, the probability
+of fatal injuries increases from close to
+zero to almost 100% (46).
+    - The probability of serious injury for belted
+front-seat occupants is three times as great at
+30 miles/h (48 km/h) and four times as great
+at 40 miles/h (64 km/h), compared with the
+risk at 20 miles/h (32 km/h) (47).
+    - For car occupants in a crash with an impact
+speed of 50 miles/h (80 km/h), the likelihood
+of death is 20 times what it would have been at
+an impact speed of 20 miles/h (32 km/h) (48).
+    - Pedestrians have a 90% chance of surviving car
+crashes at 30 km/h or below, but less than a
+50% chance of surviving impacts at 45 km/h
+or above (49, 50) (see Figure 3.3).
+    - The probability of a pedestrian being killed rises
+by a factor of eight as the impact speed of the car
+increases from 30 km/h to 50 km/h (51).
+    - Older pedestrians are even more physically vulnerable as speeds increase (52) (see Figure 3.4).
+    - Excess and inappropriate speed contributes to around 30% of fatal crashes in high-income countries (53).
+  
+* Safety References
+    38. Wegman F, Elsenaar P. Sustainable solutions to
+improve road safety in the Netherlands. Leidschendam,
+Institute for Road Safety Research, 1997
+(SWOV Report D-097-8).
+    39. Ogden KW. Safer roads: a guide to road safety engineering.
+Melbourne, Ashgate Publishing Ltd, 1996.
+    40. Cities on the move: a World Bank urban strategy review.
+Washington, DC, The World Bank, 2002.
+    41. Handboek: categorisering wegen op duurzaam veilige
+basis. Deel I (Voorlopige): functionele en operationele eisen
+[Handbook: categorizing roads on long-lasting safe basis.
+Part I (Provisional): functional and operational demands].
+Ede, Stichting centrum voor regelgeving en
+onderwoek in de grond-, water- en wegenbouw
+en de verkeerstechniek, 1997 (CROW
+Report 116).
+    42. Zone guide for pedestrian safety shows how to make systematic improvements. Washington, DC, National Highway
+Traffic Safety Administration, 1998 (Technology
+Transfer Series Number 181) (http://
+www.nhtsa.dot.gov/people/outreach/traftech/
+pub/tt181.html, accessed 5 December 2003).
+    43. Towards a sustainable safe traffic system in the Netherlands. Leidschendam, Institute for Road Safety
+Research, 1993. 
+    47. Safety of vulnerable road users. Paris, Organisation
+for Economic Co-operation and Development, 1998 (DSTI/DOT/RTR/RS7(98)1/FINAL) (http:
+//www.oecd.org/dataoecd/24/4/2103492.pdf,
+accessed 17 November 2003).
+    48. Ossenbruggen PJ, Pendharkar J, Ivan J. Roadway
+safety in rural and small urbanized areas.
+Accident Analysis and Prevention, 2001, 33:485-498.
+    49. Khan FM et al. Pedestrian environment and
+behavior in Karachi, Pakistan. Accident Analysis
+and Prevention, 1999, 31:335-339.
+    50. Herrstedt L. Planning and safety of bicycles
+in urban areas. In: Proceedings of the Traffic Safety
+on Two Continents Conference, Lisbon, 22-24 September 1997. Linköping, Swedish National Road and
+Transport Research Institute, 1997:43-58.
+    51. Kjemtrup K, Herrstedt L. Speed management and
+traffic calming in urban areas in Europe: a historical
+view. Accident Analysis and Prevention, 1992, 24:57-65.
+    52. Brilon W, Blanke H. Extensive traffic calming:
+results of the accident analyses in six model
+towns. In: ITE 1993 Compendium of Technical Papers.
+Washington, DC, Institute of Transportation
+Engineers, 1993:119-123.
+
+A3.2 Speed and Accident Risk
+-------------------
+* Notes from [Speed and Accident Risk](https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_accident_risk_en), European Road Safety Observatory
+
+- https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_road_safety_en
+
+  > Assessing potential effectiveness of speed reduction measures
+Based on work by Nilsson in Sweden, a change in average speed of 1 km/h will result in a change in accident numbers ranging between 2% for a 120 km/h road and 4% for a 50 km/h road. This result has been confirmed by many before and after studies of different speed reduction measures. This relationship is used by other Scandinavian countries and by Australian and Dutch safety engineers.
+
+  > A similar relationship is assumed in Britain, based on empirical studies by Taylor, where changes in accident numbers associated with a 1 km/h change in speed have been shown to vary between 1% and 4% for urban roads and 2.5% and 5.5% for rural roads, with the lower value reflecting good quality roads and the higher value poorer quality roads.
+
+  > Higher speeds: more accidents : High speed reduces the possibility to respond in time when necessary. People need time to process information, to decide whether or not to react and, finally to execute a reaction. At high speed the distance covered in this period is longer. At high speeds the distance between starting to brake and a complete stand still is longer as well. The braking distance is proportional to the square of speed (v2). Therefore, the possibility to avoid a collision becomes smaller as speed increases. This is well illustrated at a broad average level by Finch [24].
+
+  1 km/h increase in speed implies a 3% increase in accidents
+ 
+  > In practice the relationship is more complex. ...The higher the speed, the steeper the increase in accident risk.  The relationship between speed and accident risk is a power function:
+
+  > Based on the principles of kinetic energy and validated by empirical data, Nilsson [[44](Nilsson, G. (1982) The effects of speed limits on traffic crashes in Sweden. In: Proceedings of the international symposium on the effects of speed limits on traffic crashes and fuel consumption, Dublin. Organisation for Economy, Co-operation, and Development (OECD), Paris)][[45](Nilsson, G. (2004) Traffic safety dimensions and the power model to describe the effect of speed on safety. Bulletin 221, Lund Institute of Technology, Lund)] developed the following formula:
+$$A_2 = A_1 \left ( \frac{V_2}{V_1} \right )^2$$
+
+  > In words: the number of injury accidents after the change in speed (A2) equals the number of accidents before the change (A1) multiplied by the new average speed (v2) divided by the former average speed (v1), raised to the square power.
+
+
+## A6. Dynamic Scenarios - Draft Materials
+
+#### Calculate fractional change in Total Energy Use, with sector-change fractions weighted by sectoral VMT.
+
+Transportation Energy Use - Estimated Reference Scenario  (trillions BTU)
+
+Drawing from AEO Table 45.  Transportation Sector Energy Use by Mode and Type
+
+Transportation Energy Use Estimated Automated Vehicle Scenario = RefEnergyUse*((1+Modal Efficiency Factors)^Rebound Elasticities)*(1+Fuel Carbon Intensities)*(1+Modal Shares/Activity Factors)
+
+LDV Total Energy = LDV Total Energy Ref*((1+Light-Duty Vehicle)^Light-Duty Vehicle)*(1+ Jet Fuel)*(1+Light-Duty Vehicle)
+
+Commercial Light Trucks Motor Gasoline =  Motor Gasoline*((1+Commercial Light Trucks 1/)^Commercial Light Trucks 1/)*(1+ Motor Gasoline)*(1+Commercial Light Trucks 1/)
+
+Commercial Light Trucks Distillate Fuel Oil (diesel) =  Distillate Fuel Oil (diesel)*((1+Commercial Light Trucks 1/)^Commercial Light Trucks 1/)*(1+ Ethanol)*(1+Commercial Light Trucks 1/)
+
+CLT Total Energy =  Motor Gasoline+ Distillate Fuel Oil (diesel)
+
+Freight Trucks Motor Gasoline =  Motor Gasoline*((1+Freight Trucks)^Freight Trucks)*(1+ Motor Gasoline)*(1+Freight Trucks)
+
+Freight Trucks Distillate Fuel Oil (diesel) =  Distillate Fuel Oil (diesel)*((1+Freight Trucks)^Freight Trucks)*(1+ Ethanol)*(1+Freight Trucks)
+
+Freight Trucks Compressed Natural Gas =  Compressed Natural Gas*((1+Freight Trucks)^Freight Trucks)*(1+ Compressed Natural Gas)*(1+Freight Trucks)
+
+Freight Trucks Liquefied Petroleum Gases =  Liquefied Petroleum Gases*((1+Freight Trucks)^Freight Trucks)*(1+ Liquefied Petroleum Gases)*(1+Freight Trucks)
+
+HDV Total Energy =  Motor Gasoline+ Distillate Fuel Oil (diesel)+ Compressed Natural Gas+ Liquefied Petroleum Gases
+
+Formula: SUM(LDV Total Energy, CLT Total Energy, HDV Total Energy)/SUM(LDV Total Energy Ref, CLT Total Energy Ref, HDV Total Energy Ref)-1
+
+```{r}
+
+```
+
+VMT Demand Response over time: pick up chosen Demand and Technology Scenario, and values for chosen scenario, for years 2035 & 2050
+
+
+```{r exogCAVPenetrationShare, echo=echoWorking}
+# fully automated vehicles/total stock
+ExogCAVPenetrationShare <- read.delim(textConnection("
+Year  :LDV    :HDV
+2020  :0.00   :0.00   
+2035  :0.40   :0.40
+2050  :1.00   :1.00
+"), header = TRUE, sep = ":", strip.white = TRUE) #
+# Temporarily assume same HDV penetration as LDV.
+# linearly increases to 2035 and 2050 value input by user
+
+rownames(ExogCAVPenetrationShare) <- ExogCAVPenetrationShare$Year
+
+# compute the PolicyScen projection table
+PolicyScen <- tibble(Year = 2007:2050)
+
+# Exogenous CAV penetration (assumed Highly-automated)
+#  based on interpolation of specified points in
+PolicyScen$LDV_Penetration <- 0
+PolicyScen$LDV_Penetration[(2020:2035) - 2007 + 1] <-
+  seq(ExogCAVPenetrationShare[["2020", "LDV"]], ExogCAVPenetrationShare[["2035", "LDV"]], length.out = 2035 - 2020 + 1)
+PolicyScen$LDV_Penetration[(2035:2050) - 2007 + 1] <-
+  seq(ExogCAVPenetrationShare[["2035", "LDV"]], ExogCAVPenetrationShare[["2050", "LDV"]], length.out = 2050 - 2035 + 1)
+
+PolicyScen$HDV_Penetration <- 0
+PolicyScen$HDV_Penetration[(2020:2035) - 2007 + 1] <-
+  seq(ExogCAVPenetrationShare[["2020", "LDV"]], ExogCAVPenetrationShare[["2035", "LDV"]], length.out = 2035 - 2020 + 1)
+PolicyScen$HDV_Penetration[(2035:2050) - 2007 + 1] <-
+  seq(ExogCAVPenetrationShare[["2035", "LDV"]], ExogCAVPenetrationShare[["2050", "LDV"]], length.out = 2050 - 2035 + 1)
+```
+
+
+```{r readPolicyScen_Testdata}
+Years <- 2007:2050
+PolicyScen_Test_filename <- "PolicyAndScenarioData_Test20161014.csv"
+ScenAndPolicyProj_Test <- read_csv(paste0("./Data/", PolicyScen_Test_filename), comment = "#")
+```
+
+VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050        
+LDV Demand impact (depends on scenario choice)  6  0.671  0.671    Dmnd change Per CAV, or at total demand impact at full penetration
+HDV Demand impact (depends on scenario choice)  6  0.683  0.683    Dmnd change Per CAV, or at total demand impact at full penetration
+
+LDV Demand impact (depends on scenario choice) (not year t dependent)
+HDV Demand impact (depends on scenario choice) (not year t dependent)
+LDV penetration: total automated/total stock in 2050
+HDV penetration: total automated/total stock in 2050
+
+LDV Penetration rate=fullyauto/totalstock
+LDV Increase in VMT for each automated vehicle
+LDV VMT increase ratio/this is linked to calculation sheets
+
+HDV Penetration rate=fullyauto/totalstock
+HDV Increase in VMT for each automated vehicle
+HDV VMT increase ratio/this is linked to calculation sheets
+
+LDV Energy Intensity Multiplier, scaled by penetration
+HDV Energy Intensity Fractional Increase at full adoption - from above
+LDV Energy Intensity Multiplier, scaled by penetration
+HDV Energy Intensity Multiplier, scaled by penetration
+
+$$TranspEnergyUse_{AVScenario} = 
+   TranspEnergyUse_{Ref} \cdot (1+ModalEfficiencyFactors)^{ReboundElas} \cdot (1+FuelCarbonIntensities) \cdot
+   (1+ \frac {Modal Shares}{Activity Factors})$$
+
+
+```{r policyAndScenarioCalcs1, echo=echoWorking}
+# See '[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024Test20170809.xlsx]Policy+Scenario'"
+CAVmod <- data.frame(Year = 2007:2050)
+CAVmod$CAVpenetration <- 0.0
+CAVmod$CAVpenetration <- # Fractional Increase in VMT for Demand Scenarios
+c(
+  rep(0, sum(CAVmod$Year < 2020)),
+  seq(from = 0.040, to = 1.00, length.out = sum(CAVmod$Year >= 2020))
+)
 ```
 
 
