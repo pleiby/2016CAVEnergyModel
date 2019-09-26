@@ -630,10 +630,10 @@ DS4     :-0.80       :-0.80        :Extreme Self driving case. Large benefits of
 DS5     :-0.80       :-0.80        :Same as DemScen 4, with different exogenous demand effects
 DS6     :-0.80       :-0.80        :Same as DemScen 4, with different exogenous demand effects
 DS7     :-0.50       :-0.80        :Same as DemScen 3, with different exogenous demand effects
-B_low   :-0.10       :-0.40        :SMART Scen Sharing is Caring low
-B_high  :-0.30       :-0.40        :SMART Scen Sharing is Caring high
-C_low   :-0.10       :-0.40        :SMART Scen All About Me low
-C_high  :-0.50       :-0.40        :SMART Scen All About Me high
+B_Low   :-0.10       :-0.40        :SMART Scen Sharing is Caring low
+B_High  :-0.30       :-0.40        :SMART Scen Sharing is Caring high
+C_Low   :-0.10       :-0.40        :SMART Scen All About Me low
+C_High  :-0.50       :-0.40        :SMART Scen All About Me high
 "), header = TRUE, sep = ":", strip.white = TRUE)
 # DS0     :0           : 0.0         :Base
 DemScenCostChange$DemScen <- as.character(DemScenCostChange$DemScen)
@@ -653,10 +653,10 @@ rownames(DemScenCostChange) <- DemScenCostChange$DemScen # needed only to refere
 # DS5     :High        :High        :Low       :
 # DS6     :High        :High        :Low       :
 # DS7     :Med         :High        :Low       :
-# B_low   :Low         :MLow        :SMART Scen Sharing is Caring low
-# B_high  :MLow        :MLow        :SMART Scen Sharing is Caring high
-# C_low   :Low         :MLow        :SMART Scen All About Me low
-# C_high  :Med         :MLow        :SMART Scen All About Me high
+# B_Low   :Low         :MLow        :SMART Scen Sharing is Caring low
+# B_High  :MLow        :MLow        :SMART Scen Sharing is Caring high
+# C_Low   :Low         :MLow        :SMART Scen All About Me low
+# C_High  :Med         :MLow        :SMART Scen All About Me high
 # "),header=TRUE,sep=":",strip.white=TRUE)
 
 # Assumed Change in Vehicle Travel Cost Components
@@ -1016,17 +1016,17 @@ VTCShrAlt <- VTCShrBase %>% mutate(
   DS5 = VTCost_shr,
   DS6 = VTCost_shr,
   DS7 = VTCost_shr,
-  B_low  = VTCost_shr,
-  B_high = VTCost_shr,
-  C_low  = VTCost_shr,
-  C_high = VTCost_shr,
+  B_Low  = VTCost_shr,
+  B_High = VTCost_shr,
+  C_Low  = VTCost_shr,
+  C_High = VTCost_shr,
   VC = substr(as.character(VehType), 1, 3)
 )
 # Reshape for column variables to be component cost-shares, and separate V_Class from VehType
 #  (latter differentiates between Lt Truck and Car within LDV)
 x <- VTCShrAlt %>%
   select(-VTCost_shr) %>%
-  gather(key = DemScen, value = VCRel, DS1:C_high) %>%
+  gather(key = DemScen, value = VCRel, DS1:C_High) %>%
   spread(key = CostCat, value = VCRel)
 
 # Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases and append to
@@ -1188,10 +1188,10 @@ plotStackedBarShares(VTCShrAlt, "DS2")
 plotStackedBarShares(VTCShrAlt, "DS3")
 plotStackedBarShares(VTCShrAlt, "DS4")
 
-plotStackedBarShares(VTCShrAlt, "B_low")
-plotStackedBarShares(VTCShrAlt, "B_high")
-plotStackedBarShares(VTCShrAlt, "C_low")
-plotStackedBarShares(VTCShrAlt, "C_high")
+plotStackedBarShares(VTCShrAlt, "B_Low")
+plotStackedBarShares(VTCShrAlt, "B_High")
+plotStackedBarShares(VTCShrAlt, "C_Low")
+plotStackedBarShares(VTCShrAlt, "C_High")
 ```
 
 From scenario-based cost shares, we can easily compute and visualize the total travel cost per mile for CAVs, by component.
@@ -1233,10 +1233,10 @@ plotStackedBarCostCompons(VTCostAlt, "DS2")
 plotStackedBarCostCompons(VTCostAlt, "DS3")
 plotStackedBarCostCompons(VTCostAlt, "DS4")
 
-plotStackedBarCostCompons(VTCostAlt, "B_low")
-plotStackedBarCostCompons(VTCostAlt, "B_high")
-plotStackedBarCostCompons(VTCostAlt, "C_low")
-plotStackedBarCostCompons(VTCostAlt, "C_high")
+plotStackedBarCostCompons(VTCostAlt, "B_Low")
+plotStackedBarCostCompons(VTCostAlt, "B_High")
+plotStackedBarCostCompons(VTCostAlt, "C_Low")
+plotStackedBarCostCompons(VTCostAlt, "C_High")
 ```
 
 4.5 Fractional VMT Changes in CAV Demand Scenario (Single Tech Case)
@@ -1412,10 +1412,10 @@ LDV     :DS4     :4       :Zero        : Cost-base response (with ElasVKT) with 
 LDV     :DS5     :4       :Zero        : scenario 4 with higher elasticity
 LDV     :DS6     :4       :Low         : scenario 5 with shift to carsharing (ride hailing/pooling)
 LDV     :DS7     :3       :Low         : scenario 3 with shift to carsharing (ride hailing/pooling)
-LDV     :B_low   :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-LDV     :B_high  :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-LDV     :C_low   :3       :High        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-LDV     :C_high  :3       :High        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :B_Low   :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :B_High  :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :C_Low   :3       :High        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :C_High  :3       :High        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
 HDV     :DS1     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS2     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS3     :0       :Zero        : Cost-base response (with ElasVKT) only
@@ -1423,10 +1423,10 @@ HDV     :DS4     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS5     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS6     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS7     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :B_low   :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :B_high  :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :C_low   :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :C_high  :0       :Zero        : Cost-base response (with ElasVKT) only
+HDV     :B_Low   :0       :Zero        : Cost-base response (with ElasVKT) only
+HDV     :B_High  :0       :Zero        : Cost-base response (with ElasVKT) only
+HDV     :C_Low   :0       :Zero        : Cost-base response (with ElasVKT) only
+HDV     :C_High  :0       :Zero        : Cost-base response (with ElasVKT) only
 "), header = TRUE, sep = ":", strip.white = TRUE) #
 
 # Initially, restrict to only Shared, Full Automation cases
@@ -1587,10 +1587,10 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
       DS5 = VTCost_shr,
       DS6 = VTCost_shr,
       DS7 = VTCost_shr,
-      B_low  = VTCost_shr,
-      B_high = VTCost_shr,
-      C_low  = VTCost_shr,
-      C_high = VTCost_shr,
+      B_Low  = VTCost_shr,
+      B_High = VTCost_shr,
+      C_Low  = VTCost_shr,
+      C_High = VTCost_shr,
       VC = substr(as.character(VehType), 1, 3)
     ) %>%
     select(-VTCost_shr) # could also keep as Base case, DS0
@@ -1599,7 +1599,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
   # Reshape for column variables to be component cost-shares, and separate V_Class from VehType
   #  (latter differentiates between Lt Truck and Car within LDV)
   x <- VTCShrAlt %>%
-    gather(key = DemScen, value = VCRel, DS1:C_high) %>%
+    gather(key = DemScen, value = VCRel, DS1:C_High) %>%
     spread(key = CostCat, value = VCRel)
 
   # combine base cost shares in x and Demand Reponse Parameters (Fractional Adjustments) in y for their adjustment
@@ -1735,10 +1735,10 @@ CS4      :2050  :Low      :HDV  :4            :DS6         :Cost-based response 
 CS5      :2050  :Low      :HDV  :5            :DS2         :HDV dmnd mult Same as Scen 4
 CS6      :2050  :Low      :HDV  :6            :DS0         :HDV dmnd mult Same as Scen 4
 CS7      :2050  :Low      :HDV  :7            :DS2         :HDV dmnd mult Same as Scen 3
-CS_B_low :2050  :Low      :HDV  :8            :B_low       :
-CS_B_high:2050  :Low      :HDV  :9            :B_high      :
-CS_C_low :2050  :Low      :HDV  :8            :C_low       :
-CS_B_high:2050  :Low      :HDV  :9            :C_high      :
+CS_B_Low :2050  :Low      :HDV  :8            :B_Low       :
+CS_B_High:2050  :Low      :HDV  :9            :B_High      :
+CS_C_Low :2050  :Low      :HDV  :8            :C_Low       :
+CS_B_High:2050  :Low      :HDV  :9            :C_High      :
 CS1      :2050  :Low      :LDV  :1            :DS2         :Cost-based response (with ElasVKT) only
 CS2      :2050  :Low      :LDV  :2            :DS3         :Cost-based response (with ElasVKT) with Underserved mult option 1
 CS3      :2050  :Low      :LDV  :3            :DS5         :Cost-based response (with ElasVKT) with Underserved mult option 3
@@ -1746,10 +1746,10 @@ CS4      :2050  :Low      :LDV  :4            :DS6         :Cost-based response 
 CS5      :2050  :Low      :LDV  :5            :DS2         :Scen 4 dmnd mult with higher LDV elasticity
 CS6      :2050  :Low      :LDV  :6            :DS0         :Scen 5 dmnd mult with shift to ridehailing_ridepooling
 CS7      :2050  :Low      :LDV  :7            :DS2         :Scen 3 dmnd mult with shift to ridehailing_ridepooling
-CS_B_low :2050  :Low      :LDV  :8            :B_low       :
-CS_B_high:2050  :Low      :LDV  :9            :B_high      :
-CS_C_low :2050  :Low      :LDV  :8            :C_low       :
-CS_C_high:2050  :Low      :LDV  :9            :C_high      :
+CS_B_Low :2050  :Low      :LDV  :8            :B_Low       :
+CS_B_High:2050  :Low      :LDV  :9            :B_High      :
+CS_C_Low :2050  :Low      :LDV  :8            :C_Low       :
+CS_C_High:2050  :Low      :LDV  :9            :C_High      :
 "), header = TRUE, sep = ":", strip.white = TRUE) #
 
 CombScen_Combinations <- CombScen_Combinations %>%
