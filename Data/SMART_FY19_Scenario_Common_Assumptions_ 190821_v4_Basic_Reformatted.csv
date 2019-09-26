@@ -1,0 +1,367 @@
+﻿Sector,Parameter,Qualifier,Class_Powertrain,Baseline,Baseline-Short-Term Base,Baseline-Short-Term Low,Baseline-Short-Term High,Baseline-Long-Term Base,Baseline-Long-Term Low,Baseline-Long-Term High,A_Low Sharing Is Caring,A_High Sharing Is Caring,B_Low Technology Takes Over,B_High Technology Takes Over,C_Low All About Me,C_High All About Me
+# Sector,Parameter,Qualifier,Class_Powertrain,Baseline,Baseline Short-Term,Baseline Short-Term,Baseline Short-Term,Baseline-LongTerm,Baseline-LongTerm,Baseline-LongTerm,A_Low Sharing Is Caring,A_High Sharing Is Caring,B_Low Technology Takes Over,B_High Technology Takes Over,C_Low All About Me,C_High All About Me
+# ,,,,,Base,Low ,High,Base,Low,High,Low,High,Low,High,Low,High
+General,Land Use,,,Baseline,Short term baseline,Short term baseline,Short term baseline,Long term baseline,Long term baseline,Long term baseline,Short term,Short term,Long Term,Long Term,Long Term,Long Term
+General,Component Technology,,,Baseline,Baseline,Short term BAU,Short term VTO Targets,Baseline,Long term BAU,Long term VTO Targets,Short term BAU,Short term VTO Targets,Long term BAU,Long term VTO Targets,Long term BAU,Long term VTO Targets
+General,Additional accessory load,Partial Automation (W),,400,400,400,400,400,400,400,400,400,400,400,400,400
+General,Additional accessory load,Full Automation (W),,1900,1900,1900,1900,1900,1900,1900,1900,1900,1900,1900,1900,1900
+Passenger,Vehicle retirement rate (Pct),NA,,0,0,0,0,0,0,0,45,45,68,75,15,20
+Passenger,VOTT Factor,NA,,1,1,1,1,1,1,1,High,High,Low,Low,Low,Low
+Passenger,Shared Use,Partial Automation,,1.3,1.3,1.3,1.3,1.3,1.3,1.3,1,1,1,1,1.3,1.3
+Passenger,Shared Use,Full Automation,,1.3,1.3,1.3,1.3,1.3,1.3,1.3,1,1,1,1,1.6,1.6
+"# Passenger
+# Passenger
+# Passenger
+# Passenger
+# Passenger
+# Passenger
+# Passenger",Market Penetration Share,Classes,,"Compact car (21.6%)
+Midsize car (20.5%)
+Large Car (7.1%)
+Compact SUV (15%)
+Midsize SUV (20%)
+Fullsize SUV (4%)
+Pickup (11.8%)","Compact car (21.6%)
+Midsize car (20.5%)
+Large Car (7.1%)
+Compact SUV (15%)
+Midsize SUV (20%)
+Fullsize SUV (4%)
+Pickup (11.8%)","Compact car (18.5%)
+Midsize car (21%)
+Large Car (7.%)
+Compact SUV (17.5%)
+Midsize SUV (20%)
+Fullsize SUV (4%)
+Pickup (12%)","Compact car (18.5%)
+Midsize car (21.5%)
+Large Car (7%)
+Compact SUV (18%)
+Midsize SUV (20%)
+Fullsize SUV (4%)
+Pickup (11%)","Compact car (21.6%)
+Midsize car (20.5%)
+Large Car (7.1%)
+Compact SUV (15%)
+Midsize SUV (20%)
+Fullsize SUV (4%)
+Pickup (11.8%)","Compact car (13)
+Midsize car (22%)
+Large Car (6%)
+Compact SUV (27.5%)
+Midsize SUV (18%)
+Fullsize SUV (3%)
+Pickup (10.5%)","Compact car (13%)
+Midsize car (23%)
+Large Car (6%)
+Compact SUV (26.5%)
+Midsize SUV (18%)
+Fullsize SUV (3%)
+Pickup (10.5%)","Compact car (18.5%)
+Midsize car (21%)
+Large Car (7.%)
+Compact SUV (17.5%)
+Midsize SUV (20%)
+Fullsize SUV (4%)
+Pickup (12%)","Compact car (18.5%)
+Midsize car (21.5%)
+Large Car (7%)
+Compact SUV (18%)
+Midsize SUV (20%)
+Fullsize SUV (4%)
+Pickup (11%)","Compact car (13)
+Midsize car (22%)
+Large Car (6%)
+Compact SUV (27.5%)
+Midsize SUV (18%)
+Fullsize SUV (3%)
+Pickup (10.5%)","Compact car (13%)
+Midsize car (23%)
+Large Car (6%)
+Compact SUV (26.5%)
+Midsize SUV (18%)
+Fullsize SUV (3%)
+Pickup (10.5%)","Compact car (13)
+Midsize car (22%)
+Large Car (6%)
+Compact SUV (27.5%)
+Midsize SUV (18%)
+Fullsize SUV (3%)
+Pickup (10.5%)","Compact car (13%)
+Midsize car (23%)
+Large Car (6%)
+Compact SUV (26.5%)
+Midsize SUV (18%)
+Fullsize SUV (3%)
+Pickup (10.5%)"
+Passenger,Market Penetration Share,Classes,CAR_COMPACT,0.216,0.216,0.185,0.185,0.216,0.13,0.13,0.185,0.185,0.13,0.13,0.13,0.13
+Passenger,Market Penetration Share,Classes,CAR_MIDSIZE,0.205,0.205,0.21,0.215,0.205,0.22,0.23,0.21,0.215,0.22,0.23,0.22,0.23
+Passenger,Market Penetration Share,Classes,CAR_FULLSIZE,0.071,0.071,0.07,0.07,0.071,0.06,0.06,0.07,0.07,0.06,0.06,0.06,0.06
+Passenger,Market Penetration Share,Classes,SUV_COMPACT,0.15,0.15,0.175,0.18,0.15,0.275,0.265,0.175,0.18,0.275,0.265,0.275,0.265
+Passenger,Market Penetration Share,Classes,SUV_MIDSIZE,0.2,0.2,0.2,0.2,0.2,0.18,0.18,0.2,0.2,0.18,0.18,0.18,0.18
+Passenger,Market Penetration Share,Classes,SUV_FULLSIZE,0.04,0.04,0.04,0.04,0.04,0.03,0.03,0.04,0.04,0.03,0.03,0.03,0.03
+Passenger,Market Penetration Share,Classes,TRUCK_PICKUP,0.118,0.118,0.12,0.11,0.118,0.105,0.105,0.12,0.11,0.105,0.105,0.105,0.105
+"# Passenger
+# Passenger
+# Passenger
+# Passenger
+# Passenger
+# Passenger",Market Penetration Share,Powertrains,,"Conv gas (95.8%)
+Conv gas 48V (0%)
+Conv diesel (2%)
+HEV (2%)
+PHEV (0.1%)
+BEV (0.1%)","Conv gas (95.8%)
+Conv gas 48V (0%)
+Conv diesel (2%)
+HEV (2%)
+PHEV (0.1%)
+BEV (0.1%)","Conv gas (67%)
+Conv gas 48V (16%)
+Conv diesel (1%)
+HEV (9%)
+PHEV (3%)
+BEV (4%)","Conv gas (59%)
+Conv gas 48V (21%)
+Conv diesel (1%)
+HEV (7%)
+PHEV (5%)
+BEV (7%)","Conv gas (95.8%)
+Conv gas 48V (0%)
+Conv diesel (2%)
+HEV (2%)
+PHEV (0.1%)
+BEV (0.1%)","Conv gas (11%)
+Conv gas 48V (35%)
+Conv diesel (0.5%)
+HEV (28%)
+PHEV (7.5%)
+BEV (18%)","Conv gas (16%)
+Conv gas 48V (21%)
+Conv diesel (0.5%)
+HEV (12%)
+PHEV (11.5%)
+BEV (39%)","Conv gas (67%)
+Conv gas 48V (16%)
+Conv diesel (1%)
+HEV (9%)
+PHEV (3%)
+BEV (4%)","Conv gas (59%)
+Conv gas 48V (21%)
+Conv diesel (1%)
+HEV (7%)
+PHEV (5%)
+BEV (7%)","Conv gas (11%)
+Conv gas 48V (35%)
+Conv diesel (0.5%)
+HEV (28%)
+PHEV (7.5%)
+BEV (18%)","Conv gas (16%)
+Conv gas 48V (21%)
+Conv diesel (0.5%)
+HEV (12%)
+PHEV (11.5%)
+BEV (39%)","Conv gas (11%)
+Conv gas 48V (35%)
+Conv diesel (0.5%)
+HEV (28%)
+PHEV (7.5%)
+BEV (18%)","Conv gas (16%)
+Conv gas 48V (21%)
+Conv diesel (0.5%)
+HEV (12%)
+PHEV (11.5%)
+BEV (39%)"
+Passenger,Market Penetration Share,Powertrains,Gas_Conventional,0.958,0.958,0.67,0.59,0.958,0.11,0.16,0.67,0.59,0.11,0.16,0.11,0.16
+Passenger,Market Penetration Share,Powertrains,Gas_Conv48V,0,0,0.16,0.21,0,0.35,0.21,0.16,0.21,0.35,0.21,0.35,0.21
+Passenger,Market Penetration Share,Powertrains,Diesel_Conventional,0.02,0.02,0.01,0.01,0.02,0.005,0.005,0.01,0.01,0.005,0.005,0.005,0.005
+Passenger,Market Penetration Share,Powertrains,Gas_HEV,0.02,0.02,0.09,0.07,0.02,0.28,0.12,0.09,0.07,0.28,0.12,0.28,0.12
+Passenger,Market Penetration Share,Powertrains,Gas_PHEV,0.001,0.001,0.03,0.05,0.001,0.075,0.115,0.03,0.05,0.075,0.115,0.075,0.115
+Passenger,Market Penetration Share,Powertrains,BEV_BEV,0.001,0.001,0.04,0.07,0.001,0.18,0.39,0.04,0.07,0.18,0.39,0.18,0.39
+Passenger,Market Penetration Share,Partial Automation (Pct),0,0,0,0,0,0,0,0,10,11,5,8,5,8
+Passenger,Market Penetration Share,Full Automation (Pct),0,0,0,0,0,0,0,0,0,0,17.5,51.5,17.5,51.5
+Freight,Long Haul Commodity Flow - CAGR,NA,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+Freight,E-Commerce Delivery Rates,Per Person/day,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.08,0.2,0.2,0.35,0.35,0.35,0.35
+Freight,E-Commerce Delivery Rates,Per Household/day,0.16,0.16,0.16,0.16,0.16,0.16,0.16,0.16,0.4,0.4,0.7,0.7,0.7,0.7
+Freight,Propensity of non car mode,Unitless,1,1,1,1,1,1,1,1,0.5,0.5,1,1,1,1
+"# Freight
+# Freight
+# Freight
+# Freight
+# Freight
+# Freight",Market Penetration,Classes,,"Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)","Class 3 Box (13%)
+Class 3 Shuttle (2%)
+Class 4 Delivery (20%)
+Class 6 P&D (20%)
+Transit Bus (5%)
+Line Haul (40%)"
+Freight,Market Penetration,Classes,Class3Box,0.13,0.13,0.13,0.13,0.13,0.13,0.13,0.13,0.13,0.13,0.13,0.13,0.13
+Freight,Market Penetration,Classes,Class3Shuttle,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02
+Freight,Market Penetration,Classes,Class4Delivery,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2
+Freight,Market Penetration,Classes,Class6P&D,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2
+Freight,Market Penetration,Classes,TransitBus,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05
+Freight,Market Penetration,Classes,Class8_LineHaul,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4
+"# Freight
+# Freight
+# Freight
+# Freight
+# Freight
+# Freight
+# Freight",Market Penetration,Powertrains,,"Conv gas (15%)
+Conv gas 48V (0%)
+Conv diesel (82.5%)
+Conv diesel 48V (0%)
+HEV (2.5%)
+PHEV (0%)
+BEV (0%)","Conv gas (15%)
+Conv gas 48V (0%)
+Conv diesel (82.5%)
+Conv diesel 48V (0%)
+HEV (2.5%)
+PHEV (0%)
+BEV (0%)","Conv gas (12%)
+Conv gas 48V (3%)
+Conv diesel (60%)
+Conv diesel 48V (10%)
+HEV (5%)
+PHEV (0%)
+BEV (0%)","Conv gas (7%)
+Conv gas 48V (6%)
+Conv diesel (56%)
+Conv diesel 48V (20%)
+HEV (13%)
+PHEV (0%)
+BEV (2%)","Conv gas (15%)
+Conv gas 48V (0%)
+Conv diesel (82.5%)
+Conv diesel 48V (0%)
+HEV (2.5%)
+PHEV (0%)
+BEV (0%)","Conv gas (0%)
+Conv gas 48V (5%)
+Conv diesel (52%)
+Conv diesel 48V (16%)
+HEV (20%)
+PHEV (0%)
+BEV (11%)","Conv gas (0%)
+Conv gas 48V (5%)
+Conv diesel (44%)
+Conv diesel 48V (12%)
+HEV (22%)
+PHEV (4%)
+BEV (15%)","Conv gas (12%)
+Conv gas 48V (3%)
+Conv diesel (60%)
+Conv diesel 48V (10%)
+HEV (5%)
+PHEV (0%)
+BEV (0%)","Conv gas (7%)
+Conv gas 48V (6%)
+Conv diesel (56%)
+Conv diesel 48V (20%)
+HEV (13%)
+PHEV (0%)
+BEV (2%)","Conv gas (0%)
+Conv gas 48V (5%)
+Conv diesel (52%)
+Conv diesel 48V (16%)
+HEV (20%)
+PHEV (0%)
+BEV (11%)","Conv gas (0%)
+Conv gas 48V (5%)
+Conv diesel (44%)
+Conv diesel 48V (12%)
+HEV (22%)
+PHEV (4%)
+BEV (15%)","Conv gas (0%)
+Conv gas 48V (5%)
+Conv diesel (52%)
+Conv diesel 48V (16%)
+HEV (20%)
+PHEV (0%)
+BEV (11%)","Conv gas (0%)
+Conv gas 48V (5%)
+Conv diesel (44%)
+Conv diesel 48V (12%)
+HEV (22%)
+PHEV (4%)
+BEV (15%)"
+Freight,Market Penetration,Powertrains,Gas-Conventional,0.15,0.15,0.12,0.07,0.15,0,0,0.12,0.07,0,0,0,0
+Freight,Market Penetration,Powertrains,Gas_Conv-48V,0,0,0.03,0.06,0,0.05,0.05,0.03,0.06,0.05,0.05,0.05,0.05
+Freight,Market Penetration,Powertrains,Diesel-Conventional,0.825,0.825,0.6,0.56,0.825,0.52,0.44,0.6,0.56,0.52,0.44,0.52,0.44
+Freight,Market Penetration,Powertrains,Diesel-Conventional_48V,0,0,0.2,0.16,0,0.12,0.1,0.2,0.16,0.12,0.1,0.12,0.1
+Freight,Market Penetration,Powertrains,Diesel-HEV,0.025,0.025,0.05,0.13,0.025,0.2,0.22,0.05,0.13,0.2,0.22,0.2,0.22
+Freight,Market Penetration,Powertrains,Diesel-PHEV,0,0,0,0,0,0,0.04,0,0,0,0.04,0,0.04
+Freight,Market Penetration,Powertrains,BEV-BEV,0,0,0,0.02,0,0.11,0.15,0,0.02,0.11,0.15,0.11,0.15
+Freight,Market Penetration,Partial Automation (%),0,0,0,0,0,0,0,0,5,0,20,40,20,40
+Freight,Market Penetration,Full Automation (%),0,0,0,0,0,0,0,0,0,0,2,15,2,15
+#,,,,,,,,,,,,,,,,
+#,Notes,,,"Main 7 scenarios - Columns D, K-P",,,,,,,,,,,,
+#,,,,Additional scenarios,Columns,,Purpose,,,,,,Priority,,,
+#,,,,,D vs E vs H,,"Impact of land use (population) - no change in vehicle fleet / technology, no vehicle retired, no CAVs",,,,,,3,,,
+#,,,,,"E vs F vs G,  H vs I vs J",,"Impact of vehicle fleet / technology - no changes in land use, no vehicle retired, no CAVs",,,,,,2,,,`
+#,,,,,"F vs K, G vs L, I vs M vs O, J vs N vs P ",,"Impact of automation, connectivity and sharing - no changes on vehicle technology & electrification",,,,,,1,,,
+#,,,,,,,,,,,,,,,,
+#,,,,,,,,,,,,,,,,
+#,,,,,,,,,,,,,,,,
+# Source:,"""='[SMART FY19 Scenario - All Common Assumptions - 190821_v4(20190905)PLrev.xlsx]Basic_Reformatted'",,,,,,,,,,,,,,,

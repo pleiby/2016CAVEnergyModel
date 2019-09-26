@@ -1,0 +1,31 @@
+﻿VOTT_Impact,Congestion,TimeSensitivity,CAVs,MultiplierHighway,MultiplierArterial,Multiplier_Highway/Arterial
+#,VOTT Factor Zero (Baseline),,,,,
+Zero,Low,Low,Low,1,1,1.0/1.0
+Zero,Low,Low,High,1,1,1.0/1.0
+Zero,Low,High,Low,1,1,1.0/1.0
+Zero,Low,High,High,1,1,1.0/1.0
+Zero,High,Low,Low,1,1,1.0/1.0
+Zero,High,Low,High,1,1,1.0/1.0
+Zero,High,High,Low,1,1,1.0/1.0
+Zero,High,High,High,1,1,1.0/1.0
+#,VOTT Factor Low,,,,,
+Low,Low,Low,Low,0.7,1,0.7/1.0
+Low,Low,Low,High,0.5,0.5,0.5/0.5
+Low,Low,High,Low,0.9,1,0.9/1.0
+Low,Low,High,High,0.7,0.7,0.7/0.7
+Low,High,Low,Low,0.5,1,0.5/1.0
+Low,High,Low,High,0.35,0.35,0.35/0.35
+Low,High,High,Low,0.7,1,0.7/1.0
+Low,High,High,High,0.5,0.5,0.5/0.5
+#,VOTT Factor High,,,,,
+#,Congestion,TimeSensitivity,CAVs,MultiplierHighway,MultiplierArterial,Multiplier_Highway/Arterial
+High,Low,Low,Low,0.9,1,0.9/1.0
+High,Low,Low,High,0.7,0.7,0.7/0.7
+High,Low,High,Low,1,1,1.0/1.0
+High,Low,High,High,0.9,0.9,0.9/0.9
+High,High,Low,Low,0.7,1,0.7/1.0
+High,High,Low,High,0.5,0.5,0.5/0.5
+High,High,High,Low,1,1,1.0/1.0
+High,High,High,High,0.7,0.7,0.7/0.7
+# VoTT_Factor_Table,,,,,,
+# Source:,"""='[SMART FY19 Scenario - All Common Assumptions - 190821_v4(20190905)PLrev.xlsx]Basic_VoTT_Factor_Table'",,,,,

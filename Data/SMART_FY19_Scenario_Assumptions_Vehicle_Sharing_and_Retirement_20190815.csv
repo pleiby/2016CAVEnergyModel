@@ -1,0 +1,17 @@
+﻿Model,DemScen,Retirement rate,Private vehicle share,TNC vehicle share,TNC Mode share
+POLARIS,Base,0,0.983,0.017,0.038
+POLARIS,A_Low,0.54,0.8,0.2,0.104
+POLARIS,A_High,0.54,0.8,0.2,0.104
+POLARIS,B_Low,0.88,0.465,0.535,0.192
+POLARIS,B_High,0.92,0.455,0.545,0.245
+POLARIS,C_Low,0.33,0.9,0.1,0.069
+POLARIS,C_High,0.52,0.85,0.15,0.084
+BEAM,Base,0,0.952,0.048,0.079
+BEAM,A_Low,0.2,0.86,0.14,0.082
+BEAM,A_High,0.2,0.86,0.14,0.083
+BEAM,B_Low,0.535,0.826,0.174,0.337
+BEAM,B_High,0.545,0.82,0.18,0.382
+BEAM,C_Low,0.1,0.931,0.069,0.126
+BEAM,C_High,0.15,0.895,0.105,0.138
+# Source,Assumptions,Vehicle_Sharing_and_Retirement_20190815PLrev,,,
+# Notes,Ratios are Private to TNC,,,,
