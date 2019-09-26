@@ -42,6 +42,19 @@ Completed 20190922 CAVdecom version
     - Too many place require manual (literal) listing of Cases, e.g. initialization of VTCShrAlt
     - Need to consider multiple levels of Sharing impact on VMT
 
+20190926 Version CAVESIMver10
+------------------------------- Include mix of vehicle types by Automation, Fuel, Use tpe.
+    - Develop share-weighted results given F_A_Shares (for Fuel and Automation) and U_Share (for Use, i.e. Private/Shared)
+    - Shares are developed from SMART FY19 Scenario COmmon Assumptions, processed by source()ing the "...DataPrep.R" script.
+    - Add Test, Zero, and Base DemScens for comparison (Test should be close to old CombScen4) 
+    - develop shifts (multipliers) for Automation effect onIntensity and VMT, based on Vehicle tech type: mI_A mI_C, mI_FA.
+    - Also multiplier for overall efficiency (not Automation efficiency impact) mI_F
+    - Delay application of VMT demand shift from Shared vehicle reposition to disaggregate impact phase.
+    - New postProcessComScenarioResults chunk applies adjustments to I and VMT changes based on vehicle type
+    - Share-weighted aggregation of fractional changes is tricky, see notes. 
+       - Still testing
+    - modified keepCaseWantedEffectsaAndAssumps chunk to aggregate back up to vehicle class VC level, to reproduce old bar charts.
+
 ToDo Next 20190922
 --------------------
 1. Establish technology and demand scenario assump starting points in CAVdecom code
