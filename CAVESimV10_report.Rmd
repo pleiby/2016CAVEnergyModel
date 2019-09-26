@@ -630,6 +630,9 @@ DS4     :-0.80       :-0.80        :Extreme Self driving case. Large benefits of
 DS5     :-0.80       :-0.80        :Same as DemScen 4, with different exogenous demand effects
 DS6     :-0.80       :-0.80        :Same as DemScen 4, with different exogenous demand effects
 DS7     :-0.50       :-0.80        :Same as DemScen 3, with different exogenous demand effects
+Test    :-0.80       :-0.80        :Same as DemScen 6
+Zero    : 0.00       : 0.00        :No cost changes
+Base    : 0.00       : 0.00        :No cost changes
 B_Low   :-0.10       :-0.40        :SMART Scen Sharing is Caring low
 B_High  :-0.30       :-0.40        :SMART Scen Sharing is Caring high
 C_Low   :-0.10       :-0.40        :SMART Scen All About Me low
@@ -664,6 +667,37 @@ kable(
   x = DemScenCostChange, row.names = F, digits = 3,
   caption = "Vehicle Travel Cost Component Change (Reduction) by Demand Scenario"
 )
+```
+
+### Establish the Reference Mix of Vehicle Types in the Desired Demand Scenarios
+
+We adopt reference vehicle mix from DOE's SMART Mobility FY19 SMART Workflow Scenario Common Assumptions. This provides vehicle share by class, fuel-technology (drivetrain), degree of automation, and the fraction of base trips provided by shared vehicle services (TNCs).
+
+
+```{r readSMARTFY19CommonAssumptions, echo=echoWorking}
+source("CAVESim_SMARTFY19_Scenario_DataPrep.R")
+
+# Add Test Case
+shares_by_F_A <- 
+  shares_by_F_A %>%
+  ungroup() %>%
+  spread(key = DemScen, value = F_A_Shares) %>%
+  mutate( # new Scenarios - full automation, no automation
+    Test = ifelse((Automation == "Full") & (Fuel == "Gas"), 1, 0),
+    Zero = ifelse((Automation == "No") & (Fuel == "Gas"), 1, 0)
+  ) %>%
+  gather(key = DemScen, value = F_A_Shares,-c(VC, Automation, Fuel))
+
+shares_by_U <- 
+  shares_by_U %>%
+  ungroup() %>%
+  spread(key = DemScen, value = U_Share) %>%
+  mutate( # new Scenarios - full automation, no automation
+    Test = ifelse(Use == "Shared", 1, 0),
+    Zero = ifelse(Use == "Private", 1, 0)
+  ) %>%
+  gather(key = DemScen, value = U_Share,-c(VC, Use))
+
 ```
 
 ### Select a Single Technology Scenario and Year to Examine
@@ -1016,6 +1050,9 @@ VTCShrAlt <- VTCShrBase %>% mutate(
   DS5 = VTCost_shr,
   DS6 = VTCost_shr,
   DS7 = VTCost_shr,
+  Test = VTCost_shr,
+  Zero = VTCost_shr,
+  Base = VTCost_shr,
   B_Low  = VTCost_shr,
   B_High = VTCost_shr,
   C_Low  = VTCost_shr,
@@ -1188,10 +1225,15 @@ plotStackedBarShares(VTCShrAlt, "DS2")
 plotStackedBarShares(VTCShrAlt, "DS3")
 plotStackedBarShares(VTCShrAlt, "DS4")
 
+plotStackedBarShares(VTCShrAlt, "Test")
+plotStackedBarShares(VTCShrAlt, "Zero")
+
+plotStackedBarShares(VTCShrAlt, "Base")
 plotStackedBarShares(VTCShrAlt, "B_Low")
 plotStackedBarShares(VTCShrAlt, "B_High")
 plotStackedBarShares(VTCShrAlt, "C_Low")
 plotStackedBarShares(VTCShrAlt, "C_High")
+
 ```
 
 From scenario-based cost shares, we can easily compute and visualize the total travel cost per mile for CAVs, by component.
@@ -1233,6 +1275,10 @@ plotStackedBarCostCompons(VTCostAlt, "DS2")
 plotStackedBarCostCompons(VTCostAlt, "DS3")
 plotStackedBarCostCompons(VTCostAlt, "DS4")
 
+plotStackedBarCostCompons(VTCostAlt, "Test")
+plotStackedBarCostCompons(VTCostAlt, "Zero")
+
+plotStackedBarCostCompons(VTCostAlt, "Base")
 plotStackedBarCostCompons(VTCostAlt, "B_Low")
 plotStackedBarCostCompons(VTCostAlt, "B_High")
 plotStackedBarCostCompons(VTCostAlt, "C_Low")
@@ -1412,6 +1458,9 @@ LDV     :DS4     :4       :Zero        : Cost-base response (with ElasVKT) with 
 LDV     :DS5     :4       :Zero        : scenario 4 with higher elasticity
 LDV     :DS6     :4       :Low         : scenario 5 with shift to carsharing (ride hailing/pooling)
 LDV     :DS7     :3       :Low         : scenario 3 with shift to carsharing (ride hailing/pooling)
+LDV     :Test    :4       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 4
+LDV     :Zero    :0       :Zero        : Cost-base response (with ElasVKT) only
+LDV     :Base    :0       :Med         : Cost-base response (with ElasVKT) only
 LDV     :B_Low   :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
 LDV     :B_High  :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
 LDV     :C_Low   :3       :High        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
@@ -1423,6 +1472,9 @@ HDV     :DS4     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS5     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS6     :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :DS7     :0       :Zero        : Cost-base response (with ElasVKT) only
+HDV     :Test    :0       :Zero        : Cost-base response (with ElasVKT) only
+HDV     :Zero    :0       :Zero        : Cost-base response (with ElasVKT) only
+HDV     :Base    :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :B_Low   :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :B_High  :0       :Zero        : Cost-base response (with ElasVKT) only
 HDV     :C_Low   :0       :Zero        : Cost-base response (with ElasVKT) only
@@ -1587,6 +1639,9 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
       DS5 = VTCost_shr,
       DS6 = VTCost_shr,
       DS7 = VTCost_shr,
+      Test = VTCost_shr,
+      Zero = VTCost_shr,
+      Base = VTCost_shr,
       B_Low  = VTCost_shr,
       B_High = VTCost_shr,
       C_Low  = VTCost_shr,
@@ -1664,7 +1719,8 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
   # Make additional (exog) adjustments in VMT demand based on shifts from Underserved population and Ride Hail/Pooling
   VMTIncrease <- VMTIncrease %>%
     left_join(select(DemScenAdjustments, -Comments), by = c("VC", "DemScen")) %>% # combines cost-based VMT change with shift factors
-    mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1) # apply demand shifts
+  # Apply underserved demand, defer Shared repositioning demand shift
+    mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1)
 
   # Select other cost and demand response parameters for the current Technology and Demand Scenario and Year
 
@@ -1694,21 +1750,102 @@ CurrYear <- 2050
 techScensWanted = unique(msa$TechScen)
 
 # This loop builds a dataframe of Combined Scenario (CombScen) assumptions and results
-CaseAssumpsResults <- data.frame() # simplest empty dataframe
+CaseAssumpsResults_many <- data.frame() # simplest empty dataframe
 
 for (CurrTechScen in techScensWanted) {
-  CaseAssumpsResults <- rbind(CaseAssumpsResults, CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear))
+  CaseAssumpsResults_many <- rbind(CaseAssumpsResults_many, CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear))
 }
+```
 
-# Compute Energy Use impact (could do this earlier)
-# ??? Disaggregate: Is this the point to adjust CAV results for other categories,
-#     then weight by shares, allowing summation across subcategores? XXX
-# ??? Points where share-weighted disaggretation is possible, 
-#     given shares and exog factors to rescale energy intensities or VMT?
-CaseAssumpsResults <- CaseAssumpsResults %>% mutate(EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0)
+Construct details of scenario, disaggregated by vehicle class, automation, fuel techology, use
+.
+
+```{r postProcessCombScenarioResults, echo=echoWorking}
+# first select only scenarios for which we have disaggregated tech shares
+DetailedDemScens = unique(shares_by_F_A$DemScen)
+
+CaseAssumpsResults <- CaseAssumpsResults_many %>%
+  filter(DemScen %in% DetailedDemScens)
+# Expand table to disaggregate by Vehicle Fuel Type and Automation
+CaseAssumpsResults <- CaseAssumpsResults %>%
+  left_join(shares_by_F_A) %>% # add Fuel and Automation shares
+  left_join(shares_by_U) # add Use (Sharing, Hailing/Pooling) shares
+CaseAssumpsResults <- CaseAssumpsResults %>%
+  mutate(
+    mI_A = ifelse(Automation=="Full", 1.0,
+                  ifelse(Automation=="Partial", 0.5,
+                         ifelse(Automation=="No", 0.0,
+                                NA)
+                  )
+    ),
+    mI_C = 1.0,
+    #mI_C = ifelse(VC=="LDV", 1.0,
+    #              ifelse(VC=="HDV", 0.5,
+    #                     NA)),
+    # Note these are all adjustments to the incremental effect of automation, 
+    #  note to the effect on energy use of electrification
+    mI_FA = ifelse(Fuel=="Gas", 1.0,
+                  ifelse(Fuel=="PHEV", 0.9,
+                         ifelse(Fuel=="BEV", 0.5,
+                                NA)
+                  )
+    ),
+    # Note these are adjustments to the base vehicle energy efficiency, 
+    #  note to the effect on energy use of electrification
+    mI_FB = ifelse(Fuel=="Gas", 1.0,
+                  ifelse(Fuel=="PHEV", 0.9,
+                         ifelse(Fuel=="BEV", 0.5,
+                                NA)
+                  )
+    ),
+    # Adjustments to Demand based on vehicle Use
+    mD_U = ifelse(Use=="Private", 1.0,
+                  # estab Shared repositioning demand mults/shifts
+                  ifelse(Use=="Shared", (1 + RidePoolAdjFrac),
+                         NA)
+    )
+  )
+
+# Compute Disagg Intensity, VMT Demand and Energy Use impact (could do this earlier)
+CaseAssumpsResults <- CaseAssumpsResults %>%
+  mutate(
+    # adjust intensity for Veh Class, Automation, Fuel tech
+    NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0,
+    # adjust VMT Demand for vehicle Use case (Shared or Private)
+    # fracVMTIncr so far is dependent on cost elasticity
+    fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1
+  )
+
+# then weight VMT demand by shares, allowing summation across subcategories
+CaseAssumpsResults <- CaseAssumpsResults %>%
+  mutate(
+    # actual energy use (relative to base for this vehicle segment)
+    # ? EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0,
+    fracEnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1),
+    EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1) * F_A_Shares * U_Share
+  )
+
+# Aside: Test summation of disaggregated shares
+temp = CaseAssumpsResults %>%
+  mutate(share_prods = F_A_Shares * U_Share) %>%
+  group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
+  summarize(TotShare = sum(share_prods)) %>%
+  ungroup
+sum(temp$TotShare != 1.0) # should all equal 1.0
+
+temp = shares_by_U %>%
+  group_by(DemScen, VC) %>%
+  summarize(TotShare = sum(U_Share)) %>%
+  ungroup
+sum(temp$TotShare != 1.0) # should all equal 1.0
+
+# Other Points where share-weighted disaggretation is possible, given
+#   shares and exog factors to rescale energy intensities or VMT?
 
 CaseEffects <- CaseAssumpsResults %>% # extract a key set of results and identifying indices
-  select(c("DemScen", "ElasCase", "TechScen", "VC", "Year", "fracVMTIncr", "NIE", "EnergyUse"))
+  select(c("DemScen", "ElasCase", "TechScen", "VC", "Year", 
+           "Automation", "Fuel", "Use", "F_A_Shares", "U_Share",
+           "fracVMTIncr", "NIE", "EnergyUse"))
 
 # To move specific columns to the beginning or end of a data.frame,
 # use select from the dplyr package and its everything() fn.
@@ -1735,10 +1872,13 @@ CS4      :2050  :Low      :HDV  :4            :DS6         :Cost-based response 
 CS5      :2050  :Low      :HDV  :5            :DS2         :HDV dmnd mult Same as Scen 4
 CS6      :2050  :Low      :HDV  :6            :DS0         :HDV dmnd mult Same as Scen 4
 CS7      :2050  :Low      :HDV  :7            :DS2         :HDV dmnd mult Same as Scen 3
+CS_Test  :2050  :Low      :HDV  :4            :Test        :Cost-based response (with ElasVKT) only
+CS_Zero  :2050  :Low      :HDV  :6            :Zero        :No Tech or cost change
+CS_Base  :2050  :Low      :HDV  :6            :Base        :No Tech or cost change
 CS_B_Low :2050  :Low      :HDV  :8            :B_Low       :
 CS_B_High:2050  :Low      :HDV  :9            :B_High      :
 CS_C_Low :2050  :Low      :HDV  :8            :C_Low       :
-CS_B_High:2050  :Low      :HDV  :9            :C_High      :
+CS_C_High:2050  :Low      :HDV  :9            :C_High      :
 CS1      :2050  :Low      :LDV  :1            :DS2         :Cost-based response (with ElasVKT) only
 CS2      :2050  :Low      :LDV  :2            :DS3         :Cost-based response (with ElasVKT) with Underserved mult option 1
 CS3      :2050  :Low      :LDV  :3            :DS5         :Cost-based response (with ElasVKT) with Underserved mult option 3
@@ -1746,6 +1886,9 @@ CS4      :2050  :Low      :LDV  :4            :DS6         :Cost-based response 
 CS5      :2050  :Low      :LDV  :5            :DS2         :Scen 4 dmnd mult with higher LDV elasticity
 CS6      :2050  :Low      :LDV  :6            :DS0         :Scen 5 dmnd mult with shift to ridehailing_ridepooling
 CS7      :2050  :Low      :LDV  :7            :DS2         :Scen 3 dmnd mult with shift to ridehailing_ridepooling
+CS_Test  :2050  :Low      :LDV  :4            :Test        :Cost-based response (with ElasVKT) only
+CS_Zero  :2050  :Low      :LDV  :6            :Zero        :No Tech or cost change
+CS_Base  :2050  :Low      :LDV  :6            :Base        :No Tech or cost change
 CS_B_Low :2050  :Low      :LDV  :8            :B_Low       :
 CS_B_High:2050  :Low      :LDV  :9            :B_High      :
 CS_C_Low :2050  :Low      :LDV  :8            :C_Low       :
@@ -1776,15 +1919,37 @@ Select Predefined combinations of Tech and Demand scenarios from the full set of
 ```{r keepCaseWantedEffectsAndAssumps, echo=echoWorking}
 # Note: semi_join(df1, df2) #keep only observations in df1 that match in df2 (inner_join without keeping df2).
 # Note: anti_join(df1, df2) #drops all observations in df1 that match in df2.
-CaseWantedEffects <- CaseEffects %>%
-  # filter(Year==CurrYear) %>%
-  right_join(select(CombScen_Combinations, -Notes), 
-             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
+CombScen_Combinations_subset <- CombScen_Combinations %>%
+  filter(DemScen %in% unique(CaseAssumpsResults$DemScen))
+  # right_join requires all rows of right df to be in left, in order to keep extra columns of right dd 
 
 CaseWantedAssumpsResults <- CaseAssumpsResults %>%
-  right_join(CombScen_Combinations, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
-```
+  # keep all rows in CaseAssumps that match row in CombScen_Combinations
+  right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
 
+# Aggregated Case results across Automation type, Fuel type, and shared Use
+CaseWantedEffects <- CaseEffects %>%
+  # filter(Year==CurrYear) %>%
+  right_join(select(CombScen_Combinations_subset, -Notes), 
+             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) %>%
+  mutate(Joint_Share = F_A_Shares * U_Share) %>%
+  mutate(
+    shrWtd_fracVMTIncr = fracVMTIncr*Joint_Share,
+    shrWtd_NIE = NIE*Joint_Share
+  ) %>%
+  select(-c(fracVMTIncr, NIE)) %>%
+  group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
+  summarize(
+    fracVMTIncr = sum(shrWtd_fracVMTIncr),
+    NIE = sum(shrWtd_NIE),
+    EnergyUse = sum(EnergyUse),
+    totshare = sum(Joint_Share)
+    ) %>%
+  ungroup # %>%
+  # filter(DemScen %in% ) - get rid of DemScens with no results DS0, 2, 3, 5, 6
+
+```
+xxx
 
 5.1 Final Scenario Results Table for 2050
 ------------------------
