@@ -1924,6 +1924,7 @@ CombScen_Combinations_subset <- CombScen_Combinations %>%
   # right_join requires all rows of right df to be in left, in order to keep extra columns of right dd 
 
 CaseWantedAssumpsResults <- CaseAssumpsResults %>%
+  # filter(DemScen %in% unique(CaseAssumpsResults$DemScen)) %>%
   # keep all rows in CaseAssumps that match row in CombScen_Combinations
   right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
 
@@ -1932,13 +1933,15 @@ CaseWantedEffects <- CaseEffects %>%
   # filter(Year==CurrYear) %>%
   right_join(select(CombScen_Combinations_subset, -Notes), 
              by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) %>%
+#  inner_join(select(CombScen_Combinations_subset, -Notes), 
+#             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) 
   mutate(Joint_Share = F_A_Shares * U_Share) %>%
   mutate(
     shrWtd_fracVMTIncr = fracVMTIncr*Joint_Share,
     shrWtd_NIE = NIE*Joint_Share
   ) %>%
   select(-c(fracVMTIncr, NIE)) %>%
-  group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
+  group_by(CombScen, DemScen, TechScen, ElasCase, VC, Year) %>%
   summarize(
     fracVMTIncr = sum(shrWtd_fracVMTIncr),
     NIE = sum(shrWtd_NIE),
@@ -1949,7 +1952,6 @@ CaseWantedEffects <- CaseEffects %>%
   # filter(DemScen %in% ) - get rid of DemScens with no results DS0, 2, 3, 5, 6
 
 ```
-xxx
 
 5.1 Final Scenario Results Table for 2050
 ------------------------
