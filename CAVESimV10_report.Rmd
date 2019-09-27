@@ -1698,6 +1698,11 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
   VMTIncrease <- RelTotCost %>%
     # filter(Case=="Low") %>%
     select(-VehType) %>%
+    # mutate( # copy these components but keep originals
+    #   C_Fuel = Fuel, # fuel costs, c/mi
+    #   C_Time = Time, # time costs [c/mi]
+    #   C_Vcap = VehCapCost
+    # ) %>%
     rename(
       ElasCase = Case, # actually, this Case could reflect sensitivity Case variations in other cost compons
       C_Fuel = Fuel, # fuel costs, c/mi
@@ -1712,7 +1717,9 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
     ) %>%
     group_by(VC, DemScen, ElasCase) %>%
     summarise_at(
-      vars(C_Fuel, C_Time, C_VNonF, C_Total, ElasVKT, fracVMTIncr),
+      vars(
+            # Fuel, Maintenance, AccAndIns, VehCapCost, TollsFees, Parking, Time, Registration, 
+            C_Fuel, C_Time, C_VNonF, C_Total, ElasVKT, fracVMTIncr),
       .funs = mean
     ) # this is an unweighted mean for Sedans and LtTrucks, wich are two VehTypes in VC=LDV
 
