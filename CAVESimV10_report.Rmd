@@ -397,13 +397,13 @@ msa <- TechScenAssumps %>%
   mutate(
     TechScen = as.integer(TechScen),
     Year = as.integer(Year)
-  )  %>%
-# Match Energy Intensity Impacts for each mechanism in the scenario to the
-#   Scenario Assumptions for that mechanism:
-#   IEffectsm$IM is the intensity multiplier for each VC, Year, Mech (mech) and EffectCase
-#   msa$EffectCase is one of (Zero, Opt, Mid, Pess) for each VC, Year, Mech
-# IEffectsm has 128 = 2 x 2 x 8 x 4, while msa has 224 rows
-# merge, keeping matching rows from second, bringing in IE and IM for each Mech
+  ) %>%
+  # Match Energy Intensity Impacts for each mechanism in the scenario to the
+  #   Scenario Assumptions for that mechanism:
+  #   IEffectsm$IM is the intensity multiplier for each VC, Year, Mech (mech) and EffectCase
+  #   msa$EffectCase is one of (Zero, Opt, Mid, Pess) for each VC, Year, Mech
+  # IEffectsm has 128 = 2 x 2 x 8 x 4, while msa has 224 rows
+  # merge, keeping matching rows from second, bringing in IE and IM for each Mech
   left_join(IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
   select(-c(IE)) %>% # drop fractional reductions, keep multipliers
   arrange(TechScen, VC, Mech, Year, EffectCase)
@@ -443,7 +443,7 @@ EnergyIntensityChanges <- msa %>%
   summarize(NIE = prod(IM) - 1) # product of multipliers across all Mech(anisms)
 # minus 1 for net change
 
-# Energy Intensity Impacts by Mechanism, EffectCase-level, Year, and vehicle type (LDV, HDV) 
+# Energy Intensity Impacts by Mechanism, EffectCase-level, Year, and vehicle type (LDV, HDV)
 EnergyIntensityChanges <- arrange(EnergyIntensityChanges, TechScen, VC, Year)
 ```
 ```{r constructIntensityComponsByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
@@ -678,7 +678,7 @@ We adopt reference vehicle mix from DOE's SMART Mobility FY19 SMART Workflow Sce
 source("CAVESim_SMARTFY19_Scenario_DataPrep.R")
 
 # Add Test Cases to those read in from scenario file
-shares_by_F_A <- 
+shares_by_F_A <-
   shares_by_F_A %>%
   ungroup() %>%
   spread(key = DemScen, value = F_A_Shares) %>%
@@ -686,9 +686,9 @@ shares_by_F_A <-
     Test = ifelse((Automation == "Full") & (Fuel == "Gas"), 1, 0),
     Zero = ifelse((Automation == "No") & (Fuel == "Gas"), 1, 0)
   ) %>%
-  gather(key = DemScen, value = F_A_Shares,-c(VC, Automation, Fuel))
+  gather(key = DemScen, value = F_A_Shares, -c(VC, Automation, Fuel))
 
-shares_by_U <- 
+shares_by_U <-
   shares_by_U %>%
   ungroup() %>%
   spread(key = DemScen, value = U_Share) %>%
@@ -696,8 +696,7 @@ shares_by_U <-
     Test = ifelse(Use == "Shared", 1, 0),
     Zero = ifelse(Use == "Private", 1, 0)
   ) %>%
-  gather(key = DemScen, value = U_Share,-c(VC, Use))
-
+  gather(key = DemScen, value = U_Share, -c(VC, Use))
 ```
 
 ### Select a Single Technology Scenario and Year to Examine
@@ -795,14 +794,14 @@ row.names(TravTimeCostBasePars) <- paste(TravTimeCostBasePars$var, TravTimeCostB
 #       (TravTimeCostBasePars["VMTtot.LDV", "local"] + TravTimeCostBasePars["VMTtot.LDV", "intercity"]),
 #   "$/hr.\n"
 # )
-# 
+#
 # cat(
 #   "Check: Average TTC per mile for LDV average value matches VoTT/speed to within",
 #   TravTimeCostBasePars["average_TTC_per_mi.LDV", "average"] - #  [$/hr]/[mi/hr]
 #     TravTimeCostBasePars["VoTT.LDV", "average"] / TravTimeCostBasePars["average_speed.LDV", "average"],
 #   "$/mi.\n"
 # )
-# 
+#
 # cat(
 #   "Check: Average TTC per mile for HDV average value matches VoTT/speed to within",
 #   TravTimeCostBasePars["average_TTC_per_mi.HDV", "average"] - #  [$/hr]/[mi/hr]
@@ -868,20 +867,20 @@ VTCostBase <- VehTravelCostCompons %>%
 #   for 2 LDV categories (Lt Truck and Car) and one HDV categopry
 ChkErrorDiff <-
   VTCostBase %>%
-    filter(CostCat == "Time") %>%
-    select(VTCost_cpm) / 100 -
-    c(
-      TravTimeCostBasePars["average_TTC_per_mi.LDV", "average"],
-      TravTimeCostBasePars["average_TTC_per_mi.LDV", "average"],
-      TravTimeCostBasePars["average_TTC_per_mi.HDV", "average"]
-    )
+  filter(CostCat == "Time") %>%
+  select(VTCost_cpm) / 100 -
+  c(
+    TravTimeCostBasePars["average_TTC_per_mi.LDV", "average"],
+    TravTimeCostBasePars["average_TTC_per_mi.LDV", "average"],
+    TravTimeCostBasePars["average_TTC_per_mi.HDV", "average"]
+  )
 
-errTol = 1E-8
+errTol <- 1E-8
 if (abs(sum(ChkErrorDiff)) > errTol) {
   cat(
     "Check: Input VTCostBase Time cost for LDVs and HDV differs from Average TTC per mile by", paste(ChkErrorDiff),
     "cents/mi.\n Updating VTCostBase base travel time cost per mile."
-  ) 
+  )
 
   # Update unit Time cost per mile in the Vehicle Travel Cost matrix for MVs (base),
   #   according to current Base Assumption set for Trav Time Cost
@@ -1053,9 +1052,9 @@ VTCShrAlt <- VTCShrBase %>% mutate(
   Test = VTCost_shr,
   Zero = VTCost_shr,
   Base = VTCost_shr,
-  B_Low  = VTCost_shr,
+  B_Low = VTCost_shr,
   B_High = VTCost_shr,
-  C_Low  = VTCost_shr,
+  C_Low = VTCost_shr,
   C_High = VTCost_shr,
   VC = substr(as.character(VehType), 1, 3)
 )
@@ -1211,7 +1210,8 @@ plotStackedBarShares <- function(df, ds, ts = "TS4") {
     ggplot() +
     geom_bar(aes(x = VehType, y = VTCost_shr, fill = CostCat), stat = "identity") +
     ggtitle(paste0("Fig: Alt Cost Components for Vehicle Travel, Scen=", ds, "/", ts),
-            subtitle = "Automated Vehicle, Current Year, Relative to Base MV") +
+      subtitle = "Automated Vehicle, Current Year, Relative to Base MV"
+    ) +
     ylab("Share") +
     scale_fill_brewer(palette = "Spectral") +
     # scale_fill_brewer(palette="Blues")
@@ -1233,7 +1233,6 @@ plotStackedBarShares(VTCShrAlt, "B_Low")
 plotStackedBarShares(VTCShrAlt, "B_High")
 plotStackedBarShares(VTCShrAlt, "C_Low")
 plotStackedBarShares(VTCShrAlt, "C_High")
-
 ```
 
 From scenario-based cost shares, we can easily compute and visualize the total travel cost per mile for CAVs, by component.
@@ -1260,7 +1259,8 @@ plotStackedBarCostCompons <- function(df, ds, ts = "TS4") {
     ggplot() +
     geom_bar(aes(x = VehType, y = VTCost_cpm, fill = CostCat), stat = "identity") +
     ggtitle(paste0("Fig: Alt Cost Components for Vehicle Travel, Scen=", ds, "/", ts),
-            subtitle = "Automated Vehicle, Current Year, cents/mi") +
+      subtitle = "Automated Vehicle, Current Year, cents/mi"
+    ) +
     ylab("cents/mi") +
     scale_fill_brewer(palette = "Spectral") +
     # scale_fill_brewer(palette="Blues")
@@ -1444,7 +1444,7 @@ Note: in the table `VMTIncrease`, the time *t* and TechScen index *j* associated
 ```{r VMTAdjustments, echo=echoWorking}
 # extends logic in "calcul Dem_LDV" and "calcul Dem_HDV"
 
-# This table defines Combined Scenarios ComScen in terms of a 
+# This table defines Combined Scenarios ComScen in terms of a
 #  Demand Scenario (the results for which are based on a coupled Technology Scenario) plus
 #  Underserved Demand Multiplier Option and a possible Ride Hailing/Pooling Adjustment of VMT
 
@@ -1482,7 +1482,7 @@ HDV     :C_High  :0       :Zero        : Cost-base response (with ElasVKT) only
 "), header = TRUE, sep = ":", strip.white = TRUE) #
 
 # Initially, restrict to only Shared, Full Automation cases
-temp_refRideHailingPoolingAdj <- refRideHailingPoolingAdj %>% 
+temp_refRideHailingPoolingAdj <- refRideHailingPoolingAdj %>%
   filter(Use == "Shared", Automation == "Full") %>%
   select(-c(Use, Automation)) %>%
   gather(key = "RidePoolAdj", value = RidePoolAdjFrac)
@@ -1497,12 +1497,12 @@ DemScenAdjustments <- DemScenAdjustments %>%
 
 VMTIncrease <- VMTIncrease %>%
   left_join(select(DemScenAdjustments, -Comments), by = c("VC", "DemScen")) # combines base cost shares and Demand
-VMTIncrease <- VMTIncrease %>% 
+VMTIncrease <- VMTIncrease %>%
   mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
 
 # ??? Disaggregate:
-# This VMTIncrease table is disagg by Year and VC, as is the 
-#  Need to apply shares to this dataframe, by adding rows and columns for subcategories, e.g. 
+# This VMTIncrease table is disagg by Year and VC, as is the
+#  Need to apply shares to this dataframe, by adding rows and columns for subcategories, e.g.
 #  - Base Non-Automated fraction
 #  - electric fraction
 #  - shared fraction
@@ -1643,9 +1643,9 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
       Test = VTCost_shr,
       Zero = VTCost_shr,
       Base = VTCost_shr,
-      B_Low  = VTCost_shr,
+      B_Low = VTCost_shr,
       B_High = VTCost_shr,
-      C_Low  = VTCost_shr,
+      C_Low = VTCost_shr,
       C_High = VTCost_shr,
       VC = substr(as.character(VehType), 1, 3)
     ) %>%
@@ -1719,15 +1719,16 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
     group_by(VC, DemScen, ElasCase) %>%
     summarise_at(
       vars(
-            # Fuel, Maintenance, AccAndIns, VehCapCost, TollsFees, Parking, Time, Registration, 
-            C_Fuel, C_Time, C_VNonF, C_Total, ElasVKT, fracVMTIncr),
+        # Fuel, Maintenance, AccAndIns, VehCapCost, TollsFees, Parking, Time, Registration,
+        C_Fuel, C_Time, C_VNonF, C_Total, ElasVKT, fracVMTIncr
+      ),
       .funs = mean
     ) # this is an unweighted mean for Sedans and LtTrucks, wich are two VehTypes in VC=LDV
 
   # Make additional (exog) adjustments in VMT demand based on shifts from Underserved population and Ride Hail/Pooling
   VMTIncrease <- VMTIncrease %>%
     left_join(select(DemScenAdjustments, -Comments), by = c("VC", "DemScen")) %>% # combines cost-based VMT change with shift factors
-  # Apply underserved demand, defer Shared repositioning demand shift
+    # Apply underserved demand, defer Shared repositioning demand shift
     mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1)
 
   # Select other cost and demand response parameters for the current Technology and Demand Scenario and Year
@@ -1753,7 +1754,7 @@ This calculates the fractional change in energy Intensity, VMT, and Energy Use b
 
 ```{r multCombScenarioResultsAndAssumptionsLoop, echo=echoWorking}
 CurrYear <- 2050
-techScensWanted = unique(msa$TechScen)
+techScensWanted <- unique(msa$TechScen)
 
 # This loop builds a dataframe of Combined Scenario (CombScen) assumptions and results
 CaseAssumpsResults_many <- data.frame() # simplest empty dataframe
@@ -1768,7 +1769,7 @@ Construct details of scenario, disaggregated by vehicle class, automation, fuel 
 
 ```{r postProcessCombScenarioResults, echo=echoWorking, warning=F}
 # first select only scenarios for which we have disaggregated tech shares
-DetailedDemScens = unique(shares_by_F_A$DemScen)
+DetailedDemScens <- unique(shares_by_F_A$DemScen)
 
 CaseAssumpsResults <- CaseAssumpsResults_many %>%
   filter(DemScen %in% DetailedDemScens)
@@ -1778,37 +1779,41 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
   left_join(shares_by_U) # add Use (Sharing, Hailing/Pooling) shares
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
-    mI_A = ifelse(Automation=="Full", 1.0,
-                  ifelse(Automation=="Partial", 0.5,
-                         ifelse(Automation=="No", 0.0,
-                                NA)
-                  )
+    mI_A = ifelse(Automation == "Full", 1.0,
+      ifelse(Automation == "Partial", 0.5,
+        ifelse(Automation == "No", 0.0,
+          NA
+        )
+      )
     ),
     mI_C = 1.0,
-    #mI_C = ifelse(VC=="LDV", 1.0,
+    # mI_C = ifelse(VC=="LDV", 1.0,
     #              ifelse(VC=="HDV", 0.5,
     #                     NA)),
-    # Note these are all adjustments to the incremental effect of automation, 
+    # Note these are all adjustments to the incremental effect of automation,
     #  note to the effect on energy use of electrification
-    mI_FA = ifelse(Fuel=="Gas", 1.0,
-                  ifelse(Fuel=="PHEV", 0.9,
-                         ifelse(Fuel=="BEV", 0.5,
-                                NA)
-                  )
+    mI_FA = ifelse(Fuel == "Gas", 1.0,
+      ifelse(Fuel == "PHEV", 0.9,
+        ifelse(Fuel == "BEV", 0.5,
+          NA
+        )
+      )
     ),
-    # Note these are adjustments to the base vehicle energy efficiency, 
+    # Note these are adjustments to the base vehicle energy efficiency,
     #  note to the effect on energy use of electrification
-    mI_FB = ifelse(Fuel=="Gas", 1.0,
-                  ifelse(Fuel=="PHEV", 0.9,
-                         ifelse(Fuel=="BEV", 0.5,
-                                NA)
-                  )
+    mI_FB = ifelse(Fuel == "Gas", 1.0,
+      ifelse(Fuel == "PHEV", 0.9,
+        ifelse(Fuel == "BEV", 0.5,
+          NA
+        )
+      )
     ),
     # Adjustments to Demand based on vehicle Use
-    mD_U = ifelse(Use=="Private", 1.0,
-                  # estab Shared repositioning demand mults/shifts
-                  ifelse(Use=="Shared", (1 + RidePoolAdjFrac),
-                         NA)
+    mD_U = ifelse(Use == "Private", 1.0,
+      # estab Shared repositioning demand mults/shifts
+      ifelse(Use == "Shared", (1 + RidePoolAdjFrac),
+        NA
+      )
     )
   )
 
@@ -1835,17 +1840,17 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
 ```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
 if (testsWanted) {
-  temp = CaseAssumpsResults %>%
+  temp <- CaseAssumpsResults %>%
     mutate(share_prods = F_A_Shares * U_Share) %>%
     group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
     summarize(TotShare = sum(share_prods)) %>%
-    ungroup
+    ungroup()
   sum(temp$TotShare != 1.0) # should all equal 1.0
-  
-  temp = shares_by_U %>%
+
+  temp <- shares_by_U %>%
     group_by(DemScen, VC) %>%
     summarize(TotShare = sum(U_Share)) %>%
-    ungroup
+    ungroup()
   sum(temp$TotShare != 1.0) # should all equal 1.0
 }
 ```
@@ -1855,9 +1860,11 @@ if (testsWanted) {
 #   shares and exog factors to rescale energy intensities or VMT?
 
 CaseEffects <- CaseAssumpsResults %>% # extract a key set of results and identifying indices
-  select(c("DemScen", "ElasCase", "TechScen", "VC", "Year", 
-           "Automation", "Fuel", "Use", "F_A_Shares", "U_Share",
-           "fracVMTIncr", "NIE", "EnergyUse"))
+  select(c(
+    "DemScen", "ElasCase", "TechScen", "VC", "Year",
+    "Automation", "Fuel", "Use", "F_A_Shares", "U_Share",
+    "fracVMTIncr", "NIE", "EnergyUse"
+  ))
 
 # To move specific columns to the beginning or end of a data.frame,
 # use select from the dplyr package and its everything() fn.
@@ -1866,7 +1873,7 @@ CaseAssumpsResults <- CaseAssumpsResults %>% select(names(CaseEffects), everythi
 ```
 
 ```{r saveCombScenResultsAndAssumptions, echo=echoWorking}
-write_csv(CaseAssumpsResults,path = "CAV_Scenario_results.csv")
+write_csv(CaseAssumpsResults, path = "CAV_Scenario_results.csv")
 ```
 
 Define the Combined Scenarios `CombScen`, in terms of name, year, vehicle class,
@@ -1934,7 +1941,7 @@ with effects disaggregated by vehicle type and technology
 # Note: anti_join(df1, df2) #drops all observations in df1 that match in df2.
 CombScen_Combinations_subset <- CombScen_Combinations %>%
   filter(DemScen %in% unique(CaseAssumpsResults$DemScen))
-  # right_join requires all rows of right df to be in left, in order to keep extra columns of right dd 
+# right_join requires all rows of right df to be in left, in order to keep extra columns of right dd
 
 CaseWantedAssumpsResults <- CaseAssumpsResults %>%
   # filter(DemScen %in% unique(CaseAssumpsResults$DemScen)) %>%
@@ -1943,8 +1950,9 @@ CaseWantedAssumpsResults <- CaseAssumpsResults %>%
 
 CaseWantedEffects <- CaseEffects %>%
   # filter(Year==CurrYear) %>%
-  right_join(select(CombScen_Combinations_subset, -Notes), 
-             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
+  right_join(select(CombScen_Combinations_subset, -Notes),
+    by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")
+  )
 ```
 
 We can aggregated Case results across Automation type, Fuel type, and shared Use,
@@ -1956,16 +1964,17 @@ travel demand segment.
 # Aggregated Case results across Automation type, Fuel type, and shared Use
 CaseWantedAggAssumps <- CaseAssumpsResults %>%
   # filter(Year==CurrYear) %>%
-  right_join(select(CombScen_Combinations_subset, -Notes), 
-             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) %>%
-#  inner_join(select(CombScen_Combinations_subset, -Notes), 
-#             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) 
+  right_join(select(CombScen_Combinations_subset, -Notes),
+    by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")
+  ) %>%
+  #  inner_join(select(CombScen_Combinations_subset, -Notes),
+  #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
   mutate(Joint_Share = F_A_Shares * U_Share) %>%
   mutate(
-    fracVMTIncr = fracVMTIncr*Joint_Share,
-    NIE = NIE*Joint_Share,
-    C_Fuel  = C_Fuel * Joint_Share,
-    C_Time  = C_Time * Joint_Share,
+    fracVMTIncr = fracVMTIncr * Joint_Share,
+    NIE = NIE * Joint_Share,
+    C_Fuel = C_Fuel * Joint_Share,
+    C_Time = C_Time * Joint_Share,
     C_VNonF = C_VNonF * Joint_Share,
     C_Total = C_Total * Joint_Share,
     ElasVKT = ElasVKT * Joint_Share,
@@ -1984,34 +1993,34 @@ CaseWantedAggAssumps <- CaseAssumpsResults %>%
     totshare = sum(Joint_Share),
     F_A_Shares = sum(F_A_Shares),
     U_Shares = sum(U_Share),
-    C_Fuel   = sum(C_Fuel ),
-    C_Time   = sum(C_Time ),
-    C_VNonF  = sum(C_VNonF),
-    C_Total  = sum(C_Total),
-    ElasVKT  = sum(ElasVKT),
+    C_Fuel = sum(C_Fuel),
+    C_Time = sum(C_Time),
+    C_VNonF = sum(C_VNonF),
+    C_Total = sum(C_Total),
+    ElasVKT = sum(ElasVKT),
     RidePoolAdjFrac = sum(RidePoolAdjFrac),
-    USDmult  = sum(USDmult),
-    mI_A     = sum(mI_A),
-    mI_C     = sum(mI_C),
-    mI_FA    = sum(mI_FA),
-    mI_FB    = sum(mI_FB)
-    ) %>%
-  ungroup # %>%
-
+    USDmult = sum(USDmult),
+    mI_A = sum(mI_A),
+    mI_C = sum(mI_C),
+    mI_FA = sum(mI_FA),
+    mI_FB = sum(mI_FB)
+  ) %>%
+  ungroup() # %>%
 ```
 
 ```{r aggregatesSelectedCaseEffects, echo = echoWorking}
 # Aggregated Case results across Automation type, Fuel type, and shared Use
 CaseWantedAggEffects <- CaseEffects %>%
   # filter(Year==CurrYear) %>%
-  right_join(select(CombScen_Combinations_subset, -Notes), 
-             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) %>%
-#  inner_join(select(CombScen_Combinations_subset, -Notes), 
-#             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) 
+  right_join(select(CombScen_Combinations_subset, -Notes),
+    by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")
+  ) %>%
+  #  inner_join(select(CombScen_Combinations_subset, -Notes),
+  #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
   mutate(Joint_Share = F_A_Shares * U_Share) %>%
   mutate(
-    shrWtd_fracVMTIncr = fracVMTIncr*Joint_Share,
-    shrWtd_NIE = NIE*Joint_Share
+    shrWtd_fracVMTIncr = fracVMTIncr * Joint_Share,
+    shrWtd_NIE = NIE * Joint_Share
   ) %>%
   select(-c(fracVMTIncr, NIE)) %>%
   group_by(CombScen, DemScen, TechScen, ElasCase, VC, Year) %>%
@@ -2020,21 +2029,22 @@ CaseWantedAggEffects <- CaseEffects %>%
     NIE = sum(shrWtd_NIE),
     EnergyUse = sum(EnergyUse),
     totshare = sum(Joint_Share)
-    ) %>%
-  ungroup # %>%
-  # filter(DemScen %in% ) - get rid of DemScens with no results DS0, 2, 3, 5, 6
-
+  ) %>%
+  ungroup() # %>%
+# filter(DemScen %in% ) - get rid of DemScens with no results DS0, 2, 3, 5, 6
 ```
 ```{r checkAggregatesOverSelectedCaseEffects, echo=echoWorking, include=echoTests}
 testAggregation <- CaseWantedAggEffects %>%
   mutate(
-    EnergyUseAlt = (1+fracVMTIncr)*(1+NIE) -1,
-    EUA_over_EU = EnergyUseAlt/EnergyUse,
-    testDiff = EnergyUseAlt-EnergyUse
+    EnergyUseAlt = (1 + fracVMTIncr) * (1 + NIE) - 1,
+    EUA_over_EU = EnergyUseAlt / EnergyUse,
+    testDiff = EnergyUseAlt - EnergyUse
   ) %>%
   select(-Year)
-cat("Check: Calculated aggregate `EnergyUse` changes match product of aggregate energy intensity `NIE` and VMT changes `fracVMTIncr` to within total absolute error ",
-    sum(abs(testAggregation$testDiff), na.rm = T), ".\n")
+cat(
+  "Check: Calculated aggregate `EnergyUse` changes match product of aggregate energy intensity `NIE` and VMT changes `fracVMTIncr` to within total absolute error ",
+  sum(abs(testAggregation$testDiff), na.rm = T), ".\n"
+)
 ```
 
 5.1 Final Scenario Results Table for 2050
@@ -2082,8 +2092,10 @@ CWE_test <- CaseWantedAggEffects %>%
   right_join(SR_test, by = c("VC", "TechScen", "varname")) %>%
   mutate(testDiff = calcValue - testValue)
 
-cat("Check: Calculated values match Scenario Results test values (intensity, VMT, EUse) to within total absolute error ",
-    sum(abs(CWE_test$testDiff), na.rm = T), ".\n")
+cat(
+  "Check: Calculated values match Scenario Results test values (intensity, VMT, EUse) to within total absolute error ",
+  sum(abs(CWE_test$testDiff), na.rm = T), ".\n"
+)
 ```
 
 ```{r mirrorExtSummaryScenarioResults, echo=echoWorking, include=echoTests}
@@ -2179,23 +2191,23 @@ ElasCaseWanted <- "Low"
 ```{r poolingScenData, echo=echoWorking}
 # Gather assumptions for base and alternative case
 # extract essential cost vars, and combine base and alt scenario cases
-scenData <- CaseWantedAssumpsResults %>% 
+scenData <- CaseWantedAssumpsResults %>%
   filter(
     DemScen %in% DemScenWanted,
     ElasCase == ElasCaseWanted,
     Fuel == "Gas", # multiple vehicles and techs possible
     # VehType == VehTypeWanted
     VC == VehClassWanted
-  ) 
+  )
 # select(DemScen, TechScen, VehType, CostCat, VTCost_cpm) # extract essential vars
 
-# scenAggEffects <- CaseWantedAggEffects %>% 
+# scenAggEffects <- CaseWantedAggEffects %>%
 #   filter(
 #     DemScen %in% DemScenWanted,
 #     ElasCase == ElasCaseWanted,
 #     # VehType == VehTypeWanted
 #     VC == VehClassWanted
-#   ) 
+#   )
 
 scenAggData <- CaseWantedAggAssumps %>%
   filter(
@@ -2203,7 +2215,7 @@ scenAggData <- CaseWantedAggAssumps %>%
     ElasCase == ElasCaseWanted,
     # VehType == VehTypeWanted
     VC == VehClassWanted
-  ) 
+  )
 ```
 
 For Base assumptions and Alternative scenario assumptions, .
@@ -2215,7 +2227,9 @@ a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the curr
 VTCostBaseTotal <- VTCostBase %>%
   filter(CostCat == "Total") %>%
   select(-CostCat) # first get Base total cost for each VehType
-C_tot_base = VTCostBaseTotal %>% filter(VehType == VehTypeWanted) %>% pull(VTCost_cpm)
+C_tot_base <- VTCostBaseTotal %>%
+  filter(VehType == VehTypeWanted) %>%
+  pull(VTCost_cpm)
 
 scenAggData <- scenAggData %>%
   # construct components wanted, from cost share to monetary values in c/mi
@@ -2246,14 +2260,14 @@ Demand scenarios include variation in the value of travel time and the elasticit
 
 ```{r calcCostDataForOccupancyEffectsTest, echo=echoWorking}
 # Keep only needed summary cost variables, [in cents/mi]
-# scenCostData1 <- scenData %>% 
+# scenCostData1 <- scenData %>%
 #   filter(
 #     Automation == "Full",
 #     Fuel == "Gas",
 #     Use == "Shared"
 #   ) %>%
 #   select(DemScen, C_F, C_H, C_T, C_V)
-scenCostData <- scenAggData %>% 
+scenCostData <- scenAggData %>%
   select(DemScen, C_F, C_H, C_T, C_V)
 
 # Get the travel cost components for scenarios of interest.
@@ -2273,21 +2287,20 @@ scenCostData %>% kable(
 ```
 
 ```{r plotBaseCostData, echo=echoWorking}
-scenCostData %>% 
+scenCostData %>%
   rename(
     Fuel = C_F,
     Vehicle_Nonfuel = C_H,
     Time = C_T
   ) %>%
   select(-C_V) %>%
-  gather(key = CostCat, value=VTCost, -DemScen) %>%
+  gather(key = CostCat, value = VTCost, -DemScen) %>%
   ggplot() +
-    geom_bar(aes(x = DemScen, y = VTCost, fill = CostCat), stat = "identity") +
-    ggtitle("Fig: Vehicle travel cost data [c/mi] at Base occupancy.") +
-    ylab("Vehicle Travel Cost, c/mi") +
-    # ggtitle("Fig: Base Cost Shares for Vehicle Travel", subtitle = "Manual Vehicle, Current Year, Fraction") +
-    scale_fill_brewer(palette = "Spectral")
-
+  geom_bar(aes(x = DemScen, y = VTCost, fill = CostCat), stat = "identity") +
+  ggtitle("Fig: Vehicle travel cost data [c/mi] at Base occupancy.") +
+  ylab("Vehicle Travel Cost, c/mi") +
+  # ggtitle("Fig: Base Cost Shares for Vehicle Travel", subtitle = "Manual Vehicle, Current Year, Fraction") +
+  scale_fill_brewer(palette = "Spectral")
 ```
 
 
@@ -2301,7 +2314,7 @@ The vehicle (non-time) portion of travel costs can be divided among the occupant
 # dplyr fn for full-join with no common vars (all combinations)
 # this gives a df with observations for all levels of occupancy o for each value of DemScen
 #  Cost component values are replicated for all occupancy levels, which is correct for costs/veh-mi
-occupancyEffects <- scenAggData %>% 
+occupancyEffects <- scenAggData %>%
   select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT) %>%
   crossing(occupancyEffects)
 
@@ -2313,7 +2326,7 @@ occupancyEffects <- occupancyEffects %>%
     rho = o^elas_VoTT_wrt_o, # Time-cost multiplier due to disutility of pooling [unitless]
     C_Tpmt = C_T * rho, # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi]
     Pi = 1 / TravTimeCostBasePars["average_speed.LDV", "average"], # assumed pace, (constant over o) [hr/veh-mi]
-    C_Tdph = C_T / (100*Pi), # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+    C_Tdph = C_T / (100 * Pi), # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
     C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
     # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
     Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi)
@@ -2328,8 +2341,8 @@ Obviously the response of travelers will be quite heterogenous and situation-dep
 ```{r extractApplicableElasPKT, echo=echoWorking}
 # First extract the applicable ElasPKT for these demand scenarios
 currElasPKT <- scenAggData %>% # for display purposes only
-  filter(DemScen %in% DemScenWanted, VC == VehClassWanted, ElasCase == ElasCaseWanted) %>% 
-  pull(ElasVKT)  %>%
+  filter(DemScen %in% DemScenWanted, VC == VehClassWanted, ElasCase == ElasCaseWanted) %>%
+  pull(ElasVKT) %>%
   mean() # Warning: only works for singe DemScenWanted
 # currElasPKT
 ```
@@ -2366,13 +2379,13 @@ occupancyEffects <- occupancyEffects %>%
     ElasPKT = ElasVKT, # treat as the same
     Energy_oref = 1 + Energy_oref,
     VMT_oref = 1 + VMT_oref
-  ) %>% 
+  ) %>%
   # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
   group_by(DemScen) %>%
   mutate(
-    PMT = VMT_oref*(C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
+    PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
     VMT = PMT / o, # 	veh-mi (normalized) (defining relation for Occupancy "o")
-    Energy = Energy_oref * VMT/VMT_oref, # relative fuel cost/km indicates relative fuel intensity
+    Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
     # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
   ) %>%
   ungroup()
@@ -2455,7 +2468,7 @@ AltVMT %>%
   filter(DemScen == DemScenWanted[[2]]) %>%
   select(-DemScen, -VMT, -PMT) %>%
   spread(key = ElasTourLengthWithPooling, value = Energy) %>%
-  kable(digits = 4, caption = paste0("Energy Use Relative to Reference (",DemScenWanted[[2]],"), by Occupancy and Route Length Elasticity"))
+  kable(digits = 4, caption = paste0("Energy Use Relative to Reference (", DemScenWanted[[2]], "), by Occupancy and Route Length Elasticity"))
 ```
 
 ```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
@@ -2463,9 +2476,9 @@ AltVMT %>%
 # those three colors make up initial palette.
 # Then pass them to colorRampPalette() to create interpolating function.
 # pal <- colorRampPalette(cols)
-test_DemScen = "C_High"
+test_DemScen <- "C_High"
 # Just make sure a feasible scenario chosen, so program runs
-if (! (test_DemScen %in% occupancyEffects$DemScen)) test_DemScen = occupancyEffects$DemScen[1]
+if (!(test_DemScen %in% occupancyEffects$DemScen)) test_DemScen <- occupancyEffects$DemScen[1]
 
 baseenergy <- pull(occupancyEffects[occupancyEffects$DemScen == test_DemScen & occupancyEffects$o == 1.0, ], Energy)
 
@@ -2473,8 +2486,8 @@ AltVMT %>%
   filter(DemScen == test_DemScen) %>%
   arrange(ElasTourLengthWithPooling, o) %>%
   # mutate(ElasTourLengthWithPooling = paste0("Elas=",ElasTourLengthWithPooling)) %>%
-  mutate(ElasTourLengthWithPooling = as.factor(ElasTourLengthWithPooling)) -> prepAltVMT #%>%
-  # group_by(ElasTourLengthWithPooling) %>%
+  mutate(ElasTourLengthWithPooling = as.factor(ElasTourLengthWithPooling)) -> prepAltVMT # %>%
+# group_by(ElasTourLengthWithPooling) %>%
 # could we fill the following with geom_ribbon?
 
 prepAltVMT %>%
@@ -2952,10 +2965,10 @@ $$TranspEnergyUse_{AVScenario} =
 CAVmod <- data.frame(Year = 2007:2050)
 CAVmod$CAVpenetration <- 0.0
 CAVmod$CAVpenetration <- # Fractional Increase in VMT for Demand Scenarios
-c(
-  rep(0, sum(CAVmod$Year < 2020)),
-  seq(from = 0.040, to = 1.00, length.out = sum(CAVmod$Year >= 2020))
-)
+  c(
+    rep(0, sum(CAVmod$Year < 2020)),
+    seq(from = 0.040, to = 1.00, length.out = sum(CAVmod$Year >= 2020))
+  )
 ```
 
 
