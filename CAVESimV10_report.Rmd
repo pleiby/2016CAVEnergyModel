@@ -1839,20 +1839,18 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
 
 ```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
-if (testsWanted) {
-  temp <- CaseAssumpsResults %>%
-    mutate(share_prods = F_A_Shares * U_Share) %>%
-    group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
-    summarize(TotShare = sum(share_prods)) %>%
-    ungroup()
-  sum(temp$TotShare != 1.0) # should all equal 1.0
+temp <- CaseAssumpsResults %>%
+  mutate(share_prods = F_A_Shares * U_Share) %>%
+  group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
+  summarize(TotShare = sum(share_prods)) %>%
+  ungroup()
+sum(temp$TotShare != 1.0) # should all equal 1.0
 
-  temp <- shares_by_U %>%
-    group_by(DemScen, VC) %>%
-    summarize(TotShare = sum(U_Share)) %>%
-    ungroup()
-  sum(temp$TotShare != 1.0) # should all equal 1.0
-}
+temp <- shares_by_U %>%
+  group_by(DemScen, VC) %>%
+  summarize(TotShare = sum(U_Share)) %>%
+  ungroup()
+sum(temp$TotShare != 1.0) # should all equal 1.0}
 ```
 
 ```{r extractCaseEffects, echo=echoWorking}
