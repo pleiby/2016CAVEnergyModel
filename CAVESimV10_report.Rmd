@@ -1572,7 +1572,7 @@ $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1$$
 
 Note: this calculation applies the VKT elasticity, estimated and appropriate for cost response at the reference level (near zero) pooling.
 
-```{r }
+```{r constructTechScenEffectsIE, echo=echoWorking}
 
 # This is all vehicle energy intensity changes for all values of TechScen, Year, and Vehicle Class
 TechScenEffectsEI <- EnergyIntensityChanges %>%
@@ -1582,8 +1582,9 @@ TechScenEffectsEI <- EnergyIntensityChanges %>%
 
 Select Combined Scenario
 
+Our "combined" scenarios are composed of a technology scenario (`TechScen`) and a demand scenario (`DemScen`).
 
-```{r}
+```{r selectCombinedScenario, echo=echoWorking}
 # Note that the following VMT Increase calculation table in "VMTIncrease" is for a range of Demand Scenarios, but a _single_ tech scenario.
 # Thus they do not match the spreadsheet model results, which implicitly loops overall all TechScen values with "TBL" command.
 
@@ -1593,7 +1594,7 @@ Select Combined Scenario
 # This completes the calculation of VMT fractional change for one TechScen and the set of DemScen
 ```
 
-```{r gatherAndReportCombScenInputsAndResults}
+```{r gatherAndReportCombScenInputsAndResults, echo=echoWorking}
 CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
   # For a single TechScen CurrTS, and year CurrYr,
   #   gather combined scenario input params for combinations with all
@@ -1746,11 +1747,9 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr) {
 } # CombScenInputsAndResultsForOneTechScen
 ```
 
-Loop over all Tech Scenarios (TechScen) and develop table of all combinations of Tech Scenarios and Demand Scenarios
+Loop over all Tech Scenarios (TechScen) and develop a table of all combinations of Tech Scenarios and Demand Scenarios.
 
-Calculate fractional change in Energy Use by sector, for all cases.
-
-Iterate, building a dataframe of Combined Scenario (CombScen) assumptions and results.
+This calculates the fractional change in energy Intensity, VMT, and Energy Use by sector and segment (vehicle and travel type), for all cases. We iterate, building a dataframe of Combined Scenario (CombScen) assumptions and results.
 
 ```{r multCombScenarioResultsAndAssumptionsLoop, echo=echoWorking}
 CurrYear <- 2050
@@ -1767,7 +1766,7 @@ for (CurrTechScen in techScensWanted) {
 Construct details of scenario, disaggregated by vehicle class, automation, fuel techology, use
 .
 
-```{r postProcessCombScenarioResults, echo=echoWorking}
+```{r postProcessCombScenarioResults, echo=echoWorking, warning=F}
 # first select only scenarios for which we have disaggregated tech shares
 DetailedDemScens = unique(shares_by_F_A$DemScen)
 
@@ -1831,21 +1830,27 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     fracEnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1),
     EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1) * F_A_Shares * U_Share
   )
+```
 
+```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
-temp = CaseAssumpsResults %>%
-  mutate(share_prods = F_A_Shares * U_Share) %>%
-  group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
-  summarize(TotShare = sum(share_prods)) %>%
-  ungroup
-sum(temp$TotShare != 1.0) # should all equal 1.0
+if (testsWanted) {
+  temp = CaseAssumpsResults %>%
+    mutate(share_prods = F_A_Shares * U_Share) %>%
+    group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
+    summarize(TotShare = sum(share_prods)) %>%
+    ungroup
+  sum(temp$TotShare != 1.0) # should all equal 1.0
+  
+  temp = shares_by_U %>%
+    group_by(DemScen, VC) %>%
+    summarize(TotShare = sum(U_Share)) %>%
+    ungroup
+  sum(temp$TotShare != 1.0) # should all equal 1.0
+}
+```
 
-temp = shares_by_U %>%
-  group_by(DemScen, VC) %>%
-  summarize(TotShare = sum(U_Share)) %>%
-  ungroup
-sum(temp$TotShare != 1.0) # should all equal 1.0
-
+```{r extractCaseEffects, echo=echoWorking}
 # Other Points where share-weighted disaggretation is possible, given
 #   shares and exog factors to rescale energy intensities or VMT?
 
@@ -2020,7 +2025,7 @@ CaseWantedAggEffects <- CaseEffects %>%
   # filter(DemScen %in% ) - get rid of DemScens with no results DS0, 2, 3, 5, 6
 
 ```
-```{r checkAggregatesOverSelectedCaseEffects, echo = echoTests}
+```{r checkAggregatesOverSelectedCaseEffects, echo=echoWorking, include=echoTests}
 testAggregation <- CaseWantedAggEffects %>%
   mutate(
     EnergyUseAlt = (1+fracVMTIncr)*(1+NIE) -1,
@@ -2290,7 +2295,9 @@ scenCostData %>%
 occupancyEffects <- data.frame("o" = seq(from = 0.8, to = 1.5, by = 0.05)) #  occupancy, unitless (pass/veh, normalized)
 ```
 
-```{r calcOccupancyEffects}
+The vehicle (non-time) portion of travel costs can be divided among the occupants, so that pooling (increased occupancy) reduces cost-per-passenger mile while not altering vehicle costs per vehicle mile. Pooling has an uncertain and complex implication for the total VMT, since pooled riders do not necessarily share origins and destinations, and the net change in VMT depends on pooled-ride routing efficiency.
+
+```{r calcOccupancyEffects, echo=echoWorking}
 # dplyr fn for full-join with no common vars (all combinations)
 # this gives a df with observations for all levels of occupancy o for each value of DemScen
 #  Cost component values are replicated for all occupancy levels, which is correct for costs/veh-mi
@@ -2875,7 +2882,7 @@ Formula: SUM(LDV Total Energy, CLT Total Energy, HDV Total Energy)/SUM(LDV Total
 VMT Demand Response over time: pick up chosen Demand and Technology Scenario, and values for chosen scenario, for years 2035 & 2050
 
 
-```{r exogCAVPenetrationShare, echo=echoWorking}
+```{r exogCAVPenetrationShare, echo=echoWorking, warning=F}
 # fully automated vehicles/total stock
 ExogCAVPenetrationShare <- read.delim(textConnection("
 Year  :LDV    :HDV
@@ -2913,27 +2920,27 @@ PolicyScen_Test_filename <- "PolicyAndScenarioData_Test20161014.csv"
 ScenAndPolicyProj_Test <- read_csv(paste0("./Data/", PolicyScen_Test_filename), comment = "#")
 ```
 
-VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050        
-LDV Demand impact (depends on scenario choice)  6  0.671  0.671    Dmnd change Per CAV, or at total demand impact at full penetration
-HDV Demand impact (depends on scenario choice)  6  0.683  0.683    Dmnd change Per CAV, or at total demand impact at full penetration
+- VMT Demand Response: pick up chosen Demand Scenario, and value for chosen scenario, for years 2035 & 2050        
+- LDV Demand impact (depends on scenario choice)  6  0.671  0.671    Dmnd change Per CAV, or at total demand impact at full penetration
+- HDV Demand impact (depends on scenario choice)  6  0.683  0.683    Dmnd change Per CAV, or at total demand impact at full penetration
 
-LDV Demand impact (depends on scenario choice) (not year t dependent)
-HDV Demand impact (depends on scenario choice) (not year t dependent)
-LDV penetration: total automated/total stock in 2050
-HDV penetration: total automated/total stock in 2050
+- LDV Demand impact (depends on scenario choice) (not year t dependent)
+- HDV Demand impact (depends on scenario choice) (not year t dependent)
+- LDV penetration: total automated/total stock in 2050
+- HDV penetration: total automated/total stock in 2050
 
-LDV Penetration rate=fullyauto/totalstock
-LDV Increase in VMT for each automated vehicle
-LDV VMT increase ratio/this is linked to calculation sheets
+- LDV Penetration rate=fullyauto/totalstock
+- LDV Increase in VMT for each automated vehicle
+- LDV VMT increase ratio/this is linked to calculation sheets
 
-HDV Penetration rate=fullyauto/totalstock
-HDV Increase in VMT for each automated vehicle
-HDV VMT increase ratio/this is linked to calculation sheets
+- HDV Penetration rate=fullyauto/totalstock
+- HDV Increase in VMT for each automated vehicle
+- HDV VMT increase ratio/this is linked to calculation sheets
 
-LDV Energy Intensity Multiplier, scaled by penetration
-HDV Energy Intensity Fractional Increase at full adoption - from above
-LDV Energy Intensity Multiplier, scaled by penetration
-HDV Energy Intensity Multiplier, scaled by penetration
+- LDV Energy Intensity Multiplier, scaled by penetration
+- HDV Energy Intensity Fractional Increase at full adoption - from above
+- LDV Energy Intensity Multiplier, scaled by penetration
+- HDV Energy Intensity Multiplier, scaled by penetration
 
 $$TranspEnergyUse_{AVScenario} = 
    TranspEnergyUse_{Ref} \cdot (1+ModalEfficiencyFactors)^{ReboundElas} \cdot (1+FuelCarbonIntensities) \cdot
