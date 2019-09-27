@@ -2084,7 +2084,10 @@ save(list = ls(), file = "CAVESIMdecom.sav")
 
 # 6. Examination of VMT and PMT Given Various Levels of Pooling
 
-Consider a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.
+Ride pooling (or ridesharing) that increases vehicle occupancy has been identified as a key opportunity for achieving the full benefits of new mobility systems (Sperling, Daniel 2018) including transportation network companies (TNCs), vehicle automation and connectivity. We distinguish “ride pooling” from “vehicle hailing” (or vehicle sharing) in which vehicles are used sequentially by different users, each charged per ride or per time period. As mobility options expand, incentives for ride pooling are necessary to help manage vehicle miles travelled (VMT) since several studies (e.g. Fagnant and Kockelman 2014; Henao and Marshall. 2018) have shown that simply sharing vehicles will not significantly reduce, and could increase, VMT. This is especially a concern with connected autonomous vehicles where the convenience and lower cost per kilometer is expected to increase vehicle travel demand. 
+
+We consider the impacts of automation technologies, and pooled riding (combining different passengers in shared vehicles) on Vehicle Miles Traveled (VMT) and Passenger Miles Traveled (PMT, a measure of mobility). The response is based on the economic benefits (travel cost savings, including vehicle operation costs and travel time costs) and the potential disbenefits of ride pooling (disutility of sharing space, and incremental travel distance and delay). Since the studies of potential incremental VMT impacts of ride-pooling are still in development (e.g. Levin et al. 2017, Sun and Zhang 2018, Wenzel et al. 2019), we explore the impacts parametrically over a range of values. Trip time is well recognized as a key component of travelers’ private costs (Parry 2009; Small and Verhoef 2007; Small 2012), and as Lin et al. (Lin et al. 2012) also conclude for the case of riders hailing taxis. 
+
 
 ```{r setDemandAndPoolingParams, echo=echoWorking}
 # ElasPKT = -1             # e_{PMT,CT}, elasticity of passenger travel demand w.r.t. cost/pass-km
@@ -2097,47 +2100,61 @@ PacePi <- 1 / 39.98 # base or default pace, hr/mi
 ReductPaceAutomation <- 1 #  PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
 ```
 
-We establish estimates of vehicle travel cost per mile by component category (those related to fuel cost, non-fuel financial costs, and time costs). Gather these for Base assumptions and Alternative scenario assumptions.
+We establish estimates of vehicle travel cost per mile by component category (those related to fuel cost, non-fuel financial costs, and time costs) and estimate how these change with automation and ride sharing at different levels of pooling.
 
-```{r poolingScenData, echo=echoWorking}
-
-# extract essential cost vars, and combine base and alt scenario cases
-scenData <- VTCostAlt %>% select(DemScen, VehType, CostCat, VTCost_cpm) # extract essential vars
-VTCostBase$DemScen <- "Base" # label base as another scenario
-VTCostBase <- VTCostBase[names(scenData)] # order cost to match alt cost scenario data, and bind
-scenData <- rbind(scenData, VTCostBase) # conbine alt and base scenario data
-```
-
-```{r poolingScenDataSelectedCases, echo=echoWorking}
+```{r poolingSelectedCases, echo=echoWorking}
 # Focus on the base and alt scen cost components for LDV cars
 VehTypeWanted <- "LDVAvgSedan"
-DemScenWanted <- c("Base", "DS3")
+DemScenWanted <- c("Base", "C_High")
 ElasCaseWanted <- "Low"
+```
+
+```{r poolingScenData, echo=echoWorking}
+# Gather assumptions for base and alternative case
+# extract essential cost vars, and combine base and alt scenario cases
+scenData <- CaseWantedAssumpsResults %>% 
+  filter(
+    DemScen %in% DemScenWanted,
+    ElasCase == ElasCaseWanted,
+    Fuel == "Gas",
+    # VehType == VehTypeWanted
+    VC == "LDV"
+  ) 
+# select(DemScen, TechScen, VehType, CostCat, VTCost_cpm) # extract essential vars
+```
+
+For Base assumptions and Alternative scenario assumptions, .
+
+a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.^[Historically, U.S. average passenger car occupancy in the U.S. has been steady at about 1.5 to 1.6, with van occupancy slightly over 2 (Davis, Williams, & Boundy 2017, Fig 8.1)]
+
+```{r poolingScenDataSelectedCases, echo=echoWorking}
+VTCostBaseTotal <- VTCostBase %>% # get base travel costs, total, cents/m9
+  filter(CostCat == "Total") %>%
+  select(-CostCat) # first get Base total cost for each VehType
+C_tot_ref = VTCostBaseTotal %>% filter(VehType == "LDVAvgSedan") %>% pull(VTCost_cpm)
 
 scenData <- scenData %>%
-  filter(VehType == VehTypeWanted) %>%
-  spread(key = CostCat, value = VTCost_cpm)
-scenData <- scenData %>%
-  rename(
-    C_F = Fuel, # fuel costs, c/mi
-    C_T = Time, # time costs [c/mi]
-    C_K = VehCapCost,
-    C_Total = Total
+  # construct components wanted, from cost share to monetary values in c/mi
+  mutate(
+    C_F = C_tot_ref * C_Fuel, # fuel costs, c/mi
+    C_T = C_tot_ref * C_Time, # time costs [c/mi]
+    # C_K = VehCapCost,
+    C_tot = C_tot_ref * C_Total
   ) %>% # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
   mutate(
-    C_H = C_Total - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
-    C_V = C_F + C_H # vehicle costs, c/mi
-    # c_V = C_V/C_V[DemScen=="Base"]  # normalized vehicle travel cost relative to base
+    C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
+    C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
   )
 ```
+
 Focus on the principal travel cost components for vehicles in the `r VehTypeWanted` class.
 
 **Note:** For the current *Demand* Scenarios (DemScen) the only costs/km varying over Alt Scenario for each VehType are: 
 Time, AccAndIns (for 2 cases & small variation), and Total cost (not Fuel, Registration, Parking, Maintenance, TollsFees, VehCapCost)
 
-The differences in energy cost/mi arise separately as result of the *Technology* scenarios.
-Demand scenarios do include variation in the elasticity of VKT with respect to costs, though, 
-but that is not part of the VTCost data table.
+The differences in energy and capital-operating cost/mi arise as result of the scenario *Technology* assumptions. In the case of pooling, these costs can be shared over the passengers, reducing travel cost.
+
+Demand scenarios include variation in the value of travel time and the elasticity of VMT with respect to costs.
 
 ### 6.1 Consider alternative occupancy levels, and their effects on costs, PMT, and VMT.
 
@@ -2145,9 +2162,16 @@ but that is not part of the VTCost data table.
 
 ```{r calcCostDataForOccupancyEffectsTest, echo=echoWorking}
 # Keep only needed summary cost variables, [in cents/mi]
-scenCostData <- scenData %>% select(DemScen, C_F, C_H, C_T, C_V)
+scenCostData <- scenData %>% 
+  filter(
+    Automation == "Full",
+    Fuel == "Gas",
+    Use == "Shared"
+  ) %>%
+  select(DemScen, C_F, C_H, C_T, C_V)
+
 # Get the travel cost components for scenarios of interest.
-scenCostData <- scenCostData %>% filter(DemScen %in% DemScenWanted)
+scenCostData <- scenCostData %>% filter(DemScen %in% DemScenWanted) # redundant
 
 # # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR # TEST!!:
 # scenCostData = scenCostData %>%
@@ -2156,15 +2180,34 @@ scenCostData <- scenCostData %>% filter(DemScen %in% DemScenWanted)
 #     C_F = ifelse(DemScen=="Base",C_F, 2*C_F)
 #     )
 
-kable(scenCostData,
+scenCostData %>% kable(
   caption = "Table: Vehicle travel cost data [c/mi] at Base occupancy, for these test cases of alternative pooling.",
-  digits = 3
+  digits = 1
 )
+```
+
+```{r plotBaseCostData, echo=echoWorking}
+scenCostData %>% 
+  rename(
+    Fuel = C_F,
+    Vehicle_Nonfuel = C_H,
+    Time = C_T
+  ) %>%
+  select(-C_V) %>%
+  gather(key = CostCat, value=VTCost, -DemScen) %>%
+  ggplot() +
+    geom_bar(aes(x = DemScen, y = VTCost, fill = CostCat), stat = "identity") +
+    ggtitle("Fig: Vehicle travel cost data [c/mi] at Base occupancy.") +
+    ylab("Vehicle Travel Cost, c/mi") +
+    # ggtitle("Fig: Base Cost Shares for Vehicle Travel", subtitle = "Manual Vehicle, Current Year, Fraction") +
+    scale_fill_brewer(palette = "Spectral")
+
 ```
 
 ```{r initOccupancyEffects, echo=echoWorking}
 occupancyEffects <- data.frame("o" = seq(from = 0.8, to = 1.5, by = 0.05)) #  occupancy, unitless (pass/veh, normalized)
 ```
+
 ```{r calcOccupancyEffects}
 # dplyr fn for full-join with no common vars (all combinations)
 # this gives a df with observations for all levels of occupancy o for each value of DemScen
@@ -2186,9 +2229,7 @@ occupancyEffects <- occupancyEffects %>%
   )
 ```
 
-Pooling, or increased occupancy, reduces costs by sharing vehicle operating costs over all passengers, and reducing total VMT as pooling contracts the vehicle distance traveled in completing a tour of multiple trips (considered later). It can also increase costs to passengers by increasing the costs per unit travel time (relative to solo travel), and by adding some detour distance to a passenger's travel.  
-
-We account for these changes, and the resulting demand response through the elasticity of travel demand with respect to full, generalized cost.
+Pooling, or increased occupancy, reduces costs by sharing vehicle operating costs over all passengers, and reducing total VMT as pooling contracts the vehicle distance traveled in completing a tour of multiple trips (considered later). It can also increase costs to passengers by increasing the costs per unit travel time (relative to solo travel), and by adding some detour distance to a passenger's travel. We account for these changes, and the resulting demand response through the elasticity of travel demand with respect to full, generalized cost.
 
 Obviously the response of travelers will be quite heterogenous and situation-dependent, but the aggregate response can be estimated.
 
@@ -2279,7 +2320,7 @@ occupancyEffects <- occupancyEffects %>% mutate(
 )
 ```
 
-The ability of pooling to reduce VMT is summarized in an elasticity of "tour" length (the VMT needed to complete multiple trip) with respect to occupancy *o*:
+The ability of pooling to reduce VMT is currently summarized in an elasticity of "tour" length (the VMT needed to complete multiple trip) with respect to occupancy *o*:
 
 $$L_{tour} = L_{tour,r} o^{\epsilon_{L,o}}$$
 
@@ -2307,15 +2348,21 @@ AltVMT %>%
 # those three colors make up initial palette.
 # Then pass them to colorRampPalette() to create interpolating function.
 # pal <- colorRampPalette(cols)
+test_DemScen = "C_High"
+# Just make sure a feasible scenario chosen, so program runs
+if (! (test_DemScen %in% occupancyEffects$DemScen)) test_DemScen = occupancyEffects$DemScen[1]
 
-baseenergy <- pull(occupancyEffects[occupancyEffects$DemScen == "DS3" & occupancyEffects$o == 1.0, ], EnergyUse)
+baseenergy <- pull(occupancyEffects[occupancyEffects$DemScen == test_DemScen & occupancyEffects$o == 1.0, ], EnergyUse)
 
 AltVMT %>%
-  filter(DemScen == "DS3") %>%
+  filter(DemScen == test_DemScen) %>%
   arrange(ElasTourLengthWithPooling, o) %>%
   # mutate(ElasTourLengthWithPooling = paste0("Elas=",ElasTourLengthWithPooling)) %>%
-  mutate(ElasTourLengthWithPooling = as.factor(ElasTourLengthWithPooling)) %>%
+  mutate(ElasTourLengthWithPooling = as.factor(ElasTourLengthWithPooling)) -> prepAltVMT #%>%
   # group_by(ElasTourLengthWithPooling) %>%
+# could we fill the following with geom_ribbon?
+
+prepAltVMT %>%
   ggplot(aes(x = o, y = EnergyUse)) +
   geom_line(aes(color = ElasTourLengthWithPooling), size = 1) +
   scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
@@ -2333,7 +2380,9 @@ AltVMT %>%
     legend.text = element_text(size = 12)
   )
 ```
+### Estimate Scenario effects
 
+### Estimate Scenario effects, with 
 
 
 # Appendices
@@ -2800,12 +2849,20 @@ c(
 * Brown, A., Gonder, J., & Repac, B. (2014). An Analysis of Possible Energy Impacts of Automated Vehicle. In G. Meyer & S. Beiker (Eds.), Road Vehicle Automation (pp. 61-70). Springer. Retrieved from http://link.springer.com/book/10.1007%2F978-3-319-05990-
 * Davis, S. C., S. E. Williams, and R. G. Boundy. _Transportation Energy Data Book_. Center for Transportation Analysis, US Department of Energy, 2017.
 * European Road Safety Observatory 2018 [Speed and Accident Risk](https://ec.europa.eu/transport/road_safety/specialist/knowledge/speed/speed_is_a_central_issue_in_road_safety/speed_and_accident_risk_en) (last revised 06/07/2018).
+* Fagnant, Daniel, and Kara Kockelman. 2014. “The Environmental Implication of Shared Autonomous Vehicles Using Agent-Based Simulation.” In 93 Annual Meeting of the Transportation Research Board. Vols. Washington, DC. The National Academies.
+* Henao, Alejandro, and Wesley E. Marshall. 2018. “The Impact of Ride-Hailing on Vehicle Miles Traveled.” _Transportation_, September. https://doi.org/10.1007/s11116-018-9923-2.
 * Kloeden, C. N., McLean, A. J., Moore, V. M. & Ponte, G. (1997) Travelling speed and the rate of crash involvement. Volume 1: findings. Report No. CR 172. Federal Office of Road Safety FORS, Canberra
 * Kloeden, C. N., Ponte, G. & McLean, A. J. (2001) Travelling speed and the rate of crash involvement on rural roads. Report No. CR 204. Australian Transport Safety Bureau ATSB, Civic Square, ACT
+* Levin, Michael W., Kara M. Kockelman, Stephen D. Boyles, and Tianxin Li. 2017. “A General Framework for Modeling Shared Autonomous Vehicles with Dynamic Network-Loading and Dynamic Ride-Sharing Application.” Computers, Environment and Urban Systems 64 (July): 373–83. https://doi.org/10.1016/j.compenvurbsys.2017.04.006.
+* Lin, Yeqian, Wenquan Li, Feng Qiu, and He Xu. 2012. “Research on Optimization of Vehicle Routing Problem for Ride-Sharing Taxi.” 8th International Conference on Traffic and Transportation Studies 
+* Parry, Ian W. H. 2009. “Pricing Urban Congestion.” Annual Review of Resource Economics 1 (Journal Article): 461–84. https://doi.org/10.1146/annurev.resource.050708.144226.
+* Sun, Yanshuo  and Lei Zhang, 2018 ‘Potential of Taxi-Pooling to Reduce VMT in Washington, D.C.'
 * Schipper, Lee, Celine Marie-Lilliu, and Roger Gorham, 2000. Flexing the Link between Transport and Greenhouse Gas Emissions: A Path for the World Bank, Washington, DC: World Bank
 (http://www.ocs.polito.it/biblioteca/mobilita/FlexingLink1.pdf), June 2000. 
 * Schipper, Lee, Calanit Saenger and Anant Sudardshan 2011. "Transport and Carbon Emissions in the United States: The Long View," Energies 2011, 4, 563-581; doi:10.3390/en4040563
 * Shaefer et al. 2009.
+* Sperling, Daniel. 2018. _Three Revolutions: Steering Automated, Shared, and Electric Vehicles to a Better Future._ Island Press.
 * Stephens, T.S., J. Gonder, Y. Chen, Z. Lin, C. Liu, D. Gohlke, 2016 "Estimated Bounds and Important Factors for Fuel Use and Consumer Costs of Connected and Automated Vehicles," NREL Technical Report NREL/TP-5400-67216 November 2016, http://www.nrel.gov/docs/fy17osti/67216.pdf
 * Thomas, J., Hwang, H.-L., West, B., & Huff, S. (2013). Predicting Light-Duty Vehicle Fuel Economy as a Function of Highway Speed. SAE International Journal of Passenger Cars - Mechanical Systems, 6(2), 2013-01-1113. doi:10.4271/2013-01-1113
 * Wadud, Z., MacKenzie, D., & Leiby, P. (2016). Help or hindrance? The travel, energy and carbon impacts of highly automated vehicles. Transportation Research Part A: Policy and Practice, 86, 1-18. doi:10.1016/j.tra.2015.12.001
+* Wenzel, Tom, Clement Rames, Eleftheria Kontou, and Alejandro Henao. 2019. “Travel and Energy Implications of Ridesourcing Service in Austin, Texas.” _Transportation Research Part D: Transport and Environment_ 70: 18–34. https://doi.org/https://doi.org/10.1016/j.trd.2019.03.005.
