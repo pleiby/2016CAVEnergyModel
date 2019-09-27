@@ -677,7 +677,7 @@ We adopt reference vehicle mix from DOE's SMART Mobility FY19 SMART Workflow Sce
 ```{r readSMARTFY19CommonAssumptions, echo=echoWorking}
 source("CAVESim_SMARTFY19_Scenario_DataPrep.R")
 
-# Add Test Case
+# Add Test Cases to those read in from scenario file
 shares_by_F_A <- 
   shares_by_F_A %>%
   ungroup() %>%
@@ -1912,11 +1912,12 @@ CombScen_Combinations %>%
   )
 ```
 
-Select Predefined combinations of Tech and Demand scenarios from the full set of cross-combinations
+Select Predefined combinations of Tech and Demand scenarios from the full set of cross-combinations,
+with effects disaggregated by vehicle type and technology 
 
 (Note: so far, ran all combinations, and then choose the ones to report.)
 
-```{r keepCaseWantedEffectsAndAssumps, echo=echoWorking}
+```{r aggregateForCaseWantedEffectsAndAssumps, echo=echoWorking}
 # Note: semi_join(df1, df2) #keep only observations in df1 that match in df2 (inner_join without keeping df2).
 # Note: anti_join(df1, df2) #drops all observations in df1 that match in df2.
 CombScen_Combinations_subset <- CombScen_Combinations %>%
@@ -1927,7 +1928,13 @@ CaseWantedAssumpsResults <- CaseAssumpsResults %>%
   # filter(DemScen %in% unique(CaseAssumpsResults$DemScen)) %>%
   # keep all rows in CaseAssumps that match row in CombScen_Combinations
   right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
+```
 
+We can aggregated Case results across Automation type, Fuel type, and shared Use,
+based on disaggregated effects and demand shares associated with each
+travel demand segment.
+
+```{r aggregatesSelectedCaseEffects, echo = echoWorking}
 # Aggregated Case results across Automation type, Fuel type, and shared Use
 CaseWantedEffects <- CaseEffects %>%
   # filter(Year==CurrYear) %>%
@@ -1952,9 +1959,22 @@ CaseWantedEffects <- CaseEffects %>%
   # filter(DemScen %in% ) - get rid of DemScens with no results DS0, 2, 3, 5, 6
 
 ```
+```{r checkAggregatesOverSelectedCaseEffects, echo = echoTests}
+testAggregation <- CaseWantedEffects %>%
+  mutate(
+    EnergyUseAlt = (1+fracVMTIncr)*(1+NIE) -1,
+    EUA_over_EU = EnergyUseAlt/EnergyUse,
+    testDiff = EnergyUseAlt-EnergyUse
+  ) %>%
+  select(-Year)
+cat("Check: Calculated aggregate `EnergyUse` changes match product of aggregate energy intensity `NIE` and VMT changes `fracVMTIncr` to within total absolute error ",
+    sum(abs(testAggregation$testDiff), na.rm = T), ".\n")
+```
 
 5.1 Final Scenario Results Table for 2050
 ------------------------
+
+NOTE: FOLLOWING ARE HISTORICAL, SUPERCEDED CASES
 
 ```{r specifyTestScenarioSummary, echo=echoWorking, include=echoTests}
 # Scenario Summary 2050 Energy Intensity, VMP and Energy Use Changes at Full Adoption
@@ -2044,6 +2064,7 @@ data %>% filter(VC == "LDV") %>%
   ylab("Fractional Change")
 # scale_fill_brewer(palette="Blues")
 ```
+
 
 Tables indicating cross-tabs of:
 
