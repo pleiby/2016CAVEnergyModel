@@ -224,8 +224,8 @@ SetK_Mechs <- c( # mechanisms k by which automation alters energy and/or demand
   "Increased_feature_load",
   "Automation_accessory_load",
   "Higher_highway_speeds"
-  # "Ride_hailing",    # Q: should Mechanism set include this?
   # "Ride_pooling",    # Q: should Mechanism set include this?
+  # "Ride_hailing",    # Q: should Mechanism set include this?
   # "Electrification_BEV",
   # "Electrification_PHEV"
 )
@@ -2182,7 +2182,7 @@ We establish estimates of vehicle travel cost per mile by component category (th
 # Focus on the base and alt scen cost components for LDV cars
 VehTypeWanted <- "LDVAvgSedan"
 VehClassWanted <- "LDV"
-DemScenWanted <- c("Base", "C_High")
+DemScenWanted <- c("Base", "B_High", "C_High")
 ElasCaseWanted <- "Low"
 ```
 
@@ -2199,14 +2199,6 @@ scenData <- CaseWantedAssumpsResults %>%
   )
 # select(DemScen, TechScen, VehType, CostCat, VTCost_cpm) # extract essential vars
 
-# scenAggEffects <- CaseWantedAggEffects %>%
-#   filter(
-#     DemScen %in% DemScenWanted,
-#     ElasCase == ElasCaseWanted,
-#     # VehType == VehTypeWanted
-#     VC == VehClassWanted
-#   )
-
 scenAggData <- CaseWantedAggAssumps %>%
   filter(
     DemScen %in% DemScenWanted,
@@ -2220,17 +2212,25 @@ For Base assumptions and Alternative scenario assumptions, .
 
 a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.^[Historically, U.S. average passenger car occupancy in the U.S. has been steady at about 1.5 to 1.6, with van occupancy slightly over 2 (Davis, Williams, & Boundy 2017, Fig 8.1)]
 
-```{r poolingScenDataSelectedCases, echo=echoWorking}
+```{r extractBaseVehicleCosts, echo=echoWorking}
 # get base travel costs, total, cents/mi
-VTCostBaseTotal <- VTCostBase %>%
-  filter(CostCat == "Total") %>%
-  select(-CostCat) # first get Base total cost for each VehType
-C_tot_base <- VTCostBaseTotal %>%
-  filter(VehType == VehTypeWanted) %>%
-  pull(VTCost_cpm)
+extractVehTotalTravelCost <- function(cost_df, vehtype, costcat) {
+  # Returns vehicle travel cost component "costcat" for vehicle type "vehtype".
+  #   Expects a dataframe "cost_df" of travel costs components conforming to that of VTCostBase,
+  #   with variables CostCat, Vehtype, and VTCost_cpm
+  cost_df %>%
+    filter(CostCat == costcat) %>%
+    filter(VehType == vehtype) %>%
+    pull(VTCost_cpm)  
+}
+```
+
+```{r addVehTravelCostsComponsFromShares, echo=echoWorking}
+# Need base total vehicle cost, which is the reference point for all relative cost estimations
+C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" )
 
 scenAggData <- scenAggData %>%
-  # construct components wanted, from cost share to monetary values in c/mi
+  # construct principal cost components, from cost share to monetary values in c/mi
   mutate(
     C_F = C_tot_base * C_Fuel, # fuel costs, c/mi
     C_T = C_tot_base * C_Time, # time costs [c/mi]
@@ -2270,13 +2270,6 @@ scenCostData <- scenAggData %>%
 
 # Get the travel cost components for scenarios of interest.
 scenCostData <- scenCostData %>% filter(DemScen %in% DemScenWanted) # redundant
-
-# # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR # TEST!!:
-# scenCostData = scenCostData %>%
-#   mutate( # only alter the non-Base case fuel cost, and total # variable cost
-#     C_V = ifelse(DemScen=="Base",C_V, C_V + C_F),
-#     C_F = ifelse(DemScen=="Base",C_F, 2*C_F)
-#     )
 
 scenCostData %>% kable(
   caption = "Table: Vehicle travel cost data [c/mi] at Base occupancy, for these test cases of alternative pooling.",
@@ -2366,6 +2359,7 @@ The estimated long-run elasticity of LDV passenger travel demand with respect to
 #   EnergyUse = VMT * C_F/C_F[DemScen=="Base" & o==1.0]   # relative fuel cost/km indicates relative fuel intensity
 # )
 
+# set up reference and pooled outcome variables
 occupancyEffects <- occupancyEffects %>%
   ungroup() %>%
   rename(
@@ -2377,12 +2371,15 @@ occupancyEffects <- occupancyEffects %>%
     ElasPKT = ElasVKT, # treat as the same
     Energy_oref = 1 + Energy_oref,
     VMT_oref = 1 + VMT_oref
-  ) %>%
+  )
+
+# compute cost-related PMT response, VMT reduction (with perfect routing efficiency)
+occupancyEffects <- occupancyEffects %>%
   # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
   group_by(DemScen) %>%
   mutate(
     PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    VMT = PMT / o, # 	veh-mi (normalized) (defining relation for Occupancy "o")
+    VMT = PMT / o, # 	veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
     Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
     # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
   ) %>%
@@ -2424,17 +2421,35 @@ occupancyTravelEffects %>%
   group_by(DemScen, travelEffect) %>%
   ggplot(aes(x = o, y = value, color = travelEffect, linetype = DemScen)) +
   geom_line(size = 1.0) +
-  ggtitle("Effect of Pooling on VMT and PMT") +
+  ggtitle("Effect of Pooling on VMT and PMT - For Shared Vehicles") +
   xlab("Pooling Level (base=1.0)") +
   ylab("VMT and PMT Relative to Base")
 
 # occupancyTravelEffects %>% filter(o == 1.0)
 ```
 
-```{r checkOccupancyEffects, echo=echoWorking}
-# This check out to match calculations elsewhere
-# occupancyEffects %>% select(DemScen, o, PMT, VMT, Energy) %>%
-#   filter(DemScen=="DS3")
+```{r checkOccupancyEffects, echo=echoWorking, include=echoTests}
+# This check out to match calculations from the chosen scenario (occupancy o=1.0)
+occupancyEffects %>% 
+  mutate(Source = "Calc_O_1.0") %>%
+  filter(
+    DemScen %in% DemScenWanted, #"C_High",
+    o == 1.0
+    ) %>%
+  select(Source, DemScen, VMT, Energy, PMT) %>%
+  bind_rows(
+    CaseWantedAggAssumps %>% 
+      mutate(Source = "Scenario") %>%
+      filter(
+        DemScen %in% DemScenWanted, # "C_High",
+        VC == "LDV"
+        ) %>%
+      mutate(
+        VMT = 1 + fracVMTIncr,
+        Energy = 1 + EnergyUse
+      ) %>%
+      select(Source, DemScen, VMT, Energy)
+  )
 ```
 
 ### 6.2. Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
@@ -2787,50 +2802,32 @@ increases from 30 km/h to 50 km/h (51).
     - Excess and inappropriate speed contributes to around 30% of fatal crashes in high-income countries (53).
   
 * Safety References
-    38. Wegman F, Elsenaar P. Sustainable solutions to
+- Wegman F, Elsenaar P. Sustainable solutions to
 improve road safety in the Netherlands. Leidschendam,
 Institute for Road Safety Research, 1997
 (SWOV Report D-097-8).
-    39. Ogden KW. Safer roads: a guide to road safety engineering.
+- Ogden KW. Safer roads: a guide to road safety engineering.
 Melbourne, Ashgate Publishing Ltd, 1996.
-    40. Cities on the move: a World Bank urban strategy review.
+- Cities on the move: a World Bank urban strategy review.
 Washington, DC, The World Bank, 2002.
-    41. Handboek: categorisering wegen op duurzaam veilige
-basis. Deel I (Voorlopige): functionele en operationele eisen
-[Handbook: categorizing roads on long-lasting safe basis.
-Part I (Provisional): functional and operational demands].
-Ede, Stichting centrum voor regelgeving en
-onderwoek in de grond-, water- en wegenbouw
-en de verkeerstechniek, 1997 (CROW
-Report 116).
-    42. Zone guide for pedestrian safety shows how to make systematic improvements. Washington, DC, National Highway
-Traffic Safety Administration, 1998 (Technology
-Transfer Series Number 181) (http://
-www.nhtsa.dot.gov/people/outreach/traftech/
-pub/tt181.html, accessed 5 December 2003).
-    43. Towards a sustainable safe traffic system in the Netherlands. Leidschendam, Institute for Road Safety
-Research, 1993. 
-    47. Safety of vulnerable road users. Paris, Organisation
-for Economic Co-operation and Development, 1998 (DSTI/DOT/RTR/RS7(98)1/FINAL) (http:
-//www.oecd.org/dataoecd/24/4/2103492.pdf,
+- Zone guide for pedestrian safety shows how to make systematic improvements. Washington, DC, National Highway
+Traffic Safety Administration, 1998 (Technology Transfer Series Number 181) (http://www.nhtsa.dot.gov/people/outreach/traftech/pub/tt181.html, accessed 5 December 2003).
+- Safety of vulnerable road users. Paris, Organisation
+for Economic Co-operation and Development, 1998 (DSTI/DOT/RTR/RS7(98)1/FINAL) (http://www.oecd.org/dataoecd/24/4/2103492.pdf,
 accessed 17 November 2003).
-    48. Ossenbruggen PJ, Pendharkar J, Ivan J. Roadway
+- Ossenbruggen PJ, Pendharkar J, Ivan J. Roadway
 safety in rural and small urbanized areas.
 Accident Analysis and Prevention, 2001, 33:485-498.
-    49. Khan FM et al. Pedestrian environment and
-behavior in Karachi, Pakistan. Accident Analysis
-and Prevention, 1999, 31:335-339.
-    50. Herrstedt L. Planning and safety of bicycles
+- Khan FM et al. Pedestrian environment and behavior in Karachi, Pakistan. Accident Analysis and Prevention, 1999, 31:335-339.
+- Herrstedt L. Planning and safety of bicycles
 in urban areas. In: Proceedings of the Traffic Safety
 on Two Continents Conference, Lisbon, 22-24 September 1997. Linköping, Swedish National Road and
 Transport Research Institute, 1997:43-58.
-    51. Kjemtrup K, Herrstedt L. Speed management and
+- Kjemtrup K, Herrstedt L. Speed management and
 traffic calming in urban areas in Europe: a historical
 view. Accident Analysis and Prevention, 1992, 24:57-65.
-    52. Brilon W, Blanke H. Extensive traffic calming:
-results of the accident analyses in six model
-towns. In: ITE 1993 Compendium of Technical Papers.
-Washington, DC, Institute of Transportation
+- Brilon W, Blanke H. Extensive traffic calming: results of the accident analyses in six model
+towns. In: ITE 1993 Compendium of Technical Papers. Washington, DC, Institute of Transportation
 Engineers, 1993:119-123.
 
 A3.2 Speed and Accident Risk
