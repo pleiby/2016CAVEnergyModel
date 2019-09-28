@@ -43,7 +43,8 @@ Completed 20190922 CAVdecom version
     - Need to consider multiple levels of Sharing impact on VMT
 
 20190926 Version CAVESIMver10
-------------------------------- Include mix of vehicle types by Automation, Fuel, Use tpe.
+------------------------------- 
+- Include mix of vehicle types by Automation, Fuel, Use tpe.
     - Develop share-weighted results given F_A_Shares (for Fuel and Automation) and U_Share (for Use, i.e. Private/Shared)
     - Shares are developed from SMART FY19 Scenario COmmon Assumptions, processed by source()ing the "...DataPrep.R" script.
     - Add Test, Zero, and Base DemScens for comparison (Test should be close to old CombScen4) 
@@ -55,50 +56,58 @@ Completed 20190922 CAVdecom version
        - Still testing
     - modified keepCaseWantedEffectsaAndAssumps chunk to aggregate back up to vehicle class VC level, to reproduce old bar charts.
 
-ToDo Next 20190922
+20190927 Version CAVESIMver10
+-------------------------------
+
+ToDo Next 20190927
 --------------------
-1. Establish technology and demand scenario assump starting points in CAVdecom code
+- [x] 1. Establish technology and demand scenario assump starting points in CAVdecom code
     - Eliminate refs to spreadsheet tests, reading and melding of spreadsheet params
-2. Break out key parameter dataframes and save as CSVs
-2. Save as CAVESIMver10.Rmd
-3. Establish new set of scenarios: Base, B-Low, B-High, C-low, C-high
-4. Include Accessory Load Energy use 
+- [ ] 2. Break out key parameter dataframes and save as CSVs
+- [x] 2. Save as CAVESIMver10.Rmd
+- [x] 3. Establish new set of scenarios: Base, B-Low, B-High, C-low, C-high
+- [x] 4. Include Automation_accessory_Load Energy use 
     - (convert kW to fraction of base vehicle average energy use (V [MPH] / E [MPG]) * kWh/Gal * EngineEffiency= kWh/h 
     - or get estimate of ave power use by vehicle
-5. Update VoTT to conform to the scenarios
+- [x] 5a. Update VoTT to conform to the scenarios overall
+- [ ] 5b. Update VoTT to conform to the scenarios
 6. Update vehicle categories and stock-related data to conform to the analysis
     - K_CSDAO
-        - C Class: LDV vs MDHDV
-        - S Subclass: {Car vs LtTruck}, {Class8 vs Other}
+        - [ ] C Class: LDV vs MDHDV
+        - [ ] S Subclass: {Car vs LtTruck}, {Class8 vs Other}
             - Car {CAR_COMPACT, CAR_MID, CAR_FULL}
             - LtTruck {SUC_COMPACT ... SUV_FULL_SIZE, TRUCK_MID, TRUCK_FULL}
-        - F Fuel/Drivetrain technology
-            - Conventional (Conventional, Conv-48V)
-            - HEV
-            - PHEV
-            - BEV
-        - Automation
+        - [x] F Fuel/Drivetrain technology
+            - [x] Summary categories:
+                - Conventional (Conventional, Conv-48V)
+                - HEV
+                - PHEV
+                - BEV
+        - [ ] Elect veh vs "conventional" drivetrain efficiency adjustment
+        - [x] Automation
             - No (Manual)
             - Partial
             - Full
-        - O Ownership/Operation
+        - [x] O Ownership/Operation
             - Private
             - Shared
-    - AV vs MV shares
-    - Partial vs. Full AV shares
-    - shares/quantities of vehicls by class: 
-        - LDV (Cars, LtTrucks) and HDV Stock
-    - Electric vehicle vs "conventional" drivetrain
-- Update reference ride sharing in each scenario
-    - XXX
-- Update Base impact of automation/sharing on VMT (repositioning empty ZOV miles)
+    - [x] Automations shares by tech and Fuel/Drive
+    - [x] No vs. Partial vs. Full AV shares
+    - [ ] shares/quantities of vehicles by class: 
+        - LDV (Cars, LtTrucks) and HDV Stock, determineed by AEO Base aggregate energy demand
+- [ ] Update reference ride sharing in each scenario
+    - use total shares from POLARIS
+- [x] Update Base impact of automation/sharing on VMT (repositioning empty ZOV miles)
     - see comparison with POLARIS
 - Results
-    - Produce Bar charts of AV cost components and shares
-    - Produce Bar charts of energy intensity, VMT and energy
-    - Produce Graphs of energy, VMT, PMT vs occupancy, for 
-    - Produce Graphs of energy use vs cost (by mile and gallon)
-        
+    - [ ] Produce Bar charts of AV cost components and shares
+    - [ ] Produce Bar charts of energy intensity, VMT and energy
+    - [ ] Produce Graphs of energy, VMT, PMT vs occupancy, for 
+    - [ ] Produce Graphs of energy use vs cost (by mile and gallon)
+    - [ ] Plot of VMT, PMT vs incentive, accounting for fraction of travel that is shared (and potentially pooled)
+        - account for overall demand reduction with VMT (from efficient tax computation)
+        - exclude shift toward pooled with universal VMT charge
+        - exclude shift away from pooled with shared veh-only VMT charge
 Next Steps for Benchmarking and Refining
 -----------------------------------------
 - Include vehicle type shifts in TechScen
