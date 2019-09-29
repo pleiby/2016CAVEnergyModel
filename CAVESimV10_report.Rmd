@@ -691,12 +691,12 @@ shares_by_F_A <-
 shares_by_U <-
   shares_by_U %>%
   ungroup() %>%
-  spread(key = DemScen, value = U_Share) %>%
+  spread(key = DemScen, value = U_Shares) %>%
   mutate( # new Scenarios - full automation, no automation
     Test = ifelse(Use == "Shared", 1, 0),
     Zero = ifelse(Use == "Private", 1, 0)
   ) %>%
-  gather(key = DemScen, value = U_Share, -c(VC, Use))
+  gather(key = DemScen, value = U_Shares, -c(VC, Use))
 ```
 
 ### Select a Single Technology Scenario and Year to Examine
@@ -1776,6 +1776,7 @@ This calculates the fractional change in energy Intensity, VMT, and Energy Use b
 ```{r selectScensToPostProcess, echo=echoWorking, warning=F}
 # first select only scenarios for which we have disaggregated tech shares
 DetailedDemScens <- unique(shares_by_F_A$DemScen)
+DetailedDemScens <- DetailedDemScens[DetailedDemScens!="Zero"] # not of interest, Zero does what is says
 ```
 
 ```{r multCombScenarioResultsAndAssumptionsLoop, echo=echoWorking}
@@ -1896,7 +1897,7 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0,
     
     # if (TRUE) {
-    # Now need to adjust Fuel Cost based on NIE
+    # WARNING: Now need to adjust Fuel Cost based on NIE
     #   Correct old Fuel Cost (and dependent components) for previous calcs, that were for Automated CAV, Gas, vehicle
     old_C_Fuel = C_Fuel,
     old_C_VNonF = C_VNonF,
@@ -1925,17 +1926,17 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     # actual energy use (relative to base for this vehicle segment)
     # ? EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0,
     old_fracEnergyUse = ((1 + NIE) * (1 + old_fracVMTIncr) - 1),
-    old_EnergyUse = ((1 + NIE) * (1 + old_fracVMTIncr) - 1) * F_A_Shares * U_Share,
+    old_EnergyUse = ((1 + NIE) * (1 + old_fracVMTIncr) - 1) * F_A_Shares * U_Shares,
     
     fracEnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1),
-    EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1) * F_A_Shares * U_Share
+    EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1) * F_A_Shares * U_Shares
   )
 ```
 
 ```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
 temp <- CaseAssumpsResults %>%
-  mutate(share_prods = F_A_Shares * U_Share) %>%
+  mutate(share_prods = F_A_Shares * U_Shares) %>%
   group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
   summarize(TotShare = sum(share_prods)) %>%
   ungroup()
@@ -1947,7 +1948,7 @@ cat(
 
 temp <- shares_by_U %>%
   group_by(DemScen, VC) %>%
-  summarize(TotShare = sum(U_Share)) %>%
+  summarize(TotShare = sum(U_Shares)) %>%
   ungroup()
 ChkErrorDiff = sum(abs(temp$TotShare -1.0)) # should all equal 1.0
 cat(
@@ -2000,7 +2001,7 @@ cat(
 CaseEffects <- CaseAssumpsResults %>% # extract a key set of results and identifying indices
   select(c(
     "DemScen", "ElasCase", "TechScen", "VC", "Year",
-    "Automation", "Fuel", "Use", "F_A_Shares", "U_Share",
+    "Automation", "Fuel", "Use", "F_A_Shares", "U_Shares",
     "fracVMTIncr", "NIE", "EnergyUse"
   ))
 
@@ -2113,7 +2114,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
     ) %>%
     #  inner_join(select(CombScen_Combinations_subset, -Notes),
     #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
-    mutate(Joint_Share = F_A_Shares * U_Share) %>%
+    mutate(Joint_Share = F_A_Shares * U_Shares) %>%
     mutate(
       fracVMTIncr = fracVMTIncr * Joint_Share,
       NIE = NIE * Joint_Share,
@@ -2140,7 +2141,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
       EnergyUse = sum(EnergyUse),
       totshare = sum(Joint_Share),
       F_A_Shares = sum(F_A_Shares),
-      U_Shares = sum(U_Share),
+      U_Shares = sum(U_Shares),
       C_Fuel = sum(C_Fuel),
       C_Time = sum(C_Time),
       C_VNonF = sum(C_VNonF),
@@ -2153,8 +2154,17 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
       mI_FA = sum(mI_FA),
       mI_FB = sum(mI_FB)
     ) %>%
-    ungroup()
+    ungroup() %>%
+    # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
+    mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>%
+    mutate_at(vars(fracVMTIncr, NIE, F_A_Shares, U_Shares, 
+                   C_Fuel, C_Time, C_VNonF, C_Total,
+                   ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB),
+              funs(. / totshare))
 }
+
+# Specify key test outcomes of interest
+testVars <- c("fracVMTIncr", "NIE", "EnergyUse")
 ```
 
 ```{r defFn_aggregateSelectedCaseEffects, echo = echoWorking}
@@ -2167,7 +2177,7 @@ aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
     ) %>%
     #  inner_join(select(CombScen_Combinations_subset, -Notes),
     #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
-    mutate(Joint_Share = F_A_Shares * U_Share) %>%
+    mutate(Joint_Share = F_A_Shares * U_Shares) %>%
     mutate( # to share-weighted values
       fracVMTIncr = fracVMTIncr * Joint_Share,
       NIE = NIE * Joint_Share
@@ -2182,7 +2192,6 @@ aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
     ungroup() # %>%
 }
 
-testVars <- c("fracVMTIncr", "NIE", "EnergyUse")
 ```
 
 ```{r aggregateSelectedCaseAssumps, echo = echoWorking}
@@ -2323,6 +2332,50 @@ data %>% filter(VC == "LDV") %>%
 # scale_fill_brewer(palette="Blues")
 ```
 
+The results for Automated Private Vehicles are more dramatic:
+
+```{r testCasesForSelectedSegments}
+CaseWantedAggAssumpsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
+  CaseAssumpsResults, 
+  select(CombScen_Combinations_subset, -Notes),
+  auto_set = c("Full"),
+  fuel_set = c("Gas"),
+  use_set = c("Private")
+  )
+
+data <- CaseWantedAggAssumpsPrivateCAV %>%
+  select(c(CombScen, Year, VC, ElasCase, DemScen, TechScen, NIE, fracVMTIncr, EnergyUse)) %>%
+  # CaseWantedAggEffects %>%
+  arrange(CombScen, Year, VC, ElasCase) %>%
+  gather(key = variable, value = calcValue, testVars) %>%
+  # rename variable names, establish as factor in correct order for bar plot
+  mutate(variable = ifelse(variable == "NIE", "Intensity",
+    ifelse(variable == "fracVMTIncr", "VMT", "Energy")
+  )) %>%
+  mutate(variable = factor(variable, levels = c("Intensity", "VMT", "Energy")))
+
+# # color with RcolorBrewer
+# ggplot(data, aes(x=CombScen, calcValue, fill=condition, y=value, x=specie)) +
+#     geom_bar( stat="identity", position="fill") +
+#     scale_fill_brewer(palette = "Set1")
+#
+# Faceting
+data %>% filter(VC == "LDV") %>%
+  # mutate(variable = factor(variable, levels=names(sort(table(variable),decreasing=TRUE)))  ) %>%
+  ggplot(
+    # aes(x=reorder(variable, c("Intensity", "VMT", "Energy")),
+    aes(
+      x = variable,
+      y = calcValue, color = variable, fill = variable
+    )
+  ) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~CombScen) +
+  scale_fill_brewer(palette = "Spectral") +
+  ggtitle("Fig: Energy-Intensity, VMT, and Energy Scenarios", subtitle = "Private LDV CAVs, Excludes Ride-Pooling") +
+  ylab("Fractional Change")
+
+```
 
 
 
