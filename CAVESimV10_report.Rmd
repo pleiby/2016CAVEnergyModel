@@ -1969,6 +1969,8 @@ temp = CaseAssumpsResults %>% mutate(testTEST_NIE = abs(I_deltaCAV - NIE)) %>%
          old_fracVMTIncr, fracVMTIncr, old_fracEnergyUse, fracEnergyUse, old_EnergyUse, EnergyUse)
 temp %>% 
   mutate(testTEST_NIE = (testTEST_NIE  >1E-10)) %>% pull(testTEST_NIE) %>% sum()
+
+tolerance = 1E-6
 temp %>% # Note: no Full Auto Private Gas vehicles were altered
   filter(
     Automation == "Full",
@@ -1982,10 +1984,12 @@ temp %>% # Note: no Full Auto Private Gas vehicles were altered
     # testTEST_NIE = (testTEST_NIE  >1E-10)) %>% pull(testTEST_NIE) %>% sum()
     testTEST = (testEnergy > 1E-6)
   ) %>% 
-  filter(testTEST) #pull(testTEST) %>% sum()
+  filter(testTEST) %>% 
+  pull(testTEST) -> testEnergyDiffs
 cat(
-  "Check: Calculated differences in I_deltaCAV and NIE disagg vs agg and they match to within total error",
-  paste(sum(abs(temp$testTEST))), ", due to composition effects.\n"
+  "Check: Calculated differences in EnergyUse, disagg vs agg, and they match to within",
+  tolerance, "except in total of",
+  paste(sum(testEnergyDiffs)), "cases, due to minor numerical differences.\n"
 )
 ```
 
@@ -2096,7 +2100,12 @@ travel demand segment.
 
 ```{r defFn_aggregateSelectedCaseAssumpResults, echo = echoWorking}
 # Aggregate Case assumps and results across Automation type, Fuel type, and shared Use
-aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, comb_subset) {
+aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, 
+                                                comb_subset, 
+                                                use_set = c("Private", "Shared"),
+                                                fuel_set = c("Gas", "PHEV", "BEV"),
+                                                auto_set = c("No", "Partial", "Full")
+                                                ) {
   case_assumps_results %>%
     # filter(Year==CurrYear) %>%
     right_join(comb_subset,
@@ -2120,6 +2129,10 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, comb_subse
       mI_FA = mI_FA * Joint_Share,
       mI_FB = mI_FB * Joint_Share
     ) %>%
+    # Allow aggregation of sub segments of the market
+    filter(Automation %in% auto_set) %>%
+    filter(Fuel %in% fuel_set) %>%
+    filter(Use %in% use_set) %>%
     group_by(CombScen, DemScen, TechScen, ElasCase, VC, Year) %>%
     summarize(
       fracVMTIncr = sum(fracVMTIncr),
@@ -2196,7 +2209,7 @@ testAggregation <- CaseWantedAggEffects %>%
   ) %>%
   select(-Year)
 cat(
-  "Check: Calculated aggregate `EnergyUse` changes match product of aggregate energy intensity `NIE` and VMT changes `fracVMTIncr` to within total absolute error ",
+  "Check: Calculated aggregate `EnergyUse` changes match product of aggregate energy intensity `NIE` and VMT changes `fracVMTIncr` to within total absolute error (due to composition effects)",
   sum(abs(testAggregation$testDiff), na.rm = T), ".\n"
 )
 ```
@@ -2276,7 +2289,9 @@ table(CWE_test$TechScen, CWE_test$DemScen)
 
 
 ```{r policyAndScenarioCalcs2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-data <- CaseWantedAggEffects %>%
+data <- CaseWantedAggAssumps %>%
+  select(c(CombScen, Year, VC, ElasCase, DemScen, TechScen, NIE, fracVMTIncr, EnergyUse)) %>%
+  # CaseWantedAggEffects %>%
   arrange(CombScen, Year, VC, ElasCase) %>%
   gather(key = variable, value = calcValue, testVars) %>%
   # rename variable names, establish as factor in correct order for bar plot
@@ -2303,7 +2318,7 @@ data %>% filter(VC == "LDV") %>%
   geom_bar(stat = "identity") +
   facet_wrap(~CombScen) +
   scale_fill_brewer(palette = "Spectral") +
-  ggtitle("Fig: Energy-Intensity, VMT, and Energy Scenarios", subtitle = "LDV CAVs, Excludes Pooling/Sharing") +
+  ggtitle("Fig: Energy-Intensity, VMT, and Energy Scenarios", subtitle = "LDV CAVs, Excludes Ride-Pooling") +
   ylab("Fractional Change")
 # scale_fill_brewer(palette="Blues")
 ```

@@ -55,16 +55,16 @@ LDV_shares_by_SharedMode
 shares_by_U <- LDV_shares_by_SharedMode %>%
   mutate(Private = 1 - TNC_Mode_Share) %>%
   rename(Shared = TNC_Mode_Share) %>%
-  gather(key = Use, value = U_Share, -DemScen)
+  gather(key = Use, value = U_Shares, -DemScen)
 
 # shares by Demand Scenario, Vehicle class, and use case:
 shares_by_U <- shares_by_U %>%
-  rename(LDV = U_Share) %>%
+  rename(LDV = U_Shares) %>%
   mutate(HDV = 0.0) %>% # add HDV assumptions re sharing
   mutate(
     HDV = ifelse(Use == "Private", 1.0, HDV)
     ) %>%
-  gather(key = VC, value = U_Share, c(LDV, HDV))
+  gather(key = VC, value = U_Shares, c(LDV, HDV))
 
 shares_by_U  
 ```
