@@ -277,7 +277,7 @@ cat("-", varNameAndIndices(), "\n")
 
 ---------------------------------------
 
-## Diaggregating Energy Intensity and Demand responses by subcategory
+## Disaggregating Energy Intensity and Demand responses by subcategory
 
 ### Vehicle/Travel Categories
 
@@ -301,9 +301,9 @@ $$E_{y,r,c,a,f,u} = I_{y,r,c,a,f,u} \cdot D_{y,r,c,a,f,u}$$
 
 #### Vehicle Energy Intensity 
 
-For full CAV penetration scenarios, without electrification, we computed fuel intensity relative to the base vehicle travel (average Region/Road)
+For the full CAV penetration scenarios (`DemScen == Test`), without electrification, we computed fuel intensity relative to the base vehicle travel (average Region/Road)
 $$\rho^I_{y,r,c,a,f,u} \equiv I_{y,r,c,a,f,u} /I_{c,base}$$
-more specifically, the results are based on year and Class, and apply to a fully automated vehicle, gasoline drivetrain,  in average private (non-shared) use:
+The `Test` scenario results are based on year and vehicle Class, and apply to a fully automated vehicle (), gasoline drivetrain ($F = \text{gas}$), in average private (non-shared) use ($U = \text{shared}$):
 
 $$I_{y,r=ave,c,a=F,f=G,u=P}  = I_{y,c,base} \cdot (1+\Delta I_{y,c})$$
 
@@ -312,17 +312,22 @@ $$\rho^I_{y,c} \equiv I_{y,r=ave,c,a=F,f=G,u=P} /I_{y,c,base} = 1+\Delta I_{y,c}
 Where 
 $$I_{c,base} = I_{y, r=ave, c, a=None, f=Gas, u=Private} $$
 
-More generally, each vehicle's intensity will depend on the adjustments to the base for the vehicle type (Class, Fuel, Automation) and use case (Region). That is
+In the current approach, road travel activity (travel demand) is disaggregated by the vehicle type (Class, Fuel, Automation) and demand segment (Roadtype and Use case, private or shared). Each vehicle's energy intensity is based on those categories,  which alter the energy intensity of the base vehicle type (conventional gasoline, no automation). That is
 
-$$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (1+\Delta I_{r})(1+\Delta I_{c})(1+\Delta I_{a})(1+\Delta I_{f})(1+\Delta I_{u})$$
-$$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (\rho_{r})(\rho_{c})(\rho_{a})(\rho_{f})(\rho_{u})$$
-although the intensity adjustment factors $\rho^I$ also depend to some degree on the vehicle/driving categories. 
+$$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (1+\Delta I_{r})(1+\Delta I_{c})(1+\Delta I_{a})(1+\Delta I_{f,a})(1+\Delta I_{u})$$
+$$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (m^I_{r})(m^I_{c})(m^I_{a})(m^I_{fa})(m^I_{u})$$
+The intensity adjustment factors $m^I_{.}$ also depend to some degree on the vehicle/driving categories.
+
+Some of these intensity effect modifiers apply to the incremental effect of automation on vehicle energy intensity. Others, like `fuel_type`, apply also to the base energy intensity of the vehicle, that is, reflecting its electrification.
 
 #### Similarly, for Travel:
 
+Travel demand is similarly disaggregated
+
+
 fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1
 
-$$D_{y,r,c,a,f,u} = $$
+$$D_{y,r,c,a,f,u} = D_{y,r,c,a,f,u}$$
 
 #### With combined effect on Energy use
 $$E_{y,r,c,a,f,u} = I_{y,r,c,a,f,u} \cdot D_{y,r,c,a,f,u}$$
