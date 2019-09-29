@@ -2295,46 +2295,49 @@ table(CWE_test$TechScen, CWE_test$DemScen)
 5.2 Bar Chart Representation of Results
 ------------------
 
-
+```{r defFn_barPlotScenarioSetIntVMTEnergy, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+barPlotScenarioSetIntVMTEnergy <- function(thisdata, 
+                                           title="Fig: Energy-Intensity, VMT, and Energy Scenarios",
+                                           subtitle = "LDVs, Excludes Ride-Pooling") {
+  thisdata %>%
+    select(c(CombScen, Year, VC, ElasCase, DemScen, TechScen, NIE, fracVMTIncr, EnergyUse)) %>%
+    # CaseWantedAggEffects %>%
+    arrange(CombScen, Year, VC, ElasCase) %>%
+    gather(key = variable, value = calcValue, testVars) %>%
+    # rename variable names, establish as factor in correct order for bar plot
+    mutate(variable = ifelse(variable == "NIE", "Intensity",
+      ifelse(variable == "fracVMTIncr", "VMT", "Energy")
+    )) %>%
+    mutate(variable = factor(variable, levels = c("Intensity", "VMT", "Energy"))) %>%
+  # Faceting
+    filter(VC == "LDV") %>%
+    # mutate(variable = factor(variable, levels=names(sort(table(variable),decreasing=TRUE)))  ) %>%
+    ggplot(
+      # aes(x=reorder(variable, c("Intensity", "VMT", "Energy")),
+      aes(
+        x = variable,
+        y = calcValue, color = variable, fill = variable
+      )
+    ) +
+    geom_bar(stat = "identity") +
+    facet_wrap(~CombScen) +
+    scale_fill_brewer(palette = "Spectral") + # color with RcolorBrewer
+    ggtitle(title, subtitle = subtitle) +
+    ylab("Fractional Change")
+}
+```
 
 ```{r policyAndScenarioCalcs2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-data <- CaseWantedAggAssumps %>%
-  select(c(CombScen, Year, VC, ElasCase, DemScen, TechScen, NIE, fracVMTIncr, EnergyUse)) %>%
-  # CaseWantedAggEffects %>%
-  arrange(CombScen, Year, VC, ElasCase) %>%
-  gather(key = variable, value = calcValue, testVars) %>%
-  # rename variable names, establish as factor in correct order for bar plot
-  mutate(variable = ifelse(variable == "NIE", "Intensity",
-    ifelse(variable == "fracVMTIncr", "VMT", "Energy")
-  )) %>%
-  mutate(variable = factor(variable, levels = c("Intensity", "VMT", "Energy")))
-
-# # color with RcolorBrewer
-# ggplot(data, aes(x=CombScen, calcValue, fill=condition, y=value, x=specie)) +
-#     geom_bar( stat="identity", position="fill") +
-#     scale_fill_brewer(palette = "Set1")
-#
-# Faceting
-data %>% filter(VC == "LDV") %>%
-  # mutate(variable = factor(variable, levels=names(sort(table(variable),decreasing=TRUE)))  ) %>%
-  ggplot(
-    # aes(x=reorder(variable, c("Intensity", "VMT", "Energy")),
-    aes(
-      x = variable,
-      y = calcValue, color = variable, fill = variable
-    )
-  ) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~CombScen) +
-  scale_fill_brewer(palette = "Spectral") +
-  ggtitle("Fig: Energy-Intensity, VMT, and Energy Scenarios", subtitle = "LDV CAVs, Excludes Ride-Pooling") +
-  ylab("Fractional Change")
-# scale_fill_brewer(palette="Blues")
+# all LDV
+barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumps,
+                               title = "Fig: Energy-Intensity, VMT, and Energy Scenarios", 
+                               subtitle = "LDV Mix, Excludes Ride-Pooling") 
 ```
+
 
 The results for Automated Private Vehicles are more dramatic:
 
-```{r testCasesForSelectedSegments}
+```{r testCasesForSelectedSegments, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 CaseWantedAggAssumpsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes),
@@ -2343,41 +2346,44 @@ CaseWantedAggAssumpsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
   use_set = c("Private")
   )
 
-data <- CaseWantedAggAssumpsPrivateCAV %>%
-  select(c(CombScen, Year, VC, ElasCase, DemScen, TechScen, NIE, fracVMTIncr, EnergyUse)) %>%
-  # CaseWantedAggEffects %>%
-  arrange(CombScen, Year, VC, ElasCase) %>%
-  gather(key = variable, value = calcValue, testVars) %>%
-  # rename variable names, establish as factor in correct order for bar plot
-  mutate(variable = ifelse(variable == "NIE", "Intensity",
-    ifelse(variable == "fracVMTIncr", "VMT", "Energy")
-  )) %>%
-  mutate(variable = factor(variable, levels = c("Intensity", "VMT", "Energy")))
+barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateCAV,
+                               title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+                               subtitle = "Private LDV CAVs, Excludes Ride-Pooling")
 
-# # color with RcolorBrewer
-# ggplot(data, aes(x=CombScen, calcValue, fill=condition, y=value, x=specie)) +
-#     geom_bar( stat="identity", position="fill") +
-#     scale_fill_brewer(palette = "Set1")
-#
-# Faceting
-data %>% filter(VC == "LDV") %>%
-  # mutate(variable = factor(variable, levels=names(sort(table(variable),decreasing=TRUE)))  ) %>%
-  ggplot(
-    # aes(x=reorder(variable, c("Intensity", "VMT", "Energy")),
-    aes(
-      x = variable,
-      y = calcValue, color = variable, fill = variable
-    )
-  ) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~CombScen) +
-  scale_fill_brewer(palette = "Spectral") +
-  ggtitle("Fig: Energy-Intensity, VMT, and Energy Scenarios", subtitle = "Private LDV CAVs, Excludes Ride-Pooling") +
-  ylab("Fractional Change")
 
 ```
 
 
+```{r testCasesForSelectedSegments2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+CaseWantedAggAssumpsEVs <- aggregateSelectedCaseAssumpsResults(
+  CaseAssumpsResults, 
+  select(CombScen_Combinations_subset, -Notes),
+  #auto_set = c("Full"),
+  fuel_set = c("PHEV", "BEV"),
+  #use_set = c("Private")
+  )
+
+barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateCAV,
+                               title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+                               subtitle = "LDV BEVs and PHEVs, Excludes Ride-Pooling")
+
+
+```
+
+
+```{r testCasesForSelectedSegments3, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+CaseWantedAggAssumpsShared <- aggregateSelectedCaseAssumpsResults(
+  CaseAssumpsResults, 
+  select(CombScen_Combinations_subset, -Notes),
+  #auto_set = c("Full"),
+  #fuel_set = c("PHEV", "BEV"),
+  use_set = c("Shared")
+  )
+
+barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsShared,
+                               title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+                               subtitle = "Shared Use, Excludes Ride-Pooling")
+```
 
 ```{r saveCAVdecomEnvironment, echo=echoWorking}
 save(list = ls(), file = "CAVESIMdecom.sav")
