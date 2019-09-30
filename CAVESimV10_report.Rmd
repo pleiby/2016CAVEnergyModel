@@ -2128,7 +2128,8 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
       mI_A = mI_A * Joint_Share,
       mI_C = mI_C * Joint_Share,
       mI_FA = mI_FA * Joint_Share,
-      mI_FB = mI_FB * Joint_Share
+      mI_FB = mI_FB * Joint_Share,
+      mD_U = mD_U * Joint_Share
     ) %>%
     # Allow aggregation of sub segments of the market
     filter(Automation %in% auto_set) %>%
@@ -2152,15 +2153,17 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
       mI_A = sum(mI_A),
       mI_C = sum(mI_C),
       mI_FA = sum(mI_FA),
-      mI_FB = sum(mI_FB)
+      mI_FB = sum(mI_FB),
+      mD_U = sum(mD_U)
     ) %>%
     ungroup() %>%
     # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
-    mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>%
+    mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>% # replace zero by EPS to avoid divide by zero
     mutate_at(vars(fracVMTIncr, NIE, F_A_Shares, U_Shares, 
                    C_Fuel, C_Time, C_VNonF, C_Total,
-                   ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB),
-              funs(. / totshare))
+                   ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U),
+              funs(. / totshare)) %>%
+    mutate(ifelse(totshare == 1E-8, 0, totshare)) # restore zeros to zero from EPS
 }
 
 # Specify key test outcomes of interest
@@ -2348,7 +2351,7 @@ CaseWantedAggAssumpsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
 
 barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateCAV,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
-                               subtitle = "Private LDV CAVs, Excludes Ride-Pooling")
+                               subtitle = "LDV Private Gaso CAVs, Excludes Ride-Pooling")
 
 
 ```
@@ -2367,6 +2370,19 @@ barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateCAV,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
                                subtitle = "LDV BEVs and PHEVs, Excludes Ride-Pooling")
 
+
+```
+```{r tests, echo=echoWorking}
+# This doesn't do anything yet: Was trying to find ways to check
+#  segment sharing-weighting and rescaling by totshare
+CaseWantedAggAssumpsEVs %>%
+  # group_by(c(CombScen, DemScen, VC, ElasCase, Year)) 
+  group_by(c(CombScen)) 
+
+#%>% #DemScen, TechScen, 
+  summarize(
+    tot_totshare = sum(totshare) # this is a check
+  )
 
 ```
 
@@ -2401,8 +2417,8 @@ We consider the impacts of automation technologies, and pooled riding (combining
 # ReductCTAutomation = 0.5 # rho_A, reduction factor for the Cost of Travel Time (per hour)
 elas_VoTT_wrt_o <- 0.5 #  elas_{C_T,o}, elasticity of Cost of Travel time C_T = VoTT, w.r.t. occupancy,
 #    an assumption regarding how occupancy (pooling) increases time cost VoTT
-Elas_TourLength_wrt_Pooling <- 0.0 # elasticity of Vehicle tour length (for mult pooled trips) w.r.t. occupancy
-Elas_RiderDetour_wrt_Pooling <- 0.0 # elasticity of Passenger trip length w.r.t. occupancy and pooling
+Elas_TourLength_wrt_Pooling <- -1.0 # elasticity of Vehicle tour length (for mult pooled trips) w.r.t. occupancy
+Elas_RiderDetour_wrt_Pooling <- 0.1 # elasticity of Passenger trip length w.r.t. occupancy and pooling
 PacePi <- 1 / 39.98 # base or default pace, hr/mi
 ReductPaceAutomation <- 1 #  PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
 ```
@@ -2619,14 +2635,17 @@ occupancyEffects <- occupancyEffects %>%
   # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
   group_by(DemScen) %>%
   mutate(
+    # ToDo: Need Sharing disutility here
+    # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
     PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
     VMT = PMT / o, # 	veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+    # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
     Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
     # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
   ) %>%
   ungroup()
 
-# # These tests were passed with text differences of ~0
+# # These tests were passed with test differences of ~0
 # occupancyEffects  %>%
 #   filter(o == 1.0) %>%
 #   mutate(
@@ -2652,21 +2671,50 @@ occupancyEffects <- occupancyEffects %>%
   ungroup()
 ```
 
-```{r plotOccupancyEffects, echo=echoWorking, dpi=300}
+```{r plotOccupancyTravelEffects, echo=echoWorking, dpi=300}
 occupancyTravelEffects <- occupancyEffects %>%
   select(DemScen, o, PMT, VMT, VMT_norebound) %>%
   gather(key = travelEffect, value = value, PMT:VMT_norebound)
 
 
 occupancyTravelEffects %>%
+  # filter(travelEffect != "VMT_norebound") %>%
   group_by(DemScen, travelEffect) %>%
   ggplot(aes(x = o, y = value, color = travelEffect, linetype = DemScen)) +
   geom_line(size = 1.0) +
-  ggtitle("Effect of Pooling on VMT and PMT - For Shared Vehicles") +
+  ggtitle("Effect of Pooling on VMT and PMT - For Shared Vehicles",
+          subtitle = "Ideal routing efficiency, no disutility to sharing space. Demand rebound to cost.") +
   xlab("Pooling Level (base=1.0)") +
   ylab("VMT and PMT Relative to Base")
 
 # occupancyTravelEffects %>% filter(o == 1.0)
+```
+
+```{r plotOccupancyEffects, echo=echoWorking, dpi=300}
+occupancyCombinedEffects <- occupancyEffects %>%
+  select(DemScen, o, PMT, Energy) %>%
+  gather(key = Effect, value = value, PMT:Energy)
+
+occupancyCombinedEffects %>%
+  group_by(DemScen, Effect) %>%
+  # to control order of the lines plotted,
+  # need to change the order of factor levels by specifying the order explicitly.
+  # x$DemScen <- factor(x$DemScen, levels = x$name[order(x$val)])
+  #ggplot(aes(x = o, y = value, color = DemScen, linetype = Effect)) +
+  ggplot(aes(x = o, y = value, color = Effect, linetype = DemScen)) +
+  geom_line(size = 1.0) +
+  ggtitle("Effect of Pooling on PMT and Energy (VMT) - For Shared Vehicles",
+          subtitle = "Ideal routing efficiency, no disutility to sharing space. Demand rebound to cost.") +
+  xlab("Pooling Level (base=1.0)") +
+  ylab("VMT, PMT, Energy Relative to Base") + 
+  # geom_hline(yintercept = 1.0, color="black") + # , linetype, size)
+  geom_vline(xintercept = 1.0, color="black") + # , linetype, size)
+  annotate(geom="text", x=1.01, y=1.75, label="Base (No) Pooling", hjust = 0.0,
+              color="blue")
+  # geom_text(label="Hello")
+
+# occupancyTravelEffects %>% filter(o == 1.0)
+
 ```
 
 ```{r checkOccupancyEffects, echo=echoWorking, include=echoTests}
@@ -2695,18 +2743,13 @@ occupancyEffects %>%
 
 ### 6.2. Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
 
-```{r calcPMTandVMT, echo=echoWorking}
-occupancyEffects <- occupancyEffects %>% mutate(
-  TourContraction = o^Elas_TourLength_wrt_Pooling,
-  RideDetourExpansion = o^Elas_RiderDetour_wrt_Pooling
-)
-```
-
 The ability of pooling to reduce VMT is currently summarized in an elasticity of "tour" length (the VMT needed to complete multiple trip) with respect to occupancy *o*:
 
-$$L_{tour} = L_{tour,r} o^{\epsilon_{L,o}}$$
+$$L_{vehicle-tour} = L_{tour,r} o^{\epsilon_{v,o}}$$
 
-Considering alternative such elasticities
+$$L_{trip-passenger} = L_{trip,r} o^{\epsilon_{p,o}}$$
+
+Considering alternative such elasticities yields different insights about the economic opportunities for reducing VMT through pooling.
 
 ```{r tableForElasTourLengthEffect, echo=echoWorking}
 
@@ -2718,11 +2761,15 @@ AltVMT <- occupancyEffects %>%
 AltVMT <- AltVMT %>%
   mutate(Energy = Energy * o^ElasTourLengthWithPooling)
 
+# select a particular demand scenario
+test_DemScen <- "C_High"
+# test_DemScen <- DemScenWanted[[2]]
+
 AltVMT %>%
-  filter(DemScen == DemScenWanted[[2]]) %>%
+  filter(DemScen == test_DemScen) %>%
   select(-DemScen, -VMT, -PMT) %>%
   spread(key = ElasTourLengthWithPooling, value = Energy) %>%
-  kable(digits = 4, caption = paste0("Energy Use Relative to Reference (", DemScenWanted[[2]], "), by Occupancy and Route Length Elasticity"))
+  kable(digits = 4, caption = paste0("Energy Use Relative to Reference (", test_DemScen, "), by Occupancy and Route Length Elasticity"))
 ```
 
 ```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
@@ -2730,7 +2777,7 @@ AltVMT %>%
 # those three colors make up initial palette.
 # Then pass them to colorRampPalette() to create interpolating function.
 # pal <- colorRampPalette(cols)
-test_DemScen <- "C_High"
+
 # Just make sure a feasible scenario chosen, so program runs
 if (!(test_DemScen %in% occupancyEffects$DemScen)) test_DemScen <- occupancyEffects$DemScen[1]
 
@@ -2762,11 +2809,80 @@ prepAltVMT %>%
     legend.text = element_text(size = 12)
   )
 ```
+
 ## 6.3. Estimate Scenario effects
 
 This aggregate economic approach approach allows exploration of variant cases around established detailed mobility scenarios. The variant cases can account account for, e.g. different levels of ride pooling, and the traveler response to economic conditions and incentives including the added delay and potential disutility associated with ride pooling, as well as changes in travel cost on a per vehicle or per passenger mile basis. An incremental cost per VMT on all vehicles, would discourage all road travel (or TNC travel if only on TNCs), but also encourage substitution between non-pooled ("single passenger") travel and pooled rides. Alternatively, a subsidy of pooled riding would have a different effects on the mix and level of travel. The framework allows exploration of VMT, PMT and energy effects, although further data and research is needed to benchmark the direct and substitution responsiveness (elasticities).
 
 ### Estimate Scenario effects, with 
+
+
+```{r reassessOccupancyEffectsVsOAndCost}
+occupancyEffects1 <- data.frame("o" = seq(from = 0.8, to = 1.5, by = 0.05)) #  occupancy, unitless (pass/veh, normalized)
+
+occupancyEffects1 <- scenAggData %>%
+  select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT) %>%
+  crossing(occupancyEffects1)
+
+# set up reference and pooled outcome variables
+occupancyEffects1 <- occupancyEffects1 %>%
+  ungroup() %>%
+  rename(
+    Energy_oref = EnergyUse, # computed value from case at reference o=1.0
+    VMT_oref = fracVMTIncr, # computed value from case at reference o=1.0
+    NIE_oref = NIE
+  ) %>%
+  mutate( # convert from fractional change to multipliers
+    ElasPKT = ElasVKT, # treat as the same
+    Energy_oref = 1 + Energy_oref,
+    VMT_oref = 1 + VMT_oref
+  )
+
+
+# TravTimeCostBasePars["average_speed.LDV","average"]
+
+occupancyEffects1 <- occupancyEffects1 %>%
+  mutate(
+    C_Vpmt = C_V / o, # Variable vehicle travel cost per pass-mi [c/pass-mi]
+    rho = o^elas_VoTT_wrt_o, # Time-cost multiplier due to disutility of pooling [unitless]
+    C_Tpmt = C_T * rho, # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi]
+    Pi = 1 / TravTimeCostBasePars["average_speed.LDV", "average"], # assumed pace, (constant over o) [hr/veh-mi]
+    C_Tdph = C_T / (100 * Pi), # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+    C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
+    # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
+    Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi)
+  )
+
+occupancyEffects1 <- occupancyEffects1 %>%
+  # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
+  group_by(DemScen) %>%
+  mutate(
+    # ToDo: Need Sharing disutility here
+    # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
+    PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
+    VMT = PMT / o, # 	veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+    # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
+    Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
+    # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
+  ) %>%
+  
+  mutate( # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
+    VMT_norebound = PMT[o == 1.0] / o # 	veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+  ) %>% # but does include the effect of the Alt case on cost and PMT
+  ungroup()
+
+  # Energy = Energy_Pool1 * o^ElasTourLengthWithPooling
+```
+
+
+```{r calcPMTandVMT, echo=echoWorking}
+occupancyEffects1 <- occupancyEffects1 %>% mutate(
+  TourContraction = o^Elas_TourLength_wrt_Pooling,
+  RideDetourExpansion = o^Elas_RiderDetour_wrt_Pooling,
+  C_T_mult = RideDetourExpansion, # passenger time cost per mile rises with RideDetourExpansion
+  # C_Vp
+)
+```
 
 
 # Appendices
