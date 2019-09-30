@@ -59,6 +59,18 @@ Completed 20190922 CAVdecom version
 20190927 Version CAVESIMver10
 -------------------------------
 
+20190929am Version CAVESIMver10
+--------------------------------
+- implement functions for major case df calculations, improve disaggregation and checks
+    - define aggregateSelectedCaseAssumpsResults() fn  (just turns chunk into fn)
+    - define aggregateSelectedCaseEffects (just turns chunk into fn)
+    - pass set of DemScen(s) to be analyzed to CombScenInputsAndResultsForOneTechScen()
+    - Ex post modification seek to test/adjust I_deltaCAV in CombScenInputsAndResultsForOneTechScen() to reflect disaggregated NIE for subsegment
+    - elim unused `DemRespParamsm`
+    - add new test comparing NIE to I_deltaCAV
+    - add new display of tests on sum of disaggregated shares
+    - ToDo: need to use adjusted NIE earlier in CombScen calculation function
+
 ToDo Next 20190927
 --------------------
 - [x] 1. Establish technology and demand scenario assump starting points in CAVdecom code
