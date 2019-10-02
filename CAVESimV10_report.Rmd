@@ -1780,7 +1780,8 @@ This calculates the fractional change in energy Intensity, VMT, and Energy Use b
 ```{r selectScensToPostProcess, echo=echoWorking, warning=F}
 # first select only scenarios for which we have disaggregated tech shares
 DetailedDemScens <- unique(shares_by_F_A$DemScen)
-DetailedDemScens <- DetailedDemScens[DetailedDemScens!="Zero"] # not of interest, Zero does what is says
+DetailedDemScens <- DetailedDemScens[!(DetailedDemScens %in% c("Zero", "B_Low", "C_Low", "Test"))] # not of interest, Zero does what is says
+# DetailedDemScens
 ```
 
 ```{r multCombScenarioResultsAndAssumptionsLoop, echo=echoWorking}
@@ -2326,6 +2327,7 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
         y = calcValue, color = variable, fill = variable
       )
     ) +
+    ylim(-0.5, 0.75) +
     geom_bar(stat = "identity") +
     facet_wrap(~CombScen) +
     scale_fill_brewer(palette = "Spectral") + # color with RcolorBrewer
@@ -2338,7 +2340,7 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
 # all LDV
 barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumps,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios", 
-                               subtitle = "LDV Mix, Excludes Ride-Pooling") 
+                               subtitle = "LDV Mix, Shared mobility xcludes Ride-Pooling") 
 ```
 
 
@@ -2922,7 +2924,7 @@ occupancyEffects1 <- occupancyEffects1 %>%
   )
 ```
 
-```{r }
+```{r reassessOccupancyEffects2, echo=echoWorking}
 occupancyEffects1 <- occupancyEffects1 %>%
   # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
   group_by(DemScen) %>%
@@ -2942,7 +2944,7 @@ occupancyEffects1 <- occupancyEffects1 %>%
 
 ```
 
-```{r plotOccupancyEffects1}
+```{r plotOccupancyEffects1, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 occupancyEffects1 %>%
   select(DemScen, o, PMT, Energy) %>%
   gather(key = Effect, value = value, PMT:Energy) %>%
