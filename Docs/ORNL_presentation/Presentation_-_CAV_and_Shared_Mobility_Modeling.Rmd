@@ -30,13 +30,13 @@ library(here)
 
 ## Exploring CAVs and Shared Mobility at Aggregate Level with CAVESIM
 
-* Top-Down Methodology
+* Top-Down Methodology for modeling CAV Energy/Travel Demand
   * VKT, energy as function of cost/time-value/income/budget
   * Model estimates national (or regional) changes in VKT, fuel use
   * Founded in economic theory
     * emphasizes importance of cost economics for outcomes
   * Representative travelers behave according to constrained utility (preference) max
-* Side study: Benchmarking VKT, PKT and cost impacts of Ride *Pooling* from real ride-service trip data
+* (Computational) Side study: Benchmarking VKT, PKT and cost impacts of Ride *Pooling* from real ride-service trip data
 
 ## CAVESIM Model Structure
 
@@ -106,18 +106,18 @@ publicly available data from RideAustin TNC [in progress]
 $$O = \left ( \frac {PKT}{VKT} \right ) \equiv \frac {(passenger-km/yr)}{(vehicle-km/yr)} \sim \left [ \frac {pass}{veh} \right ] \le \bar O$$
 * Inspired by our prior work on tradable CAFE and low
 carbon fuel standards.
-* Are *in the process of implementing* the model using the **Ride Austin** data to synthesized pooled trips
+* *In the process of implementing* the model using the **Ride Austin** data to synthesized pooled trips
   * Using a heuristic algorithm based on Sun and Zhang (2018).
 
 
 ## Obtain Functional Relationships From Vehicle Routing and Trip Chaining[^1]
 
-1. $k_v(r)$ Changes in vehicle travel with pooling *r*: 
+1. $k_v(r)$ **Changes in vehicle travel with pooling *r* **: 
     * fractional increase in vehicle km needed to complete a typical set of chained or combined trips, as a function of pooling size *r*
     * compared to sum of direct rider O-D trip distances.
-2. $k_p(r)$ Changes in passenger route distance with pool size *r*: 
+2. $k_p(r)$ **Changes in passenger route distance (time) with pool size *r* **: 
     * the fractional increase in passenger route distance km (due to detours), for a typical ride. 
-  3. Changes in waiting time $T_{pw}(r)$: the incremental time per trip that the passenger must wait as a function of shared ridership r. 
+  3. **Changes in waiting time** $T_{pw}(r)$: the incremental time per trip that the passenger must wait as a function of shared ridership r. 
       * Waiting time is expected to decline with measures of system scale (size of the TNC fleet and density $\delta$ of TNC travelers in service area)
 
 [^1]: These functional relations may be derived from simulations of shared vehicles or actual travel data.
@@ -170,15 +170,6 @@ $$
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Austin_Sample_Trips_in_Network_crop.png"))
 ```
 
-## RideAustin Ride Requests by Day of Week and Hour
-
-- Busiest ride period is weekend nights and early mornings
-
-```{r, echo=F, out.width='70%', fig.align='center', fig.cap='RideAustin Ride Requests by Day of Week and Hour'}
-# alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Requests_Day_of_Week_and_Hour.png"))
-```
-
 ## RideAustin Ridesby Weekday
 
 ```{r, echo=F, out.width='70%', fig.align='center', fig.cap='Number of Rides for Each Day in Week, RideAustin data.'}
@@ -186,11 +177,13 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Reque
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Rides_per_weekday.png"))
 ```
 
-## Monthly Ride Activity Grew Over Course of the Program
+## RideAustin Ride Requests by Day of Week and Hour
 
-```{r, echo=F, out.width='70%', fig.align='center', fig.cap='Trip Counts by Year and Month Over 11 Months'}
+- Busiest ride period is weekend nights and early mornings
+
+```{r, echo=F, out.width='70%', fig.align='center', fig.cap='RideAustin Ride Requests by Day of Week and Hour'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Trip_Counts_by_Year_and_Month.png"))
+knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Requests_Day_of_Week_and_Hour.png"))
 ```
 
 ## Illustrative Pooling Diagram
@@ -204,14 +197,18 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Il
 
 - Sun & Zhang 2018, Alonso-Mora et al. 2017
 - Establish ride sample time period, *n* rides
-- Generate compact abstract graph from street map for all Os and Ds
-- Determine route distances among *all* nodes $\{O_1, ... O_n, D_1, ..., D_n\}$
-- Base Assignment of single car to single ride
-- Iterate (until no more ride insertions feasible)
+- **Initialize**
+  - Generate compact abstract graph from street map for all Os and Ds
+  - Determine route distances, times among *all* nodes $\{O_1 ... O_n, D_1, ... D_n\}$
+    - i.e. $(2n)^2$ arcs
+  - Base Assignment: single car to single ride
+- **Iterate** (until no more ride insertions feasible)
   - *Insertions* 
-    - Test inserting each unpooled ride individually in all cars w/ capacity
-    - Construct graph of feasible routes w/ insertions
-  - *Assignment* ILP over $V_{ki}$ to select insertions to max VKT reduction
+    - Test inserting each unpooled ride *r* individually in all cars *k* w/ capacity
+    - Construct graph of time-feasible routes w/ insertions, distances
+  - *Assignment* ILP over $V_{kr} \in \{0,1\}$
+    - select insertions to max VKT reduction
+    - track APKT: passenger detours/delays
 
 ## End Goal is Compilation of Costs Changes With Pooling, and Marginal Cost Analysis
 
@@ -222,23 +219,26 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Il
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
 ```
 
-## Data Challenges
-* Real deadhead miles v. deadhead miles registered to increase expenses to reduce taxable income
-* Many/most TNC drivers use more than one service which complicates firm-level analysis 
-* GPS coordinates, when provided, are not always accurate 
-* Other datasets round/blur location and time
 
-## Discussion
+## Discussion: Data Challenges
 
-* Available data sets
-  * Taxi trip data
-  * Ideally, need *demographics* of riders and *trip purpose* to better infer willingness to ride‐pool
-  * Low density routes/areas/time-of-day make pooling difficult
-  * Ideally need to know alternative choice of travel if not ride‐hailing (transit, walk, personal vehicle)
-* Tools and methods
-  * routing algorithms, network modeling software
+* Observability & Attribution
+  * Real deadhead miles v. deadhead miles registered for tax purposed
+  * Most TNC drivers use more than one service which complicates firm-level analysis 
+* Spatial accuracy
+  * GPS coordinates, times, when provided, are not always accurate 
+  * Other datasets round/blur location and time
+    * Taxi trip data
+* Ideally, need *demographics* and *trip purpose* for willingness to ride‐pool
+
+## Discussion: Tools and Methods
+  * Routing algorithms, network modeling software
+    * currently only some steps/functions parallelized
+    * seeking greater scalability
   * HPC ILP and NLP approaches
-* Collaboration
+    * Gurobi = \$ (no NLP)
+    * Julia JuMP for HPC math programmming, anyone?
+* Collaborations welcome
   * Feedback
 
 # Supplemental Slides
