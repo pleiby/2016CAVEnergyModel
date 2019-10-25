@@ -2944,7 +2944,7 @@ occupancyEffects1 <- occupancyEffects1 %>%
 
 ```
 
-```{r plotOccupancyEffects1, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+```{r plotOccupancyEffects1, echo=echoWorking, dpi=300}
 occupancyEffects1 %>%
   select(DemScen, o, PMT, Energy) %>%
   gather(key = Effect, value = value, PMT:Energy) %>%
