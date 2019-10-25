@@ -219,6 +219,13 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Il
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
 ```
 
+## Data Challenges
+
+```{r, echo=F, out.width='60%', fig.align='center', fig.cap='Deep Learning Data Needs'}
+# alt is Markdown syntax of ![alt text or image title](path/to/image)
+# source of this figure is MOSTv0.Rmd
+knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "machine_learning_xkcd1838.png"))
+```
 
 ## Discussion: Data Challenges
 
