@@ -87,63 +87,28 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "plotOccupa
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "plotOccupancyEffects1-1.png"))
 ```
 
-## Study of Ride-Pooling Potential Impacts on VKT, PKT
+## Study of Potential Ride-Pooling Potential on VKT, PKT
 
 * Several studies have shown *ride‐hailing* may significantly increase VKT
   * added VKT from deadheading/repositioning/cruising between rides
   * Deadhead rates 25% – 60% (4 studies based on data)
   * Autonomous vehicles also have this concern
-* But, ride‐pooling (shared rides) can increase average vehicle occupancy and potentially reduce VKT
-
-* **Ride‐Hailing and VKT**: Transportation Network
-Companies (TNCs) are providing new mobility
-services, but they may also be increasing vehicle-miles,
-congestion and emissions
-* **MOST** (Minimum Occupancy STandards) for
-TNCs: New policy tool to encourage ride‐pooling
+* But, **Ride‐pooling** (shared rides) can increase average vehicle occupancy and potentially reduce VKT
+* **MOST** (Minimum Occupancy STandards) for TNCs: New policy tool to encourage ride‐pooling
+  * Related _draft_ regulations: California Clean Miles Standard
 * **Case study** of the MOST concept: use
 publicly available data from RideAustin TNC [in progress]
-
-
-
-## Vehicle Minimum Occupancy Standards: Encouraging Ride Pooling
-* Ride pooling and increased vehicle occupancy
-identified as key requirements for achieving the full
-benefits of new mobility systems
-* Distinguish “ride pooling” from “ride‐hailing"
-* Incentives for ride pooling can deter empty vehicle
-kilometers, limit congestion, energy use, and
-emissions
-* Minimum Occupancy STandards (MOSTs)
-  - flexibly establish a minimum ride‐weighted occupancy level across TNC fleets
-* Related _draft_ regulations: California Clean Miles Standard
-  + Targets for GHG emission reductions by TNCs per passenger mile by 2021, implementaiton by 2023
-
-## Current Vehicle Occupancy by Type
-
-```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Average Vehicle Occupancy, Davis et al. 2017 Figure 8.1]'}
-# Alternatively, Markdown syntax is ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure1_Average_Vehicle_Occupancy.png"))
-```
-
-## Approach
-
-* We develop a model for MOSTs, identify efficient design considerations and *ideal* data needs
-  * Inspired by our prior work on tradable CAFE and low
-carbon fuel standards.
-* Are *in the process of implementing* the model using the **Ride Austin** data to synthesized pooled trips
-  * Using a heuristic algorithm based on Sun and Zhang (2018).
-* With our proposed MOSTs, the regulated or controlled
-component is vehicle occupancy, not the level of
-transportation services that is free to vary with demand.
-    - Intensity standards do not place a firm cap on the
-regulated entity.
 
 ## MOST Allows Increased PKT with Same/Lower VKT
 * Increased vehicle occupancy can *decouple* passenger kilometers traveled (PKT) from vehicle kilometers traveled (VKT)
 * A flexible occupancy standard $\bar O$ that focuses on the average ratio of passenger travel to vehicle travel
 
 $$O = \left ( \frac {PKT}{VKT} \right ) \equiv \frac {(passenger-km/yr)}{(vehicle-km/yr)} \sim \left [ \frac {pass}{veh} \right ] \le \bar O$$
+* Inspired by our prior work on tradable CAFE and low
+carbon fuel standards.
+* Are *in the process of implementing* the model using the **Ride Austin** data to synthesized pooled trips
+  * Using a heuristic algorithm based on Sun and Zhang (2018).
+
 
 ## Obtain Functional Relationships From Vehicle Routing and Trip Chaining[^1]
 
@@ -205,14 +170,6 @@ $$
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Austin_Sample_Trips_in_Network_crop.png"))
 ```
 
-## Illustrative Pooling Diagram
-
-```{r, echo=F, out.width='90%', fig.align='center', fig.cap='Illustrative two household tradeoff of passenger and vehicle travel'}
-# alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Illustrative_two_household_two_destination_tradeoff.png"))
-```
-
-
 ## RideAustin Ride Requests by Day of Week and Hour
 
 - Busiest ride period is weekend nights and early mornings
@@ -221,6 +178,7 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Il
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Requests_Day_of_Week_and_Hour.png"))
 ```
+
 ## RideAustin Ridesby Weekday
 
 ```{r, echo=F, out.width='70%', fig.align='center', fig.cap='Number of Rides for Each Day in Week, RideAustin data.'}
@@ -234,6 +192,26 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Rides_per_
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Trip_Counts_by_Year_and_Month.png"))
 ```
+
+## Illustrative Pooling Diagram
+
+```{r, echo=F, out.width='90%', fig.align='center', fig.cap='Illustrative two household tradeoff of passenger and vehicle travel'}
+# alt is Markdown syntax of ![alt text or image title](path/to/image)
+knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Illustrative_two_household_two_destination_tradeoff.png"))
+```
+
+## Ride Pooling Algorithm
+
+- Sun & Zhang 2018, Alonso-Mora et al. 2017
+- Establish ride sample time period, *n* rides
+- Generate compact abstract graph from street map for all Os and Ds
+- Determine route distances among *all* nodes $\{O_1, ... O_n, D_1, ..., D_n\}$
+- Base Assignment of single car to single ride
+- Iterate (until no more ride insertions feasible)
+  - *Insertions* 
+    - Test inserting each unpooled ride individually in all cars w/ capacity
+    - Construct graph of feasible routes w/ insertions
+  - *Assignment* ILP over $V_{ki}$ to select insertions to max VKT reduction
 
 ## End Goal is Compilation of Costs Changes With Pooling, and Marginal Cost Analysis
 
