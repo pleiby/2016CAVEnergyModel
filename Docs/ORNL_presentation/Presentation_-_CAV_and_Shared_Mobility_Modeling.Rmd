@@ -48,7 +48,7 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "CAVESIM_Mo
 
 * NLP or MCP optimization problem
 
-## Cost Driven - Base Costs (Manually-Driven Conventional Vehicle)
+## Cost Driven - Base Costs (Manually-Driven Vehicle)
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Base Vehicle Cost Components'}
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "baseCostComponStackedBarGraph-1.png"))
@@ -75,7 +75,7 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "VMT_change
 
 * Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
 
-## Ideal Pooled-Routing (little/no detours delays) Allows VKT (Energy) Reduction, Increased Mobility (PKT)
+## Ideal Pooled-Routing (~no detours/delays) Allows VKT (Energy) Reduction, Increased Mobility (PKT)
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Occupancy Effects With Ideal Routing (no detours)'}
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "plotOccupancyEffects-1.png"))
@@ -104,6 +104,7 @@ publicly available data from RideAustin TNC [in progress]
 * A flexible occupancy standard $\bar O$ that focuses on the average ratio of passenger travel to vehicle travel
 
 $$O = \left ( \frac {PKT}{VKT} \right ) \equiv \frac {(passenger-km/yr)}{(vehicle-km/yr)} \sim \left [ \frac {pass}{veh} \right ] \le \bar O$$
+
 * Inspired by our prior work on tradable CAFE and low
 carbon fuel standards.
 * *In the process of implementing* the model using the **Ride Austin** data to synthesized pooled trips
@@ -219,9 +220,9 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Il
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
 ```
 
-## Data Challenges
+## Data Challenges - The Perfect Dataverse
 
-```{r, echo=F, out.width='60%', fig.align='center', fig.cap='Deep Learning Data Needs'}
+```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Deep Learning Data Needs'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
 # source of this figure is MOSTv0.Rmd
 knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "machine_learning_xkcd1838.png"))
@@ -231,7 +232,7 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "machine_le
 
 * Observability & Attribution
   * Real deadhead miles v. deadhead miles registered for tax purposed
-  * Most TNC drivers use more than one service which complicates firm-level analysis 
+  * Most TNC drivers use more than one service which complicates firm-level analysis of VMT/deadheading
 * Spatial accuracy
   * GPS coordinates, times, when provided, are not always accurate 
   * Other datasets round/blur location and time
