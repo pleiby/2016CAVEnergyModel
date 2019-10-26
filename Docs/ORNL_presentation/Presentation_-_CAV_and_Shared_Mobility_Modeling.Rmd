@@ -25,6 +25,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(here)
+
+figureLocPath = paste("Docs", "ORNL_presentation", "figures", sep = "/")
 ```
 
 
@@ -42,8 +44,8 @@ library(here)
 
 ```{r, echo=F, out.width='85%', fig.align='center', fig.cap='CAVESIM Model Structure'}
 # Alternatively, Markdown syntax is ![alt text or image title](path/to/image)
-# knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "CAVESIM_Model_Diagram.tif"))
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "CAVESIM_Model_Structure.png"))
+# knitr::include_graphics(here(figureLocPath, "CAVESIM_Model_Diagram.tif"))
+knitr::include_graphics(here(figureLocPath, "CAVESIM_Model_Structure.png"))
 ```
 
 * NLP or MCP optimization problem
@@ -51,26 +53,26 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "CAVESIM_Mo
 ## Cost Driven - Base Costs (Manually-Driven Vehicle)
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Base Vehicle Cost Components'}
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "baseCostComponStackedBarGraph-1.png"))
+knitr::include_graphics(here(figureLocPath, "baseCostComponStackedBarGraph-1.png"))
 ```
 
 ## Cost Driven - Alt Costs (Automated Vehicle)
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Automated Vehicle Cost Components'}
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "altCostComponStackedBarGraph-14_Scen_C_TS9.png"))
+knitr::include_graphics(here(figureLocPath, "altCostComponStackedBarGraph-14_Scen_C_TS9.png"))
 ```
 
 ## (SMART Workflow) Scenario Results for Energy Efficiency, VKT and Energy Use
 
 ```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Scenario B-High and C-High'}
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "policyAndScenarioCalcs2-1.png"))
+knitr::include_graphics(here(figureLocPath, "policyAndScenarioCalcs2-1.png"))
 # Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
 ```
 
 ## Exploration of Sensitivity of Outcomes to Economic Costs/Signals
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Explore Effects of Higher Cost/Mile'}
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "VMT_change_for_VMT_Incr_cost.png"))
+knitr::include_graphics(here(figureLocPath, "VMT_change_for_VMT_Incr_cost.png"))
 ```
 
 * Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
@@ -78,13 +80,13 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "VMT_change
 ## Ideal Pooled-Routing (~no detours/delays) Allows VKT (Energy) Reduction, Increased Mobility (PKT)
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Occupancy Effects With Ideal Routing (no detours)'}
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "plotOccupancyEffects-1.png"))
+knitr::include_graphics(here(figureLocPath, "plotOccupancyEffects-1.png"))
 ```
 
 ## Occupancy Effects with Less Direct Pooled-Routing (more detours)
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Occupancy Effects with Less Ideal Pooled-Routing (more detours)'}
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "plotOccupancyEffects1-1.png"))
+knitr::include_graphics(here(figureLocPath, "plotOccupancyEffects1-1.png"))
 ```
 
 ## Study of Potential Ride-Pooling Potential on VKT, PKT
@@ -168,14 +170,14 @@ $$
 
 ```{r, echo=F, out.width='60%', fig.align='center', fig.cap='Ride Austin Sample Trips in Network'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Austin_Sample_Trips_in_Network_crop.png"))
+knitr::include_graphics(here(figureLocPath, "Ride_Austin_Sample_Trips_in_Network_crop.png"))
 ```
 
 ## RideAustin Ridesby Weekday
 
 ```{r, echo=F, out.width='70%', fig.align='center', fig.cap='Number of Rides for Each Day in Week, RideAustin data.'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Rides_per_weekday.png"))
+knitr::include_graphics(here(figureLocPath, "Rides_per_weekday.png"))
 ```
 
 ## RideAustin Ride Requests by Day of Week and Hour
@@ -184,14 +186,14 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Rides_per_
 
 ```{r, echo=F, out.width='70%', fig.align='center', fig.cap='RideAustin Ride Requests by Day of Week and Hour'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Ride_Requests_Day_of_Week_and_Hour.png"))
+knitr::include_graphics(here(figureLocPath, "Ride_Requests_Day_of_Week_and_Hour.png"))
 ```
 
 ## Illustrative Pooling Diagram
 
 ```{r, echo=F, out.width='90%', fig.align='center', fig.cap='Illustrative two household tradeoff of passenger and vehicle travel'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Illustrative_two_household_two_destination_tradeoff.png"))
+knitr::include_graphics(here(figureLocPath, "Figure3_Illustrative_two_household_two_destination_tradeoff.png"))
 ```
 
 ## Ride Pooling Algorithm
@@ -217,7 +219,7 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Figure3_Il
 ```{r, echo=F, out.width='70%', fig.align='center', fig.cap='Illustrative Cost Components'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
 # source of this figure is MOSTv0.Rmd
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
+knitr::include_graphics(here(figureLocPath, "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
 ```
 
 ## Data Challenges - The Perfect Dataverse
@@ -225,13 +227,13 @@ knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "Illustrati
 ```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Deep Learning Data Needs'}
 # alt is Markdown syntax of ![alt text or image title](path/to/image)
 # source of this figure is MOSTv0.Rmd
-knitr::include_graphics(here("Docs", "ORNL_presentation", "figures", "machine_learning_xkcd1838.png"))
+knitr::include_graphics(here(figureLocPath, "machine_learning_xkcd1838.png"))
 ```
 
 ## Discussion: Data Challenges
 
 * Observability & Attribution
-  * Real deadhead miles v. deadhead miles registered for tax purposed
+  * Real deadhead miles v. deadhead miles registered for tax purposes
   * Most TNC drivers use more than one service which complicates firm-level analysis of VMT/deadheading
 * Spatial accuracy
   * GPS coordinates, times, when provided, are not always accurate 
