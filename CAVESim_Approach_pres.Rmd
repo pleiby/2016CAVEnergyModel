@@ -303,7 +303,7 @@ Fig: VKT vs. VKT Incr. Cost
 
 ## Results: Exploring Demand and VMT for Wide Range of Demand and Technology Scenarios
 
-![Example Technology and Demand Scenarios Diagram](./data/Example_Intensity_Demand_Energy_Scenarios20190204.png)
+![Example Technology and Demand Scenarios Diagram](./Docs/figures/Example_Intensity_Demand_Energy_Scenarios20190204.png)
 
 ## Modeling Vehicle Sharing (Pooling) with Economic Costs and Responses
 
