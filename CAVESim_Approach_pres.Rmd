@@ -61,7 +61,7 @@ Finalized CAVESIM model and analysis for LD and MD/HD vehicles – ST1   |Q4
 
 ## CAVESIM Top-Down Conceptual Approach Complements Bottom-up National Aggregation and  Detailed Regional Analyses
 
-![CAVESIM Top Down Conceptual Approach Diagram](./data/CAVESIM_Top_Down_Conceptual_Approach_Diagram_V1.png)
+![CAVESIM Top Down Conceptual Approach Diagram](./Docs/figures/CAVESIM_Top_Down_Conceptual_Approach_Diagram_V1.png)
 
 ## National-level impacts (Top-down), Formulation
 
@@ -233,7 +233,7 @@ Average travel speed by region(6)	| km/hr
 
 ```{r showMechanismMultiplers, echo = F}
 
-load(file="CAVdecom.sav")
+load(file="./CAVdecom.sav")
 IM %>% filter(Year==2050 & VC=="LDV") %>%
   kable(caption= "Intensity Multipliers by Vehicle-type, Year, and Case")
 ```
