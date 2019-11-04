@@ -1,0 +1,26 @@
+---
+title: "Notes on Wenzel et al 2019"
+author: "Paul Leiby"
+date: "11/3/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ROUGH DRAFT - not working yet
+```{r}
+echoWorking = T
+```
+
+$$DH_{betw} = \frac {\delta_{DHbetw}} {1 + \delta_{DHbetw} + \delta_{DHcomm}}$$
+$$DH_{betw}  \cdot ({1 + \delta_{DHbetw} + \delta_{DHcomm}}) =  {\delta_{DHbetw}}$$
+$$DH_{betw}  \cdot ({1 + \delta_{DHcomm}}) =  {\delta_{DHbetw}} - DH_{betw}  \cdot \delta_{DHbetw} $$
+
+```{r deadheadingEst, echo=echoWorking}
+DH_betw = 0.26 # between-ride deadheading  as fraction of total TNC vehicle VMT
+DH_comm = 0.19 # commute deadheading as fraction of total TNC vehicle VMT
+delta_DH_betw = DH_betw/(1+DH_betw+DH_comm) # fractional increase from between-ride deadheading
+```
+
