@@ -84,18 +84,20 @@ knitr::include_graphics(here(figureLocPath, "altCostComponStackedBarGraph-14_Sce
     - using proxies for CAV
 - results/insights for demand effect
 
-## 2. Effect of Shared mobility on travel (PMT) while mitigating VMT
-- Studies
-- Empirical data so far
+## 2. Effect of Shared mobility on Travel (PMT) while mitigating Traffic (VMT)
+- Simulation Studies show ride services meet 90%+ trip demand with "acceptable" delay and 7-12X reduction in vehicles
+  - Fagnant & Kochelman etc XXX
+  - but not necess fewer vehicles on the road or less VMT
+- Empirical data so far show large increase in VMT from TNCs
   - Henao, UCDavis
 - Our estimates of pooling potential???
 
 ## 3. Suitability/cost-effectiveness of electrification for Shared/Automated road travel
 - Classic reasoning:
-  - AVs make time/inconvenience of recharging
   - EVs, with high capital cost, low operating costs, and long service-life are better/well-suited to high-utilization (high VMT) applications
+  - AVs make time/inconvenience of recharging
   - AVs have high "auxilliary feature" loads, amplifying the problem of EV energy management, exacerbating range problem
-  - SAVs are profit oriented, and 
+  - SAVs are profit oriented, and can ill-afford to be taken out of service long for recharging
 - Simple Calculations:
 - Research:
   - 30% of Public DC Fast-charging in SF is TNC vehicles (Jenn 2019)
@@ -282,14 +284,6 @@ knitr::include_graphics(here(figureLocPath, "Figure3_Illustrative_two_household_
 knitr::include_graphics(here(figureLocPath, "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
 ```
 
-## Data Challenges - The Perfect Dataverse
-
-```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Deep Learning Data Needs'}
-# alt is Markdown syntax of ![alt text or image title](path/to/image)
-# source of this figure is MOSTv0.Rmd
-knitr::include_graphics(here(figureLocPath, "machine_learning_xkcd1838.png"))
-```
-
 ## Discussion: Data Challenges
 
 * Observability & Attribution
@@ -300,18 +294,6 @@ knitr::include_graphics(here(figureLocPath, "machine_learning_xkcd1838.png"))
   * Other datasets round/blur location and time
     * Taxi trip data
 * Ideally, need *demographics* and *trip purpose* for willingness to ride‐pool
-
-## Discussion: Tools and Methods
-  * Routing algorithms, network modeling software
-    * currently only some steps/functions parallelized
-    * seeking greater scalability
-  * HPC ILP and NLP approaches
-    * Gurobi = \$ (no NLP)
-    * Julia JuMP for HPC math programmming, anyone?
-* Collaborations welcome
-  * Feedback
-
-# Supplemental Slides
 
 ## Literature
 1. Sperling, Daniel. Three Revolutions: Steering Automated, Shared, and Electric Vehicles to a Better Future.
@@ -337,17 +319,6 @@ via dynamic trip‐vehicle assignment. Proceedings of the National Academy of Sc
 9. CARB, Clean Mile Standard, https://ww2.arb.ca.gov/our-work/programs/clean-miles-standard
 10. Sun, Yanshuo, and Lei Zhang. 2018. “Potential of Taxi-Pooling to Reduce Vehicle Miles Traveled in Washington, D.C.” Transportation Research Record 2672 (8): 775–84. https://doi.org/10.1177/0361198118801352.
 
-
-## Needed Parameters and Functional Relationships
-- Travel time cost and utility variables
-    - $C_S(D_S, r, q)$ = added cost (expenditure-equivalent disutility) associated with pooled travel
-    - $c_{pw}$ = cost to passengers/hr wait time from pickup-delays
-    - $c_{pd}(r)$ = cost to passengers/hr detour delay time
-    - $c_{pt}(r)$ = cost to passengers/hr travel time 
-- TNC Operating cost variables
-    - $c_{vt}$ = vehicle operating cost/hr travel time (or cost/mi)
-    - $c_{vx}$ = vehicle cost/hr pick-up/drop-off transaction
-    - $\sigma$ = average travel speed for TNC vehicle
 
 ## Ridesharing and VKTs
 
