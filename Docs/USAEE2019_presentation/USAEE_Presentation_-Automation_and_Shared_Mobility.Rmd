@@ -77,12 +77,37 @@ knitr::include_graphics(here(figureLocPath, "altCostComponStackedBarGraph-14_Sce
   
 ## 1.4 Value (Cost) of Travel Time
 - importance and heterogeneity
+  - Fraction of wage rate (non-work) ~ 35% - 60% (DOT)
+  - VOTT depends strongly on the purpose and quality of time
+  - Trip purpose (work, leisure)
+  - Demographics (sex, income, age, education)
 - Value of Time Reliability
 - Evidence to date and on-going research
   - chauffer experiment
   - empirical work: 
     - using proxies for CAV
 - results/insights for demand effect
+
+## Studies: Relative Value of Time by Trip Purpose
+- Work Purpose (relative to personal time)
+  - A&W: 	2+
+  - DOT: 	2 
+  - Small: 	2 
+- Personal Purposes: A&W
+  - Commute v Leisure 	1.15
+  - Peak v Off-Peak 	1.40
+  - Commute v Shopping 	1.16
+  - Shopping v Leisure 	0.84
+
+## Estimates of the Household Vehicles Replacable by SAVs While Satisfing Demand**
+
+**Private Veh: SAV** | **Notes**                       | **Source**
+-------------------|------------------------------|------------
+3:1                   |Singapore                    | Speiser et al 2014.
+3.6:1                 |Peak travel hour, no pooling (congested, similar origins and destinations in rush hour)|Levin et al. 2017
+7:1 - 11:1            |Range of simulations in urban (Austin) area, coordinated optimum depends on road network, acceptable (short) wait times for pick-up. Replacement higher for grid networks. These studies typically *omit/simplify congestion effects*, assume SAVs completely replace personal vehicles.| (Fagnant & Kockelman, 2014, 2016, Chen, Kockelman, & Hanna, 2016, Loeb, Kockelman, & Liu, 2017)
+17:1                  |Pooled SAVs. Little explanation given. | Johnson 2016.
+31:1                  |Peak estimate in Central business district, extensive DRS/pooling (pooling of 3-4 passengers) |Levin et al. 2017
 
 ## 2. Effect of Shared mobility on Travel (PMT) while mitigating Traffic (VMT)
 - Simulation Studies show ride services meet 90%+ trip demand with "acceptable" delay and 7-12X reduction in vehicles
