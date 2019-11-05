@@ -5,7 +5,7 @@ author:
   name: Paul N. Leiby
   affiliation: Oak Ridge National Laboratory
   email: leibypn@ornl.gov
-date: Rev. 2019-09-14, Printed `r Sys.Date()`
+date: Rev. 2019-11-04, Printed `r Sys.Date()`
 output:
   word_document:
     df_print: kable
@@ -224,9 +224,9 @@ SetK_Mechs <- c( # mechanisms k by which automation alters energy and/or demand
   "Increased_feature_load",
   "Automation_accessory_load",
   "Higher_highway_speeds"
-  # "Ride_pooling",    # Q: should Mechanism set include this?
-  # "Ride_hailing",    # Q: should Mechanism set include this?
-  # "Electrification_BEV",
+  # "Ride_pooling",    # Q: Demand Mechanism set should include this
+  # "Ride_hailing",    # Q: Demand Mechanism set should include this
+  # "Electrification_BEV", # need to include this intensity effect
   # "Electrification_PHEV"
 )
 
@@ -258,7 +258,7 @@ library(stringr)
 
 We define the effects of automation on vehicle energy intensity (energy per vehicle km traveled) through a set of identified technological and operational "mechanisms." 
 
-The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[We start from the values developed in Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for effect sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ indicate the fractional change in energy intensity for a particular mechanism *k*, and are differentiated by year *t*, vehicle class *v*, and effect sensitivity *s*.
+The estimation for the midcase energy intensity impacts of each mechanism is based on literature review^[We start and depart from the values developed in Wadud, MacKenzie and Leiby 2016.] and the external calculations of the authors. Ranges of values, for sensitivity cases and scenarios, are constructed for each mechanism *k*, for effect sensitivity cases *s* from "zero" through "pessimistic," "midcase," and "optimistic." Mechanism intensity effect values $I_{E,tvks}$ indicate the fractional change in energy intensity for a particular mechanism *k*, and are differentiated by year *t*, vehicle class *v*, and effect sensitivity *s*.
 
 
 ```{r kayaIntensityModifiers, echo=echoWorking}
@@ -350,7 +350,7 @@ kable(
 )
 ```
 
-* Note "Right_sizing" and "Increased_feature_load" apply only to LDV passenger travel.
+Note "Right_sizing" and "Increased_feature_load" apply only to LDV passenger travel.
 
 ### 3.2 Energy Intensity by Vehicle Type and Technology Scenario, by Composing Mechanism Effects
 
@@ -390,7 +390,8 @@ msa$Year <- as.integer(msa$Year)
 msa <- left_join(msa, IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
   select(-c(Demand_Scenario, IE)) # drop fractional reductions, keep multipliers
 ```
-```{r}
+```{r readTechScenCases, echo=echoWorking} 
+# warning=FALSE, message=FALSE}
 TechScenAssumps <- read_csv(paste0("./Data/", "CAV_TechScenario_Master.csv"), comment = "#")
 msa <- TechScenAssumps %>%
   gather(key = TechScen, value = EffectCase, -c(VC, Mech, Year)) %>%
@@ -427,9 +428,9 @@ kable(
 The total energy intensity multiplier for each technology scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially fixed and suppressed, i.e. *m* = road_vehicle and *f* = petroleum.] 
 $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 
-$s_{jtvk}$ is the sensitivity case value for mechanism *k* on vehicle class *v* in technology scenario *j* and year *t*.
+For each technology technology scenario *j* the effect sensitivity case is (exogenously) specified for each mechanism *k* on vehicle class *v* in year *t*, and thus the sensitivity case *s* is subscripted ${s_{jtvk}}$.
 
-The Net Energy Intensity change for the technology scenario *j* is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
+The Net Energy Intensity change NIE for the technology scenario *j* is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
 
 $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
@@ -453,16 +454,6 @@ EnergyIntensityCompons <- msa %>%
   spread(key = Mech, value = IM) %>%
   left_join(EnergyIntensityChanges, by = c("TechScen", "VC", "Year"))
 ```
-<!---
-!!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: LDV Energy Intensity Reduction is halved for TechScen 4 (for both LDVs and HDVs)
-Actually:
-- NIE <- (1+NIE)*2 - 1 = 2 + 2 NIE - 1 = 1 + 2 NIE
-- ((1-0.7186037)*2 - 1)/-0.7186037 = 0.6084124 # for LDV in 2050
-- NIE = 0.6084124 * NIE # for LDV in 2050
-- sqrt(0.6084124) = 0.7800079
-NIE = prod(IM) - 1
-prod(IM)` - 1 = 1 + 2 (prod(IM) - 1) = 1 - 2 + 2 prod(IM) = 2 prod(IM) -1 
--->
 
 ```{r fixVariantTechCaseIntensity, echo=echoWorking}
 variantTechScen4 <- F
@@ -471,7 +462,6 @@ if (variantTechScen4) {
   # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved for TechScen 4 and LDVs)
   EnergyIntensityChanges <- EnergyIntensityChanges %>%
     mutate( # only alter the TechScen==2 energy intensity (doubling
-      #    NIE = ifelse((TechScen==2) & (VC=="LDV"), (1+NIE)*2.44-1, NIE)
       NIE = ifelse((TechScen == 4) & (VC == "LDV"), (1 + NIE) * 2 - 1, NIE)
     )
 }
@@ -1186,7 +1176,6 @@ VTCShrAlt <- VTCShrAlt %>%
 
 ```{r dispVTCShrAlt, echo=echoWorking}
 # Rearrange and display Vehicle Travel Cost Share ests for alternative Demand Scenarios
-```
 VTCShrAlt %>%
   select(-VC) %>%
   spread(key = VehType, value = VTCost_shr) %>%
@@ -1196,6 +1185,7 @@ VTCShrAlt %>%
     row.names = F, digits = 3,
     caption = "Table: Alt Travel Cost Components Relative to Base, by Demand Scenario & Vehicle Type"
   )
+```
 
 ### Display Alternative Scenario Travel Costs per Mile by Component
 
