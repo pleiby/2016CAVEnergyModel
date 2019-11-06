@@ -1,9 +1,7 @@
 ---
 title: "Opportunities for Road Transport Carbon Reduction through Automation & Shared Mobility"
 subtitle: "Presented to USAEE 2019"
-
 author: Paul Leiby, Oak Ridge National Laboratory
-
 date: "November 6, 2019"
 output:
   beamer_presentation:
@@ -29,31 +27,19 @@ library(here)
 figureLocPath = paste("Docs", "ORNL_presentation", "figures", sep = "/")
 ```
 
-## Outline 1: Opportunities for Road Transport Carbon Reduction through Automation and Shared Mobility
+
+## Outline: Opportunities for Road Transport Carbon Reduction through Automation and Shared Mobility
+
 1. Estimated Effects of Automation on road travel, energy use, emissions
 2. Effect of Shared mobility on travel (PMT) while mitigating VMT
 3. Suitability/cost-effectiveness of electrification for Shared/Automated road travel
 4. Net implications for C emissions reduction
-  - Some original quantitative estimates/insights
-  - A review of other research in the literature.
-  - Most of my discussion is U.S.-centric (alas), but extensible
 5. Key Messages
 
-## Outline 2: (Potentially) Important areas I do not plan on addressing
 
-- Factors influencing adoption of electric drive
-- EV charging or H2 infrastructure issues
-- Heavy Duty road transport
-- International trends, prospect
-- Microtransit
-- Scooters
+## 1. Effects of Automation on road travel, energy use, emissions
 
-## 1. Estimated Effects of Automation on road travel, energy use, emissions
-
-## 1.1 Expected importance of (full, generlized costs)
-  - and policy (re pricing and access)
-  - show costs
-## Cost Driven - Base Costs (Manually-Driven Vehicle)
+### Expected importance of full (generalized) costs
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Base Vehicle Cost Components'}
 knitr::include_graphics(here(figureLocPath, "baseCostComponStackedBarGraph-1.png"))
@@ -65,17 +51,22 @@ knitr::include_graphics(here(figureLocPath, "baseCostComponStackedBarGraph-1.png
 knitr::include_graphics(here(figureLocPath, "altCostComponStackedBarGraph-14_Scen_C_TS9.png"))
 ```
 
-## 1.2 Mechanisms and effects - Updated diagram
+## 1.2 Mechanisms and effects - Changing Energy Intensity and Travel Demand
 
-## 1.3 Demand effect
-- types of demand responses
+```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Multiple mechanisms can alter vehicle energy intensity and travel'}
+knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_intensity_and_activity_barV20191106.png"))
+# Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
+```
+
+
+## Types of demand responses
   - underserved groups
-  - cost-based demand response
-  - freight
+  - cost-based travel demand response
+  - freight response
   - pooling/sharing (defer to part 2)
   - short and long-run (land-use) implications
   
-## 1.4 Value (Cost) of Travel Time
+## 1.3 Value (Cost) of Travel Time
 - importance and heterogeneity
   - Fraction of wage rate (non-work) ~ 35% - 60% (DOT)
   - VOTT depends strongly on the purpose and quality of time
@@ -99,22 +90,33 @@ knitr::include_graphics(here(figureLocPath, "altCostComponStackedBarGraph-14_Sce
   - Commute v Shopping 	1.16
   - Shopping v Leisure 	0.84
 
-## Estimates of the Household Vehicles Replacable by SAVs While Satisfing Demand**
+## Estimates of the Household Vehicles Replacable by SAVs While Satisfing Demand
 
-**Private Veh: SAV** | **Notes**                       | **Source**
--------------------|------------------------------|------------
+- Some simulation Studies show optimized ride services meet 90%+ trip demand with "acceptable" delay and 4-12X reduction in vehicles
+
+**Private:Shared Veh**| **Notes**             | **Source**
+------------------|----------------------------|------------------------
 3:1                   |Singapore                    | Speiser et al 2014.
-3.6:1                 |Peak travel hour, no pooling (congested, similar origins and destinations in rush hour)|Levin et al. 2017
-7:1 - 11:1            |Range of simulations in urban (Austin) area, coordinated optimum depends on road network, acceptable (short) wait times for pick-up. Replacement higher for grid networks. These studies typically *omit/simplify congestion effects*, assume SAVs completely replace personal vehicles.| (Fagnant & Kockelman, 2014, 2016, Chen, Kockelman, & Hanna, 2016, Loeb, Kockelman, & Liu, 2017)
-17:1                  |Pooled SAVs. Little explanation given. | Johnson 2016.
-31:1                  |Peak estimate in Central business district, extensive DRS/pooling (pooling of 3-4 passengers) |Levin et al. 2017
+3.6:1                 |Peak travel hour, no pooling |Levin et al. 2017
+7:1 - 11:1            |Range of Austin simulations |Fagnant & Kockelman, 2014, 2016, Chen, Kockelman, Hanna, 2016, Loeb, Kockelman, Liu, 2017
+17:1, 31:1           |Pooled SAVs. Peak est. in CBD, pooling of 3-4 |Johnson 2016, Levin et al. 2017
+
+- but not necess fewer vehicles on the road or less VMT
 
 ## 2. Effect of Shared mobility on Travel (PMT) while mitigating Traffic (VMT)
-- Simulation Studies show ride services meet 90%+ trip demand with "acceptable" delay and 7-12X reduction in vehicles
-  - Fagnant & Kochelman etc XXX
-  - but not necess fewer vehicles on the road or less VMT
-- Empirical data so far show large increase in VMT from TNCs
-  - Henao, UCDavis
+
+#### Empirical data so far show large increase in VMT from TNCs
+
+Study	|	Empty Fraction of Total TNC Miles	|	Comments
+--------------------	|	--------------------	|	------------------------------
+Henao & Marshall 2018	|	41%	|	"Conservative" Uber/Lyft Denver
+Komanduri et al 2018	|	37%	|	RideAustin Dataset (incl. assumed 2 mile commute)
+Cramer & Kreuger 2016	|	36%-45%	|	From Uber data in 5 cities, empty miles
+Schaller 2017	|	40%	|	NYC Ridesourcing, NYC Taxi Commission data
+SF County Transp. Authority 2017	|	20%	|	San Francisco city core, excl commuting, omits distance from request to pickup.
+Wenzel et al. 2019	|	45%	|	RideAustin data, 26% for between-ride, 19% commuting.
+Loeb et al 2018	|	20%	|	**Simulation** satisfying 40% of all trips under  50 miles in Austin
+
 - Our estimates of pooling potential???
 
 ## 3. Suitability/cost-effectiveness of electrification for Shared/Automated road travel
@@ -309,7 +311,7 @@ knitr::include_graphics(here(figureLocPath, "Figure3_Illustrative_two_household_
 knitr::include_graphics(here(figureLocPath, "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
 ```
 
-## Discussion: Data Challenges
+## Discussion: TNC Policy Planning/Data Challenges
 
 * Observability & Attribution
   * Real deadhead miles v. deadhead miles registered for tax purposes
@@ -319,6 +321,20 @@ knitr::include_graphics(here(figureLocPath, "Illustrative_Cost_And_Occupancy_Sta
   * Other datasets round/blur location and time
     * Taxi trip data
 * Ideally, need *demographics* and *trip purpose* for willingness to ride‐pool
+
+## Main Messages
+1. Automation is highly valuable and *market-driven*, hence likely in some form(s)
+    - time, safety, convenience, cost
+2. Automation can have profound effects on road travel, energy use, emissions
+3. For "Shared mobility" to help, need pooling (higher occupancy)
+4. Widespread (S)(A)Vehicle electrification can make a big difference. Has some advantages, but not assured.
+    - motivations and experience
+5. Refining understanding, but still a *wide range of potential outcomes* 
+    - tech, behavioral, and policy uncertainty
+6. Costs, incentives and policy matter
+    - roadway/curb access priorities
+    - road use charges
+    - occupancy incentives
 
 ## Literature
 1. Sperling, Daniel. Three Revolutions: Steering Automated, Shared, and Electric Vehicles to a Better Future.
@@ -354,3 +370,12 @@ via dynamic trip‐vehicle assignment. Proceedings of the National Academy of Sc
 
   * UT Austin study on Ride Austin ride sharing data provides 
     * Patrícia S. Lavieri, Felipe F. Dias, Natalia Ruiz Juri, James Kuhr, Chandra R. Bhat. A Model of Ridesourcing Demand Generation and Distribution. TRB Journal. April 2018 
+
+## Outline 2: (Potentially) Important areas I do not plan on addressing
+
+- Factors influencing adoption of electric drive
+- EV charging or H2 infrastructure issues
+- Heavy Duty road transport
+- International trends, prospect
+- Microtransit
+- Scooters
