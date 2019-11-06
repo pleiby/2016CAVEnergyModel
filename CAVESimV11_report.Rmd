@@ -448,7 +448,7 @@ EnergyIntensityChanges <- msa %>%
 EnergyIntensityChanges <- arrange(EnergyIntensityChanges, TechScen, VC, Year)
 ```
 ```{r constructIntensityComponsByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
-# get all energy intensity changed by scenario
+# get all energy intensity changes by scenario and with component values
 EnergyIntensityCompons <- msa %>%
   select(-EffectCase) %>%
   spread(key = Mech, value = IM) %>%
@@ -508,6 +508,48 @@ EnergyIntensityChanges %>%
 # scale_fill_brewer(palette="Blues")
 ```
 
+```{r defFnMechsBarChart, echo=echoWorking}
+# If you want the heights of the bars to represent values in the data, use geom_col(),
+#   or geom_bar() with  stat_identity().
+# geom_col(mapping = NULL, data = NULL, position = "stack", ...,
+#   width = NULL, na.rm = FALSE, show.legend = NA,
+#   inherit.aes = TRUE)
+
+mechsBarChart <- function(mechs_df) {
+  # mechs_df expected to have same structure as IEffects dataframe
+  # Produced horizontal bar chart of effects by mechanism
+  mechs_df %>% 
+    filter(VC=="LDV" & Year=="2050") %>%
+    mutate(
+      # uplim = ifelse(Opt < 0, Opt-Pess, Pess-Opt),
+      # lolim = ifelse(Opt < 0, Pess, Opt)
+      uplim = ifelse(Opt < 0, Opt-Pess, Pess-Opt),
+      xlolim = ifelse(Opt < 0, Pess, Opt),
+      Mech = str_replace_all(Mech, "_", " ")
+    ) %>%
+    select(Mech, uplim, xlolim) %>% # name this way because bars plotted alphabetically
+    gather(key = case, value = value, xlolim:uplim) %>%
+    ggplot(aes(x=factor(Mech), y = value, fill=case))+
+    geom_bar(stat="identity", width=0.7) + #fill="steelblue")+
+    scale_fill_manual(values = c("steelblue", NA)) + # suppress the ploting of the lower/second bar
+    coord_flip() +
+    theme(legend.position = "none") + 
+    scale_y_continuous(breaks=seq(-50, 60, 10), limits = c(-50.0, 60.0)) + # still the y axis even though flipped
+    xlab("Mechanism") + ylab("Percent Change") +
+    theme(axis.title=element_text(face="bold",size="13",color="black"),
+          axis.text=element_text(size=13,face="bold"))
+    # ggtitle()
+    # theme_minimal()
+}
+```
+
+#### Intensity Mechanisms Summary
+
+Here is a summary of the mechanisms affecting energy intensity, and their ranges.
+
+```{r summaryIntensityMechanisms, echo=echoWorking, dpi=300}
+mechsBarChart(IEffects)
+```
 
 
 # 4. Demand Response to CAVs
