@@ -4,14 +4,14 @@ subtitle: "Presented to USAEE 2019"
 author: Paul Leiby, Oak Ridge National Laboratory
 date: "November 6, 2019"
 output:
+  powerpoint_presentation: null
+  html_document: default
+  ioslides_presentation: default
+  pdf_document: default
   beamer_presentation:
     colortheme: dolphin
     fonttheme: structurebold
     theme: AnnArbor
-  html_document: default
-  ioslides_presentation: default
-  pdf_document: default
-  powerpoint_presentation: null
   word_document:
     df_print: kable
     fig_caption: yes
@@ -53,10 +53,11 @@ knitr::include_graphics(here(figureLocPath, "altCostComponStackedBarGraph-14_Sce
 
 ## 1.2 Mechanisms and effects - Changing Energy Intensity and Travel Demand
 
-```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Multiple mechanisms can alter vehicle energy intensity and travel'}
-knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_intensity_and_activity_barV20191106.png"))
-# Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
+```{r, echo=F, out.width='75%', fig.align='center', fig.cap='Multiple mechanisms can alter vehicle energy intensity and travel'}
+knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_intensity_and_activity_barV20191106wide.png"))
+# knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_intensity_and_activity_barV20191106.png"))
 ```
+Impacts vary with connectivity, powertrain, and operating conditions.
 
 
 ## Types of demand responses
@@ -94,7 +95,7 @@ knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_i
 
 - Some simulation Studies show optimized ride services meet 90%+ trip demand with "acceptable" delay and 4-12X reduction in vehicles
 
-**Private:Shared Veh**| **Notes**             | **Source**
+**Private Veh Replacement**| **Notes**             | **Source**
 ------------------|----------------------------|------------------------
 3:1                   |Singapore                    | Speiser et al 2014.
 3.6:1                 |Peak travel hour, no pooling |Levin et al. 2017
@@ -107,15 +108,15 @@ knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_i
 
 #### Empirical data so far show large increase in VMT from TNCs
 
-Study	|	Empty Fraction of Total TNC Miles	|	Comments
---------------------	|	--------------------	|	------------------------------
-Henao & Marshall 2018	|	41%	|	"Conservative" Uber/Lyft Denver
-Komanduri et al 2018	|	37%	|	RideAustin Dataset (incl. assumed 2 mile commute)
-Cramer & Kreuger 2016	|	36%-45%	|	From Uber data in 5 cities, empty miles
-Schaller 2017	|	40%	|	NYC Ridesourcing, NYC Taxi Commission data
-SF County Transp. Authority 2017	|	20%	|	San Francisco city core, excl commuting, omits distance from request to pickup.
-Wenzel et al. 2019	|	45%	|	RideAustin data, 26% for between-ride, 19% commuting.
-Loeb et al 2018	|	20%	|	**Simulation** satisfying 40% of all trips under  50 miles in Austin
+Empty Fraction of TNC Miles	|	Study	|	Comments
+--------------------|--------------------|------------------------------
+41%	|Henao & Marshall 2018	|		Uber/Lyft Denver
+37%	|Komanduri et al 2018	|		RideAustin Dataset (incl. assumed 2 mile commute)
+36%-45%	|	Cramer & Kreuger 2016	|	From Uber data in 5 cities
+40%	|	Schaller 2017	        |	NYC Ridesourcing, NYC Taxi Commission data
+20%	|SF County Transp. Authority 2017	|		San Francisco city core, excl commuting, omits distance from request to pickup.
+45%	| Wenzel et al. 2019	  |		RideAustin data, 26% for between-ride, 19% commuting.
+20%	|Loeb et al 2018	      |		**Simulation** satisfying 40% of all trips under  50 miles in Austin
 
 - Our estimates of pooling potential???
 
@@ -129,23 +130,6 @@ Loeb et al 2018	|	20%	|	**Simulation** satisfying 40% of all trips under  50 mil
 - Research:
   - 30% of Public DC Fast-charging in SF is TNC vehicles (Jenn 2019)
 
-## 4. Net implications for C emissions reduction
-- Scenarios
-#### (SMART Workflow) Scenario Results for Energy Efficiency, VKT and Energy Use
-
-```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Scenario B-High and C-High'}
-knitr::include_graphics(here(figureLocPath, "policyAndScenarioCalcs2-1.png"))
-# Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
-```
-
-## 4.1 Exploration of Sensitivity of Outcomes to Economic Costs/Signals
-
-```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Explore Effects of Higher Cost/Mile'}
-knitr::include_graphics(here(figureLocPath, "VMT_change_for_VMT_Incr_cost.png"))
-```
-
-* Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
-
 ## Exploring CAVs and Shared Mobility at Aggregate Level with CAVESIM
 
 * Top-Down Methodology for modeling CAV Energy/Travel Demand
@@ -156,6 +140,48 @@ knitr::include_graphics(here(figureLocPath, "VMT_change_for_VMT_Incr_cost.png"))
   * Representative travelers behave according to constrained utility (preference) max
 * (Computational) Side study: Benchmarking VKT, PKT and cost impacts of Ride *Pooling* from real ride-service trip data
 
+## 4. Net implications for Energy Use
+
+#### (SMART Workflow) Scenario Results for Energy Efficiency, VKT and Energy Use
+
+```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Scenario B-High and C-High'}
+knitr::include_graphics(here(figureLocPath, "policyAndScenarioCalcs2-1.png"))
+# Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
+```
+
+## Range of Uncertainty Visible with Monte-Carlo Analysis Across Driving Factors and Impact
+
+
+```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Distributions of relative VMT, fuel intensity, and total fuel consumption'}
+knitr::include_graphics(here(figureLocPath, "Demand_intensity_fuel_use_multiplier_distribution20190607.png"))
+```
+
+- Source: Gohlke et al. 2019. CAV Energy Bounding Study.
+
+## 4.1 Exploration of Sensitivity of Outcomes to Economic Costs/Signals
+
+```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Explore Effects of Higher Cost/Mile'}
+knitr::include_graphics(here(figureLocPath, "VMT_change_for_VMT_Incr_cost.png"))
+```
+
+* Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
+
+
+## Summary
+1. Automation is highly valuable and *market-driven*, hence likely in some form(s)
+    - time, safety, convenience, cost advantages
+2. Automation can have significant VMT and energy use effects from Induced Demand and Unoccupied Travel
+3. For "Shared mobility" to help, need pooling (higher occupancy)
+4. Widespread electrification can make a big difference. Has some advantages, but not assured.
+5. Refining understanding, but still a *wide range of potential outcomes* 
+    - tech, behavioral, and policy uncertainty
+6. Costs, incentives and policy matter
+    - roadway/curb access priorities (e.g. CACC lanes)
+    - road use charges
+    - occupancy incentives, ZOV pricing strategies
+
+# Supplemental Slides
+
 ## CAVESIM Model Structure
 
 ```{r, echo=F, out.width='85%', fig.align='center', fig.cap='CAVESIM Model Structure'}
@@ -165,18 +191,6 @@ knitr::include_graphics(here(figureLocPath, "CAVESIM_Model_Structure.png"))
 ```
 
 * NLP or MCP optimization problem
-
-## Ideal Pooled-Routing (~no detours/delays) Allows VKT (Energy) Reduction, Increased Mobility (PKT)
-
-```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Occupancy Effects With Ideal Routing (no detours)'}
-knitr::include_graphics(here(figureLocPath, "plotOccupancyEffects-1.png"))
-```
-
-## Occupancy Effects with Less Direct Pooled-Routing (more detours)
-
-```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Occupancy Effects with Less Ideal Pooled-Routing (more detours)'}
-knitr::include_graphics(here(figureLocPath, "plotOccupancyEffects1-1.png"))
-```
 
 ## Study of Potential Ride-Pooling Potential on VKT, PKT
 
@@ -189,6 +203,87 @@ knitr::include_graphics(here(figureLocPath, "plotOccupancyEffects1-1.png"))
   * Related _draft_ regulations: California Clean Miles Standard
 * **Case study** of the MOST concept: use
 publicly available data from RideAustin TNC [in progress]
+
+## Ride Pooling Algorithm
+
+- Sun & Zhang 2018, Alonso-Mora et al. 2017
+- Establish ride sample time period, *n* rides
+- **Initialize**
+  - Generate compact abstract graph from street map for all Os and Ds
+  - Determine route distances, times among *all* nodes $\{O_1 ... O_n, D_1, ... D_n\}$
+    - i.e. $(2n)^2$ arcs
+  - Base Assignment: single car to single ride
+- **Iterate** (until no more ride insertions feasible)
+  - *Insertions* 
+    - Test inserting each unpooled ride *r* individually in all cars *k* w/ capacity
+    - Construct graph of time-feasible routes w/ insertions, distances
+  - *Assignment* ILP over $V_{kr} \in \{0,1\}$
+    - select insertions to max VKT reduction
+    - track APKT: passenger detours/delays
+
+## Market Outcome: Occupancy Standard as an Optimization Problem
+
+- Optimization problem maximizes economic net benefit, *subject to an Occupancy Standard* and feasibility constraints. 
+
+- Benefits derive from the marginal benefit of travel *D* 
+
+- Costs derive from passenger waiting time, passenger incremental travel time from detours in pooled rides, and TNC operating costs
+<!--  - based on travel time and pickup/drop-off transaction time costs. -->
+$$
+\begin {aligned}
+\max_{D, D_S, r} &\int_0^D P_D (x,r,q)dx ~-~ C_S(D_S,r,q) ~-~ T_{pw}(D)\cdot c_{pw} ~-~ T_{pt}(D, D_S, r) \cdot c_{pd}(r) \\
+&~-~ T_{vt}(D_V) c_{vt} ~-~ T_{vx}(D_V) c_{vx}
+\end {aligned}
+$$
+$$
+\begin {aligned}
+s.t. ~&O(r) \equiv \frac {PKT}{VKT(r)} = \frac {D}{D_V} \\
+&O(r) \ge \bar {O} \\
+&D_V(D,D_S,r) = (D-D_S) (1+k_v(1)) + D_S \cdot (1+k_v(r))\\
+\end {aligned}
+$$
+
+
+## RideAustin Ride Requests by Day of Week and Hour
+
+- Busiest ride period is weekend nights and early mornings
+
+```{r, echo=F, out.width='70%', fig.align='center', fig.cap='RideAustin Ride Requests by Day of Week and Hour'}
+# alt is Markdown syntax of ![alt text or image title](path/to/image)
+knitr::include_graphics(here(figureLocPath, "Ride_Requests_Day_of_Week_and_Hour.png"))
+```
+
+## End Goal is Compilation of Costs Changes With Pooling, and Marginal Cost Analysis
+
+
+```{r, echo=F, out.width='70%', fig.align='center', fig.cap='Illustrative Cost Components'}
+# alt is Markdown syntax of ![alt text or image title](path/to/image)
+# source of this figure is MOSTv0.Rmd
+knitr::include_graphics(here(figureLocPath, "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
+```
+
+## Discussion: TNC Policy Planning/Data Challenges
+
+* Observability & Attribution
+  * Real deadhead miles v. deadhead miles registered for tax purposes
+  * Most TNC drivers use more than one service which complicates firm-level analysis of VMT/deadheading
+* Spatial accuracy
+  * GPS coordinates, times, when provided, are not always accurate 
+  * Other datasets round/blur location and time
+    * Taxi trip data
+* Ideally, need *demographics* and *trip purpose* for willingness to ride‐pool
+
+## Ideal Pooled-Routing (~no detours/delays) Allows VKT (Energy) Reduction, Increased Mobility (PKT)
+
+```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Occupancy Effects With Ideal Routing (no detours)'}
+knitr::include_graphics(here(figureLocPath, "plotOccupancyEffects-1.png"))
+```
+
+## Occupancy Effects with Less Direct Pooled-Routing (more detours)
+
+```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Occupancy Effects with Less Ideal Pooled-Routing (more detours)'}
+knitr::include_graphics(here(figureLocPath, "plotOccupancyEffects1-1.png"))
+```
 
 ## MOST Allows Increased PKT with Same/Lower VKT
 * Increased vehicle occupancy can *decouple* passenger kilometers traveled (PKT) from vehicle kilometers traveled (VKT)
@@ -213,28 +308,6 @@ carbon fuel standards.
       * Waiting time is expected to decline with measures of system scale (size of the TNC fleet and density $\delta$ of TNC travelers in service area)
 
 [^1]: These functional relations may be derived from simulations of shared vehicles or actual travel data.
-
-## Market Outcome: as an Optimization Problem
-
-- Optimization problem maximizes economic net benefit, *subject to an Occupancy Standard* and feasibility constraints. 
-
-- Benefits derive from the marginal benefit of travel *D* 
-
-- Costs derive from passenger waiting time, passenger incremental travel time from detours in pooled rides, and TNC operating costs
-<!--  - based on travel time and pickup/drop-off transaction time costs. -->
-$$
-\begin {aligned}
-\max_{D, D_S, r} &\int_0^D P_D (x,r,q)dx ~-~ C_S(D_S,r,q) ~-~ T_{pw}(D)\cdot c_{pw} ~-~ T_{pt}(D, D_S, r) \cdot c_{pd}(r) \\
-&~-~ T_{vt}(D_V) c_{vt} ~-~ T_{vx}(D_V) c_{vx}
-\end {aligned}
-$$
-$$
-\begin {aligned}
-s.t. ~&O(r) \equiv \frac {PKT}{VKT(r)} = \frac {D}{D_V} \\
-&O(r) \ge \bar {O} \\
-&D_V(D,D_S,r) = (D-D_S) (1+k_v(1)) + D_S \cdot (1+k_v(r))\\
-\end {aligned}
-$$
 
 
 ## RideAustin Data for Initial Test
@@ -269,15 +342,6 @@ knitr::include_graphics(here(figureLocPath, "Ride_Austin_Sample_Trips_in_Network
 knitr::include_graphics(here(figureLocPath, "Rides_per_weekday.png"))
 ```
 
-## RideAustin Ride Requests by Day of Week and Hour
-
-- Busiest ride period is weekend nights and early mornings
-
-```{r, echo=F, out.width='70%', fig.align='center', fig.cap='RideAustin Ride Requests by Day of Week and Hour'}
-# alt is Markdown syntax of ![alt text or image title](path/to/image)
-knitr::include_graphics(here(figureLocPath, "Ride_Requests_Day_of_Week_and_Hour.png"))
-```
-
 ## Illustrative Pooling Diagram
 
 ```{r, echo=F, out.width='90%', fig.align='center', fig.cap='Illustrative two household tradeoff of passenger and vehicle travel'}
@@ -285,93 +349,9 @@ knitr::include_graphics(here(figureLocPath, "Ride_Requests_Day_of_Week_and_Hour.
 knitr::include_graphics(here(figureLocPath, "Figure3_Illustrative_two_household_two_destination_tradeoff.png"))
 ```
 
-## Ride Pooling Algorithm
+- Evaluating pooling potential with ride pooling algorithm Sun & Zhang 2018, Alonso-Mora et al. 2017, applied to RideAustin data
 
-- Sun & Zhang 2018, Alonso-Mora et al. 2017
-- Establish ride sample time period, *n* rides
-- **Initialize**
-  - Generate compact abstract graph from street map for all Os and Ds
-  - Determine route distances, times among *all* nodes $\{O_1 ... O_n, D_1, ... D_n\}$
-    - i.e. $(2n)^2$ arcs
-  - Base Assignment: single car to single ride
-- **Iterate** (until no more ride insertions feasible)
-  - *Insertions* 
-    - Test inserting each unpooled ride *r* individually in all cars *k* w/ capacity
-    - Construct graph of time-feasible routes w/ insertions, distances
-  - *Assignment* ILP over $V_{kr} \in \{0,1\}$
-    - select insertions to max VKT reduction
-    - track APKT: passenger detours/delays
-
-## End Goal is Compilation of Costs Changes With Pooling, and Marginal Cost Analysis
-
-
-```{r, echo=F, out.width='70%', fig.align='center', fig.cap='Illustrative Cost Components'}
-# alt is Markdown syntax of ![alt text or image title](path/to/image)
-# source of this figure is MOSTv0.Rmd
-knitr::include_graphics(here(figureLocPath, "Illustrative_Cost_And_Occupancy_Standard_Analysis_MOSTv0.png"))
-```
-
-## Discussion: TNC Policy Planning/Data Challenges
-
-* Observability & Attribution
-  * Real deadhead miles v. deadhead miles registered for tax purposes
-  * Most TNC drivers use more than one service which complicates firm-level analysis of VMT/deadheading
-* Spatial accuracy
-  * GPS coordinates, times, when provided, are not always accurate 
-  * Other datasets round/blur location and time
-    * Taxi trip data
-* Ideally, need *demographics* and *trip purpose* for willingness to ride‐pool
-
-## Main Messages
-1. Automation is highly valuable and *market-driven*, hence likely in some form(s)
-    - time, safety, convenience, cost
-2. Automation can have profound effects on road travel, energy use, emissions
-3. For "Shared mobility" to help, need pooling (higher occupancy)
-4. Widespread (S)(A)Vehicle electrification can make a big difference. Has some advantages, but not assured.
-    - motivations and experience
-5. Refining understanding, but still a *wide range of potential outcomes* 
-    - tech, behavioral, and policy uncertainty
-6. Costs, incentives and policy matter
-    - roadway/curb access priorities
-    - road use charges
-    - occupancy incentives
-
-## Literature
-1. Sperling, Daniel. Three Revolutions: Steering Automated, Shared, and Electric Vehicles to a Better Future.
-Island Press, 2018.
-2. Fagnant, D. J., and K. M. Kockelman. The Travel and Environmental Implications of Shared Autonomous
-Vehicles, Using Agent‐Based Model Scenarios. Transportation Research Part C: Emerging Technologies,
-Vol. 40, 2014, pp. 1–13.
-3. Levin, M. W., K. M. Kockelman, S. D. Boyles, and T. Li. A General Framework for Modeling Shared
-Autonomous Vehicles with Dynamic Network‐Loading and Dynamic Ride‐Sharing Application.
-Computers, Environment and Urban Systems, Vol. 64, 2017, pp. 373–383.
-4. Henao, A., Marshall W.E. The impact of ride‐hailing on vehicle miles traveled. Transportation (2018).
-5. Tirachini, A., Gomex‐Lobo, A. Does ride sourcing increase or decrease vehicle kilometers traveled (VKT)?
-A simulation approach for the case of Santiago, Chile. Working Paper, November 2017
-
-## Literature Continued
-6. Lavieri, P.S., Dias, F.F, Ruiz Juri, N., Kuhr, J. Bhat, C.R. A Model of Ridesourcing Demand Generation and
-Distribution. TRB Journal. April 2018
-7. Ride Austin. (2017). Ride‐Austin‐june6‐april13 [Data file and code
-book]. Available from data.world: https://data.world/ride‐austin/ride‐austin‐june‐6‐april‐13
-8. Alonso‐Mora, J., Samaranayake, S., Wallar, A., Frazzoli, E., and Rus, D. On‐demand high‐capacity ridesharing
-via dynamic trip‐vehicle assignment. Proceedings of the National Academy of Sciences, January
-2017
-9. CARB, Clean Mile Standard, https://ww2.arb.ca.gov/our-work/programs/clean-miles-standard
-10. Sun, Yanshuo, and Lei Zhang. 2018. “Potential of Taxi-Pooling to Reduce Vehicle Miles Traveled in Washington, D.C.” Transportation Research Record 2672 (8): 775–84. https://doi.org/10.1177/0361198118801352.
-
-
-## Ridesharing and VKTs
-
-* Important studies (to be expanded)
-
-  * MIT algorithm improves real-time ride-pooling, reducing fleet size, passenger wait-times and total VKTs
-    * Javier Alonso-Mora, Samitha Samaranayake, Alex Wallar, Emilio Frazzoli, and Daniela Rus. On-demand high-capacity ride-sharing via dynamic trip-vehicle assignment. Proceedings of the National Academy of Sciences, January 2017.
-
-  * UT Austin study on Ride Austin ride sharing data provides 
-    * Patrícia S. Lavieri, Felipe F. Dias, Natalia Ruiz Juri, James Kuhr, Chandra R. Bhat. A Model of Ridesourcing Demand Generation and Distribution. TRB Journal. April 2018 
-
-## Outline 2: (Potentially) Important areas I do not plan on addressing
+## (Potentially) Important areas Not Addressed
 
 - Factors influencing adoption of electric drive
 - EV charging or H2 infrastructure issues
@@ -379,3 +359,4 @@ via dynamic trip‐vehicle assignment. Proceedings of the National Academy of Sc
 - International trends, prospect
 - Microtransit
 - Scooters
+
