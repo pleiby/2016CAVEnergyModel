@@ -97,7 +97,7 @@ shares_by_Automation <- shares_by_Automation %>%
     Fuel = ifelse(Fuel_Tech == "TOTAL", "TOTAL", Fuel)
   )
 
-#shares_by_Automation <- 
+#shares_by_Automation
 LDV_shares_by_F_A = shares_by_Automation %>%
   filter(Fuel != "TOTAL") %>%
   filter(VehSubClass != "TOTAL") %>%
@@ -215,7 +215,10 @@ HDV_shares_by_A %>%
 shares_by_F_A = HDV_shares_by_F_A %>%
   ungroup() %>%
   mutate(VC = ifelse(VC == "MDV_HDV", "HDV", VC)) %>%
-  union(LDV_shares_by_F_A)
+  #union(LDV_shares_by_F_A)
+  bind_rows(LDV_shares_by_F_A)
+
+
 glimpse(shares_by_F_A)
 
 # Checks - should all be 1.0
