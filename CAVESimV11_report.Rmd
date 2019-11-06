@@ -518,17 +518,25 @@ EnergyIntensityChanges %>%
 mechsBarChart <- function(mechs_df) {
   # mechs_df expected to have same structure as IEffects dataframe
   # Produced horizontal bar chart of effects by mechanism
-  mechs_df %>% 
-  # IEffects %>%
+  mechs_df %>%
     filter(VC=="LDV" & Year=="2050") %>%
     mutate(
       # uplim = ifelse(Opt < 0, Opt-Pess, Pess-Opt),
       # lolim = ifelse(Opt < 0, Pess, Opt)
-      uplim = ifelse(Opt < 0, Opt-Pess, Pess-Opt),
-      xlolim = ifelse(Opt < 0, Pess, Opt),
+      # try to generalize fn mechsBarChart() to account for bars spanning from negative to postive values (fails)
+      neglim = ifelse(Opt < 0 & Pess > 0, Opt, 0), # plot this neg bar segment
+      uplim = ifelse(Opt < 0 & Pess > 0,
+                     Pess,
+                     ifelse( Opt < 0,  
+                             Opt-Pess, Pess-Opt)
+                     ),
+      xlolim = ifelse(Opt < 0 & Pess > 0,
+                     0, # omit
+                     ifelse(Opt < 0, Pess, Opt)
+                     ),
       Mech = str_replace_all(Mech, "_", " ")
-    ) %>%
-    select(Mech, uplim, xlolim) %>% # name this way because bars plotted alphabetically
+    )  %>%
+    select(Mech, uplim, xlolim, neglim) %>% # name this way because bars plotted alphabetically
     gather(key = case, value = value, xlolim:uplim) -> temp_df
   # str(temp_df)
   # temp_df$Mech = with(temp_df, factor(Mech, levels = rev(levels(Mech))))
@@ -536,10 +544,10 @@ mechsBarChart <- function(mechs_df) {
   temp_df %>%
     ggplot(aes(x=factor(Mech), y = value, fill=case))+
     geom_bar(stat="identity", width=0.7) + #fill="steelblue")+
-    scale_fill_manual(values = c("steelblue", NA)) + # suppress the ploting of the lower/second bar
+    scale_fill_manual(values = c("steelblue", NA, "steelblue")) + # suppress the ploting of the lower/second bar
     coord_flip() +
     theme(legend.position = "none") + 
-    scale_y_continuous(breaks=seq(-50, 60, 10), limits = c(-50.0, 60.0)) + # still the y axis even though flipped
+    scale_y_continuous(breaks=seq(-50, 70, 10), limits = c(-50.0, 70.0)) + # still the y axis even though flipped
     xlab("Mechanism") + ylab("Percent Change") +
     theme(axis.title=element_text(face="bold",size="14",color="black"),
           axis.text=element_text(size=14,face="bold")) +
@@ -563,7 +571,7 @@ IEffects %>%
 ```
 
 
-```{r summaryIntensityMechanisms, echo=echoWorking, dpi=300, fig.width=7}
+```{r summaryIntensityMechanisms_wide, echo=echoWorking, dpi=300, fig.width=7}
 # IEffects[,order(ncol(IEffects):1)] %>% # reverse column order (has no effect)
 # IEffects$Mech <- factor(IEffects$name, levels = IEffects$name[order(x$val)])
 IEffects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech))))
@@ -571,6 +579,40 @@ IEffects %>%
 #  select()
   mechsBarChart()
 ```
+
+### TEMP Graphic: Demand Effects
+
+```{r buildIEffectsTemp, echo=echoWorking, dpi=300, fig.width=7}
+DEffectsTemp <- read.delim(textConnection("
+VC	:	Year	:	Mech	:	Opt	:	Mid	:	Pess	:	Zero
+LDV	:	2035	:	D_Underserved_travelers	:	0	:	6	:	10	:	0
+LDV	:	2035	:	D_Ride_Hailing_Empty_Miles	:	-20	:	30	:	50	:	0
+LDV	:	2035	:	D_Induced_VMT_Demand	:	15	:	25	:	67	:	0
+LDV	:	2050	:	D_Underserved_travelers	:	0	:	6	:	10	:	0
+LDV	:	2050	:	D_Ride_Hailing_Empty_Miles	:	-20	:	30	:	50	:	0
+LDV	:	2050	:	D_Induced_VMT_Demand	:	15	:	25	:	67	:	0
+"), header = TRUE, sep = ":", strip.white = TRUE) # ;
+
+#Effects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech))))
+DEffectsTemp %>%
+#  select()
+  mechsBarChart()
+
+```
+
+```{r combBar, echo=echoWorking, dpi=300, fig.width=7}
+IEffects %>%
+  mutate(
+    Mech = str_replace(Mech, "Congestion_mitigation", "Lower congestion"),
+    Mech = str_replace(Mech, "Automation_accessory_load", "Sensor/Computer load"),
+    Mech = str_replace(Mech, "Ride_Hailing_Empty_Miles", "Ride_Hailing_Empty_Miles"),
+    Mech = str_replace(Mech, "De_emphasized_performance", "De-emphasized_performance")
+  ) %>%
+bind_rows(DEffectsTemp) %>%
+  mechsBarChart()
+  
+```
+
 
 # 4. Demand Response to CAVs
 
@@ -2383,6 +2425,8 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
     geom_bar(stat = "identity") +
     facet_wrap(~CombScen) +
     scale_fill_brewer(palette = "Spectral") + # color with RcolorBrewer
+    theme(axis.title=element_text(face="bold",size="14",color="black"),
+          axis.text=element_text(size=14,face="bold")) +
     ggtitle(title, subtitle = subtitle) +
     ylab("Fractional Change")
 }
