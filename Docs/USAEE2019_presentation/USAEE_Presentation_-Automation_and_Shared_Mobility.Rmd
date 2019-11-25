@@ -4,14 +4,14 @@ subtitle: "Presented to USAEE 2019"
 author: Paul Leiby, Oak Ridge National Laboratory
 date: "November 6, 2019"
 output:
-  powerpoint_presentation: null
-  html_document: default
-  ioslides_presentation: default
-  pdf_document: default
   beamer_presentation:
     colortheme: dolphin
     fonttheme: structurebold
     theme: AnnArbor
+  html_document: default
+  ioslides_presentation: default
+  pdf_document: default
+  powerpoint_presentation: null
   word_document:
     df_print: kable
     fig_caption: yes
@@ -30,16 +30,21 @@ figureLocPath = paste("Docs", "ORNL_presentation", "figures", sep = "/")
 
 ## Outline: Opportunities for Road Transport Carbon Reduction through Automation and Shared Mobility
 
-1. Estimated Effects of Automation on road travel, energy use, emissions
+1. Estimated Effects of Automation on travel demand, energy efficiency
 2. Effect of Shared mobility on travel (PMT) while mitigating VMT
-3. Suitability/cost-effectiveness of electrification for Shared/Automated road travel
-4. Net implications for C emissions reduction
-5. Key Messages
+3. Suitability of electrification for Shared/Automated road travel
+4. Net implications for VMT, energy use
 
+## Multiple Factors Drive Energy/Oil Demand Outcomes: Helpful to Organize/Decompose with “ASIF” Framework
+
+
+```{r, echo=F, out.width='75%', fig.align='center', fig.cap='ASIF Decompostion - Block Diagram'}
+knitr::include_graphics(here(figureLocPath, "ASIF_Block_Diagram.png"))
+```
 
 ## 1. Effects of Automation on road travel, energy use, emissions
 
-### Expected importance of full (generalized) costs
+### Travel Costs Per Mile:  Value of driver’s time is single largest cost of operating a vehicle. Fuel is <15% for cars, 35% for heavy trucks.
 
 ```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Base Vehicle Cost Components'}
 knitr::include_graphics(here(figureLocPath, "baseCostComponStackedBarGraph-1.png"))
@@ -51,22 +56,16 @@ knitr::include_graphics(here(figureLocPath, "baseCostComponStackedBarGraph-1.png
 knitr::include_graphics(here(figureLocPath, "altCostComponStackedBarGraph-14_Scen_C_TS9.png"))
 ```
 
-## 1.2 Mechanisms and effects - Changing Energy Intensity and Travel Demand
+## 1.2 CAV Mechanisms and Effects – Estimated Changes to LDV Energy Intensity and Travel Demand
 
 ```{r, echo=F, out.width='75%', fig.align='center', fig.cap='Multiple mechanisms can alter vehicle energy intensity and travel'}
-knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_intensity_and_activity_barV20191106wide.png"))
+knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_intensity_and_activity_barV20191106final.png"))
 # knitr::include_graphics(here(figureLocPath, "CAV_multiple_mechanisms_can_alter_intensity_and_activity_barV20191106.png"))
 ```
+Multiple mechanisms can alter vehicle energy intensity and travel.
 Impacts vary with connectivity, powertrain, and operating conditions.
 
 
-## Types of demand responses
-  - underserved groups
-  - cost-based travel demand response
-  - freight response
-  - pooling/sharing (defer to part 2)
-  - short and long-run (land-use) implications
-  
 ## 1.3 Value (Cost) of Travel Time
 - importance and heterogeneity
   - Fraction of wage rate (non-work) ~ 35% - 60% (DOT)
@@ -77,8 +76,9 @@ Impacts vary with connectivity, powertrain, and operating conditions.
 - Evidence to date and on-going research
   - chauffer experiment
   - empirical work: 
-    - using proxies for CAV
-- results/insights for demand effect
+    - Stated preference
+    - RP using proxies for CAV (transit, train, ride share)
+- Some evidence for 20% - 75% Time Cost reduction, for personal CAV trips
 
 ## Studies: Relative Value of Time by Trip Purpose
 - Work Purpose (relative to personal time)
@@ -91,22 +91,9 @@ Impacts vary with connectivity, powertrain, and operating conditions.
   - Commute v Shopping 	1.16
   - Shopping v Leisure 	0.84
 
-## Estimates of the Household Vehicles Replacable by SAVs While Satisfing Demand
-
-- Some simulation Studies show optimized ride services meet 90%+ trip demand with "acceptable" delay and 4-12X reduction in vehicles
-
-**Private Veh Replacement**| **Notes**             | **Source**
-------------------|----------------------------|------------------------
-3:1                   |Singapore                    | Speiser et al 2014.
-3.6:1                 |Peak travel hour, no pooling |Levin et al. 2017
-7:1 - 11:1            |Range of Austin simulations |Fagnant & Kockelman, 2014, 2016, Chen, Kockelman, Hanna, 2016, Loeb, Kockelman, Liu, 2017
-17:1, 31:1           |Pooled SAVs. Peak est. in CBD, pooling of 3-4 |Johnson 2016, Levin et al. 2017
-
-- but not necess fewer vehicles on the road or less VMT
-
 ## 2. Effect of Shared mobility on Travel (PMT) while mitigating Traffic (VMT)
 
-#### Empirical data so far show large increase in VMT from TNCs
+#### Empirical data so far show large increase in VMT from TNCs. Empty miles from optimized (single) automated TNC could be lower.
 
 Empty Fraction of TNC Miles	|	Study	|	Comments
 --------------------|--------------------|------------------------------
@@ -118,30 +105,33 @@ Empty Fraction of TNC Miles	|	Study	|	Comments
 45%	| Wenzel et al. 2019	  |		RideAustin data, 26% for between-ride, 19% commuting.
 20%	|Loeb et al 2018	      |		**Simulation** satisfying 40% of all trips under  50 miles in Austin
 
-- Our estimates of pooling potential???
+
+## Shared Mobility Could Sharply Reduce Number of Vehicles Needed to Meet Demand
+
+- Some simulation studies show optimized ride services meet 90%+ trip demand with "acceptable" delay and 4-12X reduction in vehicles
+
+**Private Veh Replacement**| **Notes**             | **Source**
+------------------|----------------------------|------------------------
+3:1                   |Singapore                    | Speiser et al 2014.
+3.6:1                 |Peak travel hour, no pooling |Levin et al. 2017
+7:1 - 11:1            |Range of Austin simulations |Fagnant & Kockelman, 2014, 2016, Chen, Kockelman, Hanna, 2016, Loeb, Kockelman, Liu, 2017
+17:1+                 |Pooled SAVs. Peak est. in CBD, pooling of 3-4 |Johnson 2016, Levin et al. 2017
+
+- Not necess fewer vehicles on the road or less VMT.
+- Much more intensively used, higher-turnover, vehicles.
 
 ## 3. Suitability/cost-effectiveness of electrification for Shared/Automated road travel
 - Classic reasoning:
   - EVs, with high capital cost, low operating costs, and long service-life are better/well-suited to high-utilization (high VMT) applications
-  - AVs make time/inconvenience of recharging
-  - AVs have high "auxilliary feature" loads, amplifying the problem of EV energy management, exacerbating range problem
+  - AVs make time/inconvenience of recharging less salient
+- However
   - SAVs are profit oriented, and can ill-afford to be taken out of service long for recharging
+  - AVs have high "auxilliary feature" loads, amplifying the problem of EV energy management, exacerbating range problem under low-speed operation
 - Simple Calculations:
 - Research:
   - 30% of Public DC Fast-charging in SF is TNC vehicles (Jenn 2019)
 
-## Exploring CAVs and Shared Mobility at Aggregate Level with CAVESIM
-
-* Top-Down Methodology for modeling CAV Energy/Travel Demand
-  * VKT, energy as function of cost/time-value/income/budget
-  * Model estimates national (or regional) changes in VKT, fuel use
-  * Founded in economic theory
-    * emphasizes importance of cost economics for outcomes
-  * Representative travelers behave according to constrained utility (preference) max
-* (Computational) Side study: Benchmarking VKT, PKT and cost impacts of Ride *Pooling* from real ride-service trip data
-
-## 4. Net implications for Energy Use
-
+## 4. Net implications for Energy Use/Travel Demand - Top-Down Methodology for modeling CAVs
 #### (SMART Workflow) Scenario Results for Energy Efficiency, VKT and Energy Use
 
 ```{r, echo=F, out.width='50%', fig.align='center', fig.cap='Scenario B-High and C-High'}
@@ -156,7 +146,7 @@ knitr::include_graphics(here(figureLocPath, "policyAndScenarioCalcs2-1.png"))
 knitr::include_graphics(here(figureLocPath, "Demand_intensity_fuel_use_multiplier_distribution20190607.png"))
 ```
 
-- Source: Gohlke et al. 2019. CAV Energy Bounding Study.
+- Source: Gohlke et al. 20192019. National-Level Light-Duty CAV Outcomes and Scenarios Synthesis.
 
 ## 4.1 Exploration of Sensitivity of Outcomes to Economic Costs/Signals
 
@@ -166,13 +156,24 @@ knitr::include_graphics(here(figureLocPath, "VMT_change_for_VMT_Incr_cost.png"))
 
 * Figure: Aggregate result for changes to vehicle energy intensity, VKT and energy use from disaggregated scenarios
 
+## Models Simulating Activity and Travel at Meso-scale Also Highlight Uncertain Potential for VMT and Energy Rebound at High Automation, Importance of Technology Improvements 
+
+```{r, echo=F, out.width='65%', fig.align='center', fig.cap='Results from POLARIS, Auld et al. ANL'}
+knitr::include_graphics(here(figureLocPath, "AuldEtAl2019_Meso-scale_Models_Also_Highlight_Uncertain_Potential.png"))
+```
+
+- Source: Auld, Joshua, et al., Argonne National Laboratory. “Impact of Connected and Automated Vehicle (CAV) Technologies on Travel Demand and Energy”, U.S. DOE Vehicle Technologies Office 2019.
+
+## Incentives Can Promote Higher Mobility Energy Productivity. Cost Signals Can Influence Energy & VMT Outcomes.
 
 ## Summary
 1. Automation is highly valuable and *market-driven*, hence likely in some form(s)
     - time, safety, convenience, cost advantages
-2. Automation can have significant VMT and energy use effects from Induced Demand and Unoccupied Travel
+2. Automation can have significant VMT and energy use effects
+   - from Induced Demand and Unoccupied Travel
 3. For "Shared mobility" to help, need pooling (higher occupancy)
-4. Widespread electrification can make a big difference. Has some advantages, but not assured.
+4. Widespread electrification can make a big difference.
+    - Has some advantages, but not assured.
 5. Refining understanding, but still a *wide range of potential outcomes* 
     - tech, behavioral, and policy uncertainty
 6. Costs, incentives and policy matter
@@ -359,4 +360,22 @@ knitr::include_graphics(here(figureLocPath, "Figure3_Illustrative_two_household_
 - International trends, prospect
 - Microtransit
 - Scooters
+
+
+## Types of demand responses
+  - underserved groups
+  - cost-based travel demand response
+  - freight response
+  - pooling/sharing (defer to part 2)
+  - short and long-run (land-use) implications
+
+## Exploring CAVs and Shared Mobility at Aggregate Level with CAVESIM
+
+* Top-Down Methodology for modeling CAV Energy/Travel Demand
+  * VKT, energy as function of cost/time-value/income/budget
+  * Model estimates national (or regional) changes in VKT, fuel use
+  * Founded in economic theory
+    * emphasizes importance of cost economics for outcomes
+  * Representative travelers behave according to constrained utility (preference) max
+* (Computational) Side study: Benchmarking VKT, PKT and cost impacts of Ride *Pooling* from real ride-service trip data
 
