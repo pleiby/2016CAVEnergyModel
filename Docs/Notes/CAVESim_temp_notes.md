@@ -1,4 +1,11 @@
-CAVESIM Temp Notes for Development
+---
+title: "CAVSIM Notes and Next Steps"
+author: "Paul Leiby"
+date: "12/18/2018"
+output: word_document
+---
+
+CAVESIM Temp Notes for Development and Next Steps
 ==================================
 
 Completed 20190922 CAVdecom version
@@ -120,6 +127,7 @@ ToDo Next 20190927
         - account for overall demand reduction with VMT (from efficient tax computation)
         - exclude shift toward pooled with universal VMT charge
         - exclude shift away from pooled with shared veh-only VMT charge
+
 Next Steps for Benchmarking and Refining
 -----------------------------------------
 - Include vehicle type shifts in TechScen
@@ -159,3 +167,10 @@ ToDos for Refining
     - collapse the two long, largely duplicative, functions into 1, or have the second call the first
 
 - Section 8: need to extract VTCostAlt from full set of CaseAssumptions, selecting out DemScen, TechScen, ElasCase of interest.
+
+Factors to Highlight
+---------------------
+- effect of costs of CAV on VKT and Energy use
+- effect of vehicle efficiency
+- effect of delays/detours and willingness-to-pool on VMT
+  - need mix between pooled vs hailed within Shared ridership fraction
