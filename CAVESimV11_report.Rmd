@@ -2213,22 +2213,22 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
     ) %>%
     #  inner_join(select(CombScen_Combinations_subset, -Notes),
     #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
-    mutate(Joint_Share = F_A_Shares * U_Shares) %>%
+    mutate(Joint_FAU_Share = F_A_Shares * U_Shares) %>%
     mutate(
-      fracVMTIncr = fracVMTIncr * Joint_Share,
-      NIE = NIE * Joint_Share,
-      C_Fuel = C_Fuel * Joint_Share,
-      C_Time = C_Time * Joint_Share,
-      C_VNonF = C_VNonF * Joint_Share,
-      C_Total = C_Total * Joint_Share,
-      ElasVKT = ElasVKT * Joint_Share,
-      RidePoolAdjFrac = RidePoolAdjFrac * Joint_Share,
-      USDmult = USDmult * Joint_Share,
-      mI_A = mI_A * Joint_Share,
-      mI_C = mI_C * Joint_Share,
-      mI_FA = mI_FA * Joint_Share,
-      mI_FB = mI_FB * Joint_Share,
-      mD_U = mD_U * Joint_Share
+      fracVMTIncr = fracVMTIncr * Joint_FAU_Share,
+      NIE = NIE * Joint_FAU_Share,
+      C_Fuel = C_Fuel * Joint_FAU_Share,
+      C_Time = C_Time * Joint_FAU_Share,
+      C_VNonF = C_VNonF * Joint_FAU_Share,
+      C_Total = C_Total * Joint_FAU_Share,
+      ElasVKT = ElasVKT * Joint_FAU_Share,
+      RidePoolAdjFrac = RidePoolAdjFrac * Joint_FAU_Share,
+      USDmult = USDmult * Joint_FAU_Share,
+      mI_A = mI_A * Joint_FAU_Share,
+      mI_C = mI_C * Joint_FAU_Share,
+      mI_FA = mI_FA * Joint_FAU_Share,
+      mI_FB = mI_FB * Joint_FAU_Share,
+      mD_U = mD_U * Joint_FAU_Share
     ) %>%
     # Allow aggregation of sub segments of the market
     filter(Automation %in% auto_set) %>%
@@ -2239,7 +2239,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
       fracVMTIncr = sum(fracVMTIncr),
       NIE = sum(NIE),
       EnergyUse = sum(EnergyUse),
-      totshare = sum(Joint_Share),
+      totshare = sum(Joint_FAU_Share),
       F_A_Shares = sum(F_A_Shares),
       U_Shares = sum(U_Shares),
       C_Fuel = sum(C_Fuel),
@@ -2279,17 +2279,17 @@ aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
     ) %>%
     #  inner_join(select(CombScen_Combinations_subset, -Notes),
     #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
-    mutate(Joint_Share = F_A_Shares * U_Shares) %>%
+    mutate(Joint_FAU_Share = F_A_Shares * U_Shares) %>%
     mutate( # to share-weighted values
-      fracVMTIncr = fracVMTIncr * Joint_Share,
-      NIE = NIE * Joint_Share
+      fracVMTIncr = fracVMTIncr * Joint_FAU_Share,
+      NIE = NIE * Joint_FAU_Share
     ) %>%
     group_by(CombScen, DemScen, TechScen, ElasCase, VC, Year) %>%
     summarize(
       fracVMTIncr = sum(fracVMTIncr),
       NIE = sum(NIE),
       EnergyUse = sum(EnergyUse),
-      totshare = sum(Joint_Share) # this is a check
+      totshare = sum(Joint_FAU_Share) # this is a check
     ) %>%
     ungroup() # %>%
 }
