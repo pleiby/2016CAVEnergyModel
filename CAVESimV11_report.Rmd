@@ -5,7 +5,7 @@ author:
   name: Paul N. Leiby
   affiliation: Oak Ridge National Laboratory
   email: leibypn@ornl.gov
-date: Rev. 2019-11-04, Printed `r Sys.Date()`
+date: Rev. 2019-11-26, Printed `r Sys.Date()`
 output:
   word_document:
     df_print: kable
@@ -17,7 +17,7 @@ output:
   html_document:
     df_print: paged
     toc: yes
-file: CAVESimV10.Rmd
+file: CAVESimV11_report.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
   modeling
 address:
@@ -30,7 +30,7 @@ abstract: A compact and aggregated model of road vehicle travel and energy use i
   specification of driver/traveler behavior. Vehicle efficiency, travel (vehicle-kilometers
   traveled), average travel speed, congestion, and travel time are endogenous. Following
   Small and Verhoef (2007) and others, utility derives from travel, aggregate goods
-  consumption, and liesure, subject to individual budget and time constraints.
+  consumption, and leisure, subject to individual budget and time constraints.
 ---
 
 ```{r global_options, include=FALSE}
