@@ -1,7 +1,7 @@
 ---
-title: "CAVSIM Notes and Next Steps"
+title: "CAVESIM Notes and Next Steps"
 author: "Paul Leiby"
-date: "12/18/2018"
+date: "11/26/2019"
 output: word_document
 ---
 
@@ -82,23 +82,21 @@ ToDo Next 20190927
 --------------------
 - [x] 1. Establish technology and demand scenario assump starting points in CAVdecom code
     - Eliminate refs to spreadsheet tests, reading and melding of spreadsheet params
-- [ ] 2. Break out key parameter dataframes and save as CSVs
 - [x] 2. Save as CAVESIMver10.Rmd
 - [x] 3. Establish new set of scenarios: Base, B-Low, B-High, C-low, C-high
 - [x] 4. Include Automation_accessory_Load Energy use 
     - (convert kW to fraction of base vehicle average energy use (V [MPH] / E [MPG]) * kWh/Gal * EngineEffiency= kWh/h 
     - or get estimate of ave power use by vehicle
-- [x] 5a. Update VoTT to conform to the scenarios overall
-- [ ] 5b. Update VoTT to conform to the scenarios
+- [x] 5a. Update VoTT to conform to the scenarios overall (but not in detail)
 6. Update vehicle categories and stock-related data to conform to the analysis
-    - K_CSDAO
-        - [ ] C Class: LDV vs MDHDV
-        - [ ] S Subclass: {Car vs LtTruck}, {Class8 vs Other}
-            - Car {CAR_COMPACT, CAR_MID, CAR_FULL}
-            - LtTruck {SUC_COMPACT ... SUV_FULL_SIZE, TRUCK_MID, TRUCK_FULL}
-        - [x] F Fuel/Drivetrain technology
+    - K_CSFAO
+        - [X] C "VehClass/VC": LDV vs MDHDV
+        - [ ] S "VehSubclass": {Car vs LtTruck}, {Class8 vs Other} - Aggregated these in our analysis so far
+            - Car {CAR_COMPACT, CAR_MIDSIZE, CAR_FULL}
+            - LtTruck {SUV_COMPACT, SUV_MIDSIZE, SUV_FULL_SIZE, TRUCK_MIDSIZE, TRUCK_FULL}
+        - [x] F "Fuel_Tech" (Fuel/Drivetrain technology)
             - [x] Summary categories:
-                - Conventional (Conventional, Conv-48V)
+                - Conventional {Conventional, Conv-48V}
                 - HEV
                 - PHEV
                 - BEV
@@ -107,11 +105,11 @@ ToDo Next 20190927
             - No (Manual)
             - Partial
             - Full
-        - [x] O Ownership/Operation
+        - [x] O Ownership/Operation (at this point, only affects extend of Empty VMT)
             - Private
             - Shared
-    - [x] Automations shares by tech and Fuel/Drive
-    - [x] No vs. Partial vs. Full AV shares
+    - [ ] Automation's shares by "Fuel_Tech" (Drive)
+        - [x] No vs. Partial vs. Full AV shares
     - [ ] shares/quantities of vehicles by class: 
         - LDV (Cars, LtTrucks) and HDV Stock, determineed by AEO Base aggregate energy demand
 - [ ] Update reference ride sharing in each scenario
@@ -119,14 +117,34 @@ ToDo Next 20190927
 - [x] Update Base impact of automation/sharing on VMT (repositioning empty ZOV miles)
     - see comparison with POLARIS
 - Results
-    - [ ] Produce Bar charts of AV cost components and shares
-    - [ ] Produce Bar charts of energy intensity, VMT and energy
+    - [x] Produce Bar charts of AV cost components and shares
+    - [x] Produce Bar charts of energy intensity, VMT and energy
     - [ ] Produce Graphs of energy, VMT, PMT vs occupancy, for 
     - [ ] Produce Graphs of energy use vs cost (by mile and gallon)
     - [ ] Plot of VMT, PMT vs incentive, accounting for fraction of travel that is shared (and potentially pooled)
         - account for overall demand reduction with VMT (from efficient tax computation)
         - exclude shift toward pooled with universal VMT charge
         - exclude shift away from pooled with shared veh-only VMT charge
+
+20191002 Version CAVESIMver10
+--------------------------------
+- modify Sec. 6.3 Est Scenario effects:
+    - Scenario with economic response to occupance and road charge
+    - For shared mobility, differentiate between
+        - PMT cost VMT cost
+        - PMT demand and VMT demand
+- make assumptions re Pooling impact on VMT through params in chunk setDemandAndPoolingParams
+    - elas_VoTT_wrt_Pooling
+    - Elas_TourLength_wrt_Pooling
+    - Elas_RiderDetour_wrt_Pooling
+    - PacePi
+    - ReductPaceAutomation
+- make Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use (Shared vs. Private)
+    - for Use == "Shared", adjust mD_U = (1 + RidePoolAdjFrac)
+- Added Dem/Tech scen cost charts for selects SMART scenarios (Base, B_Low/B_High, C_Low/C_High)
+  - Note: have to choose TechScen cases to match with these DemScen cases
+- Modify output for Capstone contribution
+  - fine-tune graph titles, resolution
 
 Next Steps for Benchmarking and Refining
 -----------------------------------------
@@ -168,9 +186,60 @@ ToDos for Refining
 
 - Section 8: need to extract VTCostAlt from full set of CaseAssumptions, selecting out DemScen, TechScen, ElasCase of interest.
 
-Factors to Highlight
+Planned Steps for Revised Contribution to Capstone Report 20191127
 ---------------------
+#### worthwhile points/approaches from bounds works
+- 
+
+#### Factors to Highlight
 - effect of costs of CAV on VKT and Energy use
 - effect of vehicle efficiency
 - effect of delays/detours and willingness-to-pool on VMT
   - need mix between pooled vs hailed within Shared ridership fraction
+- make Scenario effects randomized (disribution)
+- show effect of incentives (road use charge, sharing incentives)
+
+ToDo Next 20191127
+--------------------
+- [ ] 4. Revisit Automation_accessory_Load Energy use 
+    - (convert kW to fraction of base vehicle average energy use (V [MPH] / E [MPG]) * kWh/Gal * EngineEffiency= kWh/h 
+    - or get estimate of ave power use by vehicle
+- [ ] 5b. More careful Update VoTT cases to conform to the scenarios detail
+- [ ] 5c. More careful Update VoTT cases to conform to the scenarios detail
+- [ ] 6. Refine vehicle categories and stock-related data to conform to the analysis
+    - K_CSFAO
+        - [X] C "VehClass/VC": LDV vs MDHDV
+        - [ ] S "VehSubclass": {Car vs LtTruck}, {Class8 vs Other} - Aggregated these in our analysis so far
+            - Car {CAR_COMPACT, CAR_MIDSIZE, CAR_FULL}
+            - LtTruck {SUV_COMPACT, SUV_MIDSIZE, SUV_FULL_SIZE, TRUCK_MIDSIZE, TRUCK_FULL}
+        - [x] F "Fuel_Tech" (Fuel/Drivetrain technology)
+            - [x] Summary categories:
+                - Conventional {Conventional, Conv-48V}
+                - HEV
+                - PHEV
+                - BEV
+        - [ ] Elect veh vs "conventional" drivetrain efficiency adjustment
+        - [x] Automation
+            - No (Manual)
+            - Partial
+            - Full
+        - [x] O Ownership/Operation (at this point, only affects extend of Empty VMT)
+            - Private
+            - Shared
+    - [ ] Automation's shares by "Fuel_Tech" (Drive)
+        - [x] No vs. Partial vs. Full AV shares
+    - [ ] shares/quantities of vehicles by class: 
+        - LDV (Cars, LtTrucks) and HDV Stock, determineed by AEO Base aggregate energy demand
+- [ ] 7. Check/Update reference ride sharing in each scenario
+    - use total shares from POLARIS
+- [ ] 8. Update Base impact of automation/sharing on VMT (repositioning empty ZOV miles)
+    - see comparison with POLARIS
+- Results
+    - [x] Produce Bar charts of AV cost components and shares
+    - [x] Produce Bar charts of energy intensity, VMT and energy
+    - [ ] Produce Graphs of energy, VMT, PMT vs occupancy, for 
+    - [ ] Produce Graphs of energy use vs cost (by mile and gallon)
+    - [ ] Plot of VMT, PMT vs incentive, accounting for fraction of travel that is shared (and potentially pooled)
+        - account for overall demand reduction with VMT (from efficient tax computation)
+        - exclude shift toward pooled with universal VMT charge
+        - exclude shift away from pooled with shared veh-only VMT charge
