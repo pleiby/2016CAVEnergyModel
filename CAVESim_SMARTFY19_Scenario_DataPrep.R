@@ -15,28 +15,46 @@
 # These are tne names of the Scenario Common Assumptions Files, 
 #  which were extracted fromm SMART FY19 Workflow spreadsheets
 
+Scenario_Assumptions_Basic_filename = "SMART_FY19_Scenario_Common_Assumptions_ 190821_v4_Basic_Reformatted.csv"
+
 Scenario_Assumptions_Vehicles_LDV_filename = "SMART_FY19_Scenario_Common_Assumptions_ 190821_v4_Vehicles_LDV_Reformatted.csv"
 
 Scenario_Assumptions_Vehicles_HDV_filename = "SMART_FY19_Scenario_Common_Assumptions_ 190821_v4_Vehicles_MD_HD_Reformatted.csv"
 
 Scenario_Assumptions_VoTT_filename = "SMART_FY19_Scenario_Common_Assumptions_ 190821_v4_Basic_VoTT_Factor_Table.csv"
 
-Scenario_Assumptions_Sharing_filename ="SMART_FY19_Scenario_Assumptions_Vehicle_Sharing_and_Retirement_20190815.csv"
-
-Scenario_Assumptions_Basic_filename =
-"SMART_FY19_Scenario_Common_Assumptions_ 190821_v4_Basic_Reformatted.csv"
+Scenario_Assumptions_Sharing_filename = "SMART_FY19_Scenario_Assumptions_Vehicle_Sharing_and_Retirement_20190815.csv"
 
 # read the Scenario Common Assumptions Files,
 library(tidyverse)
 
+# This data file includes overall SMART Scenario assumptions (across Scenario in columns) for
+#   Overall assumed penetration shares, by 
+#    Sector: Passenger (LDV) & Freight (MDV_HDV)
+#    Class: Vehicle size classes, LDV for Car, SUV, LtTruck, and MDV_HDV various classes
+#    Powertrain: Fuel (Gas, Dies, BEV) x Technology (Conv, 48V, HEV, PHEV, BEV)
+#   Also includes general params re 
+#    VoTT_Impact (factors, in {Zero, Low, High}; 
+#    Shared Use VMT expansion factors due to empty/ZOV travel (by Partial and Full Automation));
+#    Accessory Power Load (in Watts, by Partial and Full Automation)
+ScenAssumps_Basic <- read_csv(paste0("./Data/", 
+                                     Scenario_Assumptions_Basic_filename), comment = '#')
+# These 2 data file include, for LDV and HDV (MD_HD) sectors respectively:
+#   Overall assumed penetration shares (by VehClass, VehSubClass.Fuel_Tech, and Automation) vs. SMART Scenario
 ScenAssumps_LDV <- read_csv(paste0("./Data/", 
                       Scenario_Assumptions_Vehicles_LDV_filename), comment = '#')
 ScenAssumps_HDV <- read_csv(paste0("./Data/", 
                       Scenario_Assumptions_Vehicles_HDV_filename), comment = '#')
-ScenAssumps_Basic <- read_csv(paste0("./Data/", 
-                      Scenario_Assumptions_Basic_filename), comment = '#')
+# Data file including VoTT multiplier factors (Arterial and Highway)
+#   by scenario-based "VoTT_Impact" (Zero, Low, High)
+#   by "Congestion" (Low, High)
+#   by "TimeSensitivity" (Low, High)
+#   by "CAVs" automation level (Low, High)
 ScenAssumps_VoTT <- read_csv(paste0("./Data/", 
                       Scenario_Assumptions_VoTT_filename), comment = '#')
+# This Data file includes benchmarking estimates, by meso-scale Model (POLARIS, BEAM) and SMART Scenario
+#   of of TNC_vehicle_share (1-Private_vehicle_share)
+#   of "TNC_mode_share", fraction or road trips satisfied by TNC
 ScenAssumps_Sharing <- read_csv(paste0("./Data/", 
                       Scenario_Assumptions_Sharing_filename), comment = '#')
 #```
