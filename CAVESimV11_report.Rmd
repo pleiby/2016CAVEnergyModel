@@ -7,15 +7,18 @@ author:
   email: leibypn@ornl.gov
 date: Rev. 2019-11-26, Printed `r Sys.Date()`
 output:
+  html_document:
+    df_print: paged
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
+    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: Template_CAVs_CapstoneReport_20190701.docx
-    toc: yes
-  html_document:
-    df_print: paged
     toc: yes
 file: CAVESimV11_report.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -146,7 +149,7 @@ Transportation GHG emissions are then the sum over all transportation modes, veh
 
 $$G_t = \Sigma_{m,v} (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I(\vec x_{tmv}) ~\Sigma_f g_{tf} \phi_{tmvf}$$
 
-Defining indices
+#### Defining indices
 
 - m = transportation mode
 - v = vehicle type
@@ -206,7 +209,12 @@ and could be further decomposed into vehicle size classes, and drivetrain classe
 
 Mechanisms by Which CAVs Can Alter Energy Use and Emissions
 ---------------------------
-We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicle automation, each $k \in K$ of which has an effect represented by multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. In general, a mechanism can affect travel activity levels *A*, vehicle energy intensities *I*, or mode and fuel shares $\sigma, \phi$. 
+We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicle automation, each $k \in K$ of which has an effect represented by multiplier $\mu_k$ that can increase or decrease a component term in the ASIF decomposition. In general, a mechanism can affect 
+
+- travel activity levels *A*, 
+- vehicle energy intensities *I*, or 
+- mode and fuel shares $\sigma, \phi$.
+
 Furthermore, a mechanism could also effect vehicle class shares or occupancy, but we do not yet consider such effects. 
 
 Taking a Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. For each scenario values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Combined Technology/Demand scenario *s*, i.e. $\mu_{tvks}$???.
@@ -325,36 +333,32 @@ A multiplier value of 1.0 indicates no change and less/greater than one implies 
 ```{r constrIEffects, warning=FALSE, echo=echoWorking}
 # Get (compound) case name and split into separate variables for each part
 
-# IEffects$EffectCase = row.names(IEffects)
-# IEffects = separate(data=IEffects, col=EffectCase, into=c("VC","Year", "Mech"), sep="\\.")
-
 # From percent-change to fractional-change, then to multiplier
 IEffectsm <- IEffects %>%
   gather(key = EffectCase, value = "IE", Opt:Zero) %>%
   mutate(IE = IE / 100.0) %>%
   mutate(IM = 1 + IE) # These Intensity Multipliers are the "mu" factors
 
-# IM = dataframe(TechScen, DemScen, Mech, Year, VC) # intensity multiplying factors
+# Intensity effects as fractional change and multiplying factors by (VC, Year, Mech, EffectCase)
 
-IM <- IEffectsm %>%
+# spread out IM for EffectCases and display table
+IEffectsm %>%
   select(-IE) %>%
   spread(key = EffectCase, value = IM) %>%
-  arrange(desc(VC), Year)
+  arrange(desc(VC), Year) %>%
 # arrange(order(match(Mech, IEffects$Mech)))
 # sort columns same way as original data frame
-IM <- IM[, c(colnames(IEffects))]
-
-kable(
-  x = IM,
-  caption = "Intensity Multipliers by Vehicle-type, Year, Mechanism, and Case"
-)
+  select(colnames(IEffects)) %>%
+  kable(
+    caption = "Table: Intensity Multipliers by Vehicle-type, Year, Mechanism, and Case"
+  )
 ```
 
 Note "Right_sizing" and "Increased_feature_load" apply only to LDV passenger travel.
 
 ### 3.2 Energy Intensity by Vehicle Type and Technology Scenario, by Composing Mechanism Effects
 
-We construct Scenario Multipliers $\mu_{jtv}$ (supressing subscripts *m, f*) for the vehicle energy intensity of each Scenario *j*, for Year *t* and Vehicle class *v*. These overall intensity multipliers for technology scenario *j* reflect the combined the effect of all the mechanisms on vehicle energy intensity.
+We construct Scenario Multipliers $\mu_{jtv}$ (supressing subscripts *m, f*) for the vehicle energy intensity of each Tech Scenario *j*, for Year *t* and Vehicle class *v*. These overall intensity multipliers for technology scenario *j* reflect the combined the effect of all the mechanisms on vehicle energy intensity.
 
 For each technology scenario *j*, year *t*, vehicle class *v*, the estimated "EffectCase" or effect sensitivity case *s* is specified for each mechanism *k*, i.e. 
 
@@ -363,33 +367,23 @@ $s \in \{Zero, Low, Mid, High\}$.
 
 This Effect Sensitivity case *s* determines the appropriate intensity multiplier for each mechanism in the technology scenario.
 
+The `EffectCase` indicates a discrete point in the range of potential mechanism impacts provided as multipliers $\mu_{tvks}$ in the array `IEffectsm`
+
+#### Establish the (exogenous) mapping between Technology Scenarios and the `EffectCase` for each Mechanism
+
+Read a data file with scenario names, descriptions, `TechScen` number,  
+and EffectCase level assumed for each mechanism `Mech` by vehicle class `VC` and `Year`.
+Note: `Demand_Scenario` number in this file is unused/deprecated.
+
 ```{r constructIntensityByScenMech, echo=echoWorking, warning=FALSE, message=FALSE}
 # Load the descriptions of the scenarios
-mechScenAssumps <- read_csv(paste0("./Data/", "CAV_Scenario_Master.csv"), comment = "#")
-# This table contains: tech scenario number and demand scenario number;
-# scenario name and description; and assumptions re setting levels (Zero, Low, Mid, High) for each mechanism .
+mechScenAssumps <- read_csv(paste0("./Data/", "CAV_Scenario_Descriptions.csv"), comment = "#")
+# This table contains: tech scenario number and (unused) demand scenario number;
+# scenario name and description. 
+# Assumptions re setting levels (Zero, Low, Mid, High) for each mechanism now in separate file.
 # If a "results" csv file, Also includes Check Values: resulting energy intensity fractional change Multipliers for LDV and HDV in 2 years;
-
-mechScenDescriptors <- mechScenAssumps %>%
-  select(TechScen, Demand_Scenario, Scenario_Name, Scenario_Description)
-
-
-msa <- mechScenAssumps %>%
-  # select(-c(LDV_Multipliers.2035:Scenario_Description)) %>% # if a result CSV file, drop aggregated result for scenario and Name, Description
-  select(-c(Scenario_Name:Scenario_Description)) %>% # drop scenario Name, Description
-  gather(key = VehMechYear, value = EffectCase, LDV.Platooning.2035:HDV.Higher_highway_speeds.2050)
-msa <- separate(msa, VehMechYear, c("VC", "Mech", "Year"), sep = "\\.")
-msa$Year <- as.integer(msa$Year)
-
-# Match Energy Intensity Impacts for each mechanism in the scenario to the
-#   Scenario Assumptions for that mechanism:
-#   IEffectsm$IM is the intensity multiplier for each VC, Year, Mech (mech) and EffectCase
-#   msa$EffectCase is one of (Zero, Opt, Mid, Pess) for each VC, Year, Mech
-# IEffectsm has 128 = 2 x 2 x 8 x 4, while msa has 224 rows
-# merge, keeping matching rows from second, bringing in IE and IM for each Mech
-msa <- left_join(msa, IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
-  select(-c(Demand_Scenario, IE)) # drop fractional reductions, keep multipliers
 ```
+
 ```{r readTechScenCases, echo=echoWorking} 
 # warning=FALSE, message=FALSE}
 TechScenAssumps <- read_csv(paste0("./Data/", "CAV_TechScenario_Master.csv"), comment = "#")
@@ -417,7 +411,7 @@ scenAssumps <- msa %>%
   arrange(Year, desc(VC))
 kable(
   x = scenAssumps,
-  caption = "Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario"
+  caption = "Table: Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario"
 )
 ```
 
@@ -580,7 +574,7 @@ IEffects %>%
   mechsBarChart()
 ```
 
-### TEMP Graphic: Demand Effects
+### 3.5 Establish Cases for Exogenous Demand Effects
 
 ```{r buildIEffectsTemp, echo=echoWorking, dpi=300, fig.width=7}
 DEffectsTemp <- read.delim(textConnection("
@@ -593,10 +587,10 @@ LDV	:	2050	:	D_Ride_Hailing_Empty_Miles	:	-20	:	30	:	50	:	0
 LDV	:	2050	:	D_Induced_VMT_Demand	:	15	:	25	:	67	:	0
 "), header = TRUE, sep = ":", strip.white = TRUE) # ;
 
-#Effects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech))))
-DEffectsTemp %>%
-#  select()
-  mechsBarChart()
+# Difficulty controlling order of bars in bar chart:
+#Effects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech)))) # does not work
+# DEffectsTemp %>%
+#  mechsBarChart()
 
 ```
 
@@ -701,7 +695,7 @@ DemRespParams <- DemRespParams[, c("VC", "Parameter", "Zero", "Low", "Med", "Hig
 ```{r displayDemRespParam, echo=echoWorking}
 kable(
   x = DemRespParams, digits = 4, row.names = F,
-  caption = "Key Parameters for Demand Response (for all Demand Scenarios)"
+  caption = "Table: Key Parameters for Demand Response (for all Demand Scenarios)"
 )
 ```
 
@@ -759,7 +753,7 @@ rownames(DemScenCostChange) <- DemScenCostChange$DemScen # needed only to refere
 # Assumed Change in Vehicle Travel Cost Components
 kable(
   x = DemScenCostChange, row.names = F, digits = 3,
-  caption = "Vehicle Travel Cost Component Change (Reduction) by Demand Scenario"
+  caption = "Table: Vehicle Travel Cost Component Change (Reduction) by Demand Scenario"
 )
 ```
 
@@ -834,7 +828,7 @@ DemRespParams
 DemRespParams <- DemRespParams[, c("VC", "Parameter", "Zero", "Low", "Med", "High")] # reorder columns
 kable(
   x = DemRespParams, digits = 4,
-  caption = "DemRespParams: Important Parameters for the Calculation of Demand Reponse, by Vehicle-type, and Year"
+  caption = "Table DemRespParams: Important Parameters for the Calculation of Demand Reponse, by Vehicle-type, and Year"
 )
 ```
 
@@ -870,7 +864,7 @@ average_TTC_per_mi    : HDV     :0.611      :0.611      :0.611      :$/mi  :2011
 
 TravTimeCostBasePars %>%
   select(-Source_Notes) %>%
-  kable(caption = "Base Travel Time Cost Parameters", digits = 3)
+  kable(caption = "Table: Base Travel Time Cost Parameters", digits = 3)
 
 # Note: this approach of constructing row names from col vars and then using row/col names for subsequent calculations
 #   is contrary to recommended tidyverse approach, which eschews row names in favor of column vars.
@@ -1033,7 +1027,7 @@ VTCostBase %>%
   arrange(factor(CostCat, levels = costComponOrder$CostCat)) %>%
   kable(
     x = ., row.names = F, digits = 3,
-    caption = "Base Vehicle Travel Cost Components by Vehicle Type (cents/mi)"
+    caption = "Table: Base Vehicle Travel Cost Components by Vehicle Type (cents/mi)"
   )
 ```
 
@@ -1063,7 +1057,7 @@ VTCShrBase %>%
   # VTCShrBase = VTCShrBase[costComponOrder$CostCat,] # re-order to desired order
   kable(
     x = ., row.names = F, digits = 3,
-    caption = "Base Vehicle Travel Cost: Components Share by Vehicle Type, Year=2018"
+    caption = "Table: Base Vehicle Travel Cost: Components Share by Vehicle Type, Year=2018"
   )
 ```
 
