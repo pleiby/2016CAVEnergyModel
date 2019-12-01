@@ -337,7 +337,11 @@ A multiplier value of 1.0 indicates no change and less/greater than one implies 
 IEffectsm <- IEffects %>%
   gather(key = EffectCase, value = "IE", Opt:Zero) %>%
   mutate(IE = IE / 100.0) %>%
-  mutate(IM = 1 + IE) # These Intensity Multipliers are the "mu" factors
+  mutate(IM = 1 + IE) %>% # These Intensity Multipliers are the "mu" factors
+  mutate(
+    VC = as.character(VC),
+    Mech = as.character(Mech)
+  )
 
 # Intensity effects as fractional change and multiplying factors by (VC, Year, Mech, EffectCase)
 
@@ -371,8 +375,7 @@ The `EffectCase` indicates a discrete point in the range of potential mechanism 
 
 #### Establish the (exogenous) mapping between Technology Scenarios and the `EffectCase` for each Mechanism
 
-Read a data file with scenario names, descriptions, `TechScen` number,  
-and EffectCase level assumed for each mechanism `Mech` by vehicle class `VC` and `Year`.
+Read a data file with scenario names, descriptions, `TechScen` number.
 Note: `Demand_Scenario` number in this file is unused/deprecated.
 
 ```{r constructIntensityByScenMech, echo=echoWorking, warning=FALSE, message=FALSE}
@@ -383,6 +386,13 @@ mechScenAssumps <- read_csv(paste0("./Data/", "CAV_Scenario_Descriptions.csv"), 
 # Assumptions re setting levels (Zero, Low, Mid, High) for each mechanism now in separate file.
 # If a "results" csv file, Also includes Check Values: resulting energy intensity fractional change Multipliers for LDV and HDV in 2 years;
 ```
+
+Read a data file defining Technology Scenario Assumptions:
+for each `TechScen` number, indicate `EffectCase` level assumed for each
+mechanism `Mech` by vehicle class `VC` and `Year`.
+
+Join selected intensity multipliers for each technology mechanism effect case
+from (zero, low, Mid, High) values in `IEffectsm`
 
 ```{r readTechScenCases, echo=echoWorking} 
 # warning=FALSE, message=FALSE}
@@ -397,22 +407,22 @@ msa <- TechScenAssumps %>%
   #   Scenario Assumptions for that mechanism:
   #   IEffectsm$IM is the intensity multiplier for each VC, Year, Mech (mech) and EffectCase
   #   msa$EffectCase is one of (Zero, Opt, Mid, Pess) for each VC, Year, Mech
-  # IEffectsm has 128 = 2 x 2 x 8 x 4, while msa has 224 rows
-  # merge, keeping matching rows from second, bringing in IE and IM for each Mech
+  # IEffectsm has 144 = (2 x 2 x 4 EffectCases x 9 Mechs) rows.
+  # while msa has 324 = (2 x 2 x 9 TechScen x9 Mechs) rows.
+  # Merge, keeping matching rows from second, bringing in IE and IM for each Mech
   left_join(IEffectsm, by = c("VC", "Year", "Mech", "EffectCase")) %>%
   select(-c(IE)) %>% # drop fractional reductions, keep multipliers
   arrange(TechScen, VC, Mech, Year, EffectCase)
 ```
 ```{r reportScenarioAssumps, echo=echoWorking, warning=FALSE, message=FALSE}
-scenAssumps <- msa %>%
+msa %>%
   select(-IM) %>%
-  # scenAssumps = scenAssumps[,c("TechScen", "VC", "Year", "Mech", "EffectCase")] # re-order cols
+  # select(c("TechScen", "VC", "Year", "Mech", "EffectCase")) # re-order cols
   spread(key = TechScen, value = EffectCase) %>%
-  arrange(Year, desc(VC))
-kable(
-  x = scenAssumps,
-  caption = "Table: Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario"
-)
+  arrange(Year, desc(VC)) %>%
+  kable(
+    caption = "Table: Effect Sensitivity Cases by Vehicle Class, Year, AV Mechanism and Tech Scenario"
+    )
 ```
 
 <!---
@@ -429,7 +439,7 @@ The Net Energy Intensity change NIE for the technology scenario *j* is the diffe
 $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
 This establishes the reference change in vehicle energy intensity associated with technology scenario *j* (`TechScen`).
-Actual achieved vehicle energy intensity will depend on the economic responses based on costs and the utility maximization.
+Actual achieved vehicle energy intensity will depend on the economic responses of travelers based on costs and the utility maximization.
 
 ```{r constructIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # Overall energy intensity for the scenario is the product of mechanism multipliers
@@ -441,6 +451,7 @@ EnergyIntensityChanges <- msa %>%
 # Energy Intensity Impacts by Mechanism, EffectCase-level, Year, and vehicle type (LDV, HDV)
 EnergyIntensityChanges <- arrange(EnergyIntensityChanges, TechScen, VC, Year)
 ```
+
 ```{r constructIntensityComponsByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # get all energy intensity changes by scenario and with component values
 EnergyIntensityCompons <- msa %>%
@@ -509,11 +520,13 @@ EnergyIntensityChanges %>%
 #   width = NULL, na.rm = FALSE, show.legend = NA,
 #   inherit.aes = TRUE)
 
-mechsBarChart <- function(mechs_df) {
+mechsBarChart <- function(mechs_df, 
+                          VC_chosen = "LDV",
+                          Year_chosen = "2050") {
   # mechs_df expected to have same structure as IEffects dataframe
   # Produced horizontal bar chart of effects by mechanism
   mechs_df %>%
-    filter(VC=="LDV" & Year=="2050") %>%
+    filter(VC==VC_chosen & Year==Year_chosen) %>%
     mutate(
       # uplim = ifelse(Opt < 0, Opt-Pess, Pess-Opt),
       # lolim = ifelse(Opt < 0, Pess, Opt)
