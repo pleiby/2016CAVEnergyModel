@@ -179,6 +179,7 @@ The variables are
 Focusing on passenger travel, we can write energy use $E_{tvf}$ as
 
 $$E_{tvf} = A_{tv} \cdot \frac {1}{o_{tv}} \cdot \Sigma_{m} \sigma_{tvm} \phi_{tvmf} I_{tvmf}$$
+
 with units
 
 $$[EJ/yr] = [bill~ pkm/yr] \cdot [vkm/pkm] \cdot [unitlessShare] \cdot [unitlessShare] \cdot [MJ/vkm]$$
@@ -397,6 +398,7 @@ from (zero, low, Mid, High) values in `IEffectsm`
 ```{r readTechScenCases, echo=echoWorking} 
 # warning=FALSE, message=FALSE}
 TechScenAssumps <- read_csv(paste0("./Data/", "CAV_TechScenario_Master.csv"), comment = "#")
+
 msa <- TechScenAssumps %>%
   gather(key = TechScen, value = EffectCase, -c(VC, Mech, Year)) %>%
   mutate(
@@ -485,6 +487,8 @@ kable(
 
 This table is the fractional change in vehicle energy use per mile-travelled, as a result of the combined effect of the (`r length(unique(IEffects$Mech))`) identified technological mechanisms by which automation alters vehicle energy intensity.
 
+### 3.3 Plots of Energy Intensity Changes by Mechanism, and Scenario
+
 ```{r netEnergyIntensityChangeBarPlot, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 # # color with RcolorBrewer
 # ggplot(data, aes(x=TechScen, calcValue, fill=condition, y=value, x=specie)) +
@@ -566,18 +570,19 @@ mechsBarChart <- function(mechs_df,
 
 #### Intensity Mechanisms Summary
 
-Here is a summary of the mechanisms affecting energy intensity, and their ranges.
+Here is a summary of the mechanisms affecting energy intensity, and their impact ranges.
 
 ```{r summaryIntensityMechanisms, echo=echoWorking, dpi=300}
 # IEffects[,order(ncol(IEffects):1)] %>% # reverse column order (has no effect)
 # IEffects$Mech <- factor(IEffects$name, levels = IEffects$name[order(x$val)])
-IEffects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech))))
+IEffects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech)))) # reverse alphabetic order 
 IEffects %>%
 #  select()
   mechsBarChart()
 ```
 
-
+Repeat mechanisms bar chart with wider fig.width specification.
+ 
 ```{r summaryIntensityMechanisms_wide, echo=echoWorking, dpi=300, fig.width=7}
 # IEffects[,order(ncol(IEffects):1)] %>% # reverse column order (has no effect)
 # IEffects$Mech <- factor(IEffects$name, levels = IEffects$name[order(x$val)])
@@ -587,17 +592,17 @@ IEffects %>%
   mechsBarChart()
 ```
 
-### 3.5 Establish Cases for Exogenous Demand Effects
+### 3.4 Establish Cases for Exogenous Demand Effects
 
 ```{r buildIEffectsTemp, echo=echoWorking, dpi=300, fig.width=7}
 DEffectsTemp <- read.delim(textConnection("
-VC	:	Year	:	Mech	:	Opt	:	Mid	:	Pess	:	Zero
-LDV	:	2035	:	D_Underserved_travelers	:	0	:	6	:	10	:	0
-LDV	:	2035	:	D_Ride_Hailing_Empty_Miles	:	-20	:	30	:	50	:	0
-LDV	:	2035	:	D_Induced_VMT_Demand	:	15	:	25	:	67	:	0
-LDV	:	2050	:	D_Underserved_travelers	:	0	:	6	:	10	:	0
-LDV	:	2050	:	D_Ride_Hailing_Empty_Miles	:	-20	:	30	:	50	:	0
-LDV	:	2050	:	D_Induced_VMT_Demand	:	15	:	25	:	67	:	0
+VC  : Year  : Mech                        : Opt : Mid : Pess  : Zero
+LDV : 2035  : D_Underserved_travelers     : 0   : 6   : 10    : 0
+LDV : 2035  : D_Ride_Hailing_Empty_Miles  : -20 : 30  : 50    : 0
+LDV : 2035  : D_Induced_VMT_Demand        : 15  : 25  : 67    : 0
+LDV : 2050  : D_Underserved_travelers     : 0   : 6   : 10    : 0
+LDV : 2050  : D_Ride_Hailing_Empty_Miles  : -20 : 30  : 50    : 0
+LDV : 2050  : D_Induced_VMT_Demand        : 15  : 25  : 67    : 0
 "), header = TRUE, sep = ":", strip.white = TRUE) # ;
 
 # Difficulty controlling order of bars in bar chart:
@@ -607,7 +612,11 @@ LDV	:	2050	:	D_Induced_VMT_Demand	:	15	:	25	:	67	:	0
 
 ```
 
+#### Combining Demand Mechanism with Energy Intensity Mechanisms is Summary Bar Chart
+
 ```{r combBar, echo=echoWorking, dpi=300, fig.width=7}
+# Following renaming is a crude way to force ordering of mechanism/effects
+#   in this bar chart
 IEffects %>%
   mutate(
     Mech = str_replace(Mech, "Congestion_mitigation", "Lower congestion"),
@@ -623,7 +632,7 @@ bind_rows(DEffectsTemp) %>%
 
 # 4. Demand Response to CAVs
 
-In addition to the changes in energy intensity we account for a travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
+In addition to the changes in energy intensity we account for an endogenous travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
 
 4.1 Key parameters for Demand scenarios
 -----------------------
@@ -2710,18 +2719,18 @@ The estimated long-run elasticity of LDV passenger travel demand with respect to
 # Now compute VMT and PMT, given travel costs per passenger mile, the elasticity of PMT w.r.t. cost, and occupancy.
 # c.f. this approach to costs (vehicle and time)
 # PMTVMT = PMTVMT %>% mutate(
-#   C_t = rho_o *C_T/Pi,		        #	time cost pre hr, adjusted for occupancy [cents/pass-hr]
+#   C_t = rho_o *C_T/Pi,            # time cost pre hr, adjusted for occupancy [cents/pass-hr]
 #   # C_t = ifelse(DemScen!="Base", C_t * ReductCTAutomation, C_t)  # not needed, already in scenario-dep travel time cost
 #   C_T = rho_o *C_T                # time cost per mile, adjusted for occupancy and speed [cents/pass-mi]
 # )
 #
 # PMTVMT = PMTVMT %>% mutate(
-#   C_M = C_V/o + C_t*Pi		#	travel distance cost, share of vehicle costs plus time cost, cents/pass-mi
+#   C_M = C_V/o + C_t*Pi    # travel distance cost, share of vehicle costs plus time cost, cents/pass-mi
 # )
 #
 # PMTVMT = PMTVMT %>% mutate(
-#   PMT = (C_M/C_M[DemScen=="Base" & o==1.0])^ElasPKT,		#	pass-mi (normalized w.r.t Base scenario, base Occupancy)
-#   VMT = PMT/o,		                                      #	veh-mi (normalized) (defining relation for Occupancy "o")
+#   PMT = (C_M/C_M[DemScen=="Base" & o==1.0])^ElasPKT,    # pass-mi (normalized w.r.t Base scenario, base Occupancy)
+#   VMT = PMT/o,                                          # veh-mi (normalized) (defining relation for Occupancy "o")
 #   EnergyUse = VMT * C_F/C_F[DemScen=="Base" & o==1.0]   # relative fuel cost/km indicates relative fuel intensity
 # )
 
@@ -2746,8 +2755,8 @@ occupancyEffects <- occupancyEffects %>%
   mutate(
     # ToDo: Need Sharing disutility here
     # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
-    PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    VMT = PMT / o, # 	veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+    PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
+    VMT = PMT / o, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
     # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
     Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
     # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
@@ -2775,7 +2784,7 @@ occupancyEffects <- occupancyEffects %>%
 occupancyEffects <- occupancyEffects %>%
   group_by(DemScen) %>%
   mutate( # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
-    VMT_norebound = PMT[o == 1.0] / o # 	veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+    VMT_norebound = PMT[o == 1.0] / o #   veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
   ) %>% # but does include the effect of the Alt case on cost and PMT
   ungroup()
 ```
@@ -3034,14 +3043,14 @@ occupancyEffects1 <- occupancyEffects1 %>%
   mutate(
     # ToDo: Need Sharing disutility here
     # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
-    PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    VMT = PMT * TourContraction, # 	veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+    PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
+    VMT = PMT * TourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
     # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
     Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
     # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
 
     # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
-    VMT_norebound = PMT[o == 1.0] / o # 	veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+    VMT_norebound = PMT[o == 1.0] / o #   veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
   ) %>% # but does include the effect of the Alt case on cost and PMT
   ungroup()
 
@@ -3101,9 +3110,9 @@ AltVMT1 <- AltVMT1 %>%
     # ToDo: Need Sharing disutility here
     # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
     C_Mratio = (C_Mpmt / C_Mpmt[o == 1.0 & C_road == 0.0]),
-    PMT = VMT_oref * (C_Mratio)^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    # PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, # 	pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    VMT = PMT * TourContraction, # 	veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+    PMT = VMT_oref * (C_Mratio)^ElasPKT, #  pass-mi (normalized w.r.t Base scenario, base Occupancy)
+    # PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
+    VMT = PMT * TourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
     # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
     Energy = Energy_oref * VMT / VMT_oref, # relative VMT indicates relative Energy
     
