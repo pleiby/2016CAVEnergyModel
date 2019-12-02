@@ -162,6 +162,7 @@ library(tidyr)
 library(readr)
 library(ggplot2)
 library(stringr)
+library(janitor)
 ```
 
 
@@ -758,11 +759,12 @@ kable(
 
 Unit travel time cost per mile $\underline c_{T,v}$ is differentiated by vehicle class, and depends on average speed and hourly time cost. 
 
-In this test, for each vehicle, we use the VMT-weighted average of local and intercity speed to construct the average time cost per mile:
+In this test, for each vehicle, we use the VMT-weighted average of local and intercity speed^[**ToDo** distinguish between local and intercity speed and time cost per mile.] to construct the *base* average time cost per mile:
 
 $$VoTT_{v,average} = \frac {VMT_{v,local} VoTT_{v,local} + VMT_{v,intercity} VoTT_{v,intercity}} {VMT_{v,local}  + VMT_{v,intercity}}$$
 And base Unit travel time cost per mile is
 $$\underline c_{Tv} = \frac {VoTT_{v,average}}  {S_{v,average}}$$
+
 ```{r calcTravelTimeCost, echo=echoWorking}
 
 # Start with some urban/non-urban differentiation, but use distance-weighted average value.
@@ -790,37 +792,45 @@ TravTimeCostBasePars %>%
 row.names(TravTimeCostBasePars) <- paste(TravTimeCostBasePars$var, TravTimeCostBasePars$V_Class, sep = ".")
 ```
 
+```{r}
+TravTimeCostBasePars
+```
+
 ```{r checkTravelTimeCost, echo=echoWorking, include=echoTests}
 # Following calculation yields LDV Time cost per mile
 # Test computed vs. specified values in table
-# cat(
-#   "Check: Calculated VoTT for LDV average value matches VMT-weighted average to within",
-#   TravTimeCostBasePars["VoTT.LDV", "average"] -
-#     (TravTimeCostBasePars["VMTtot.LDV", "local"] * TravTimeCostBasePars["VoTT.LDV", "local"] +
-#       TravTimeCostBasePars["VMTtot.LDV", "intercity"] * TravTimeCostBasePars["VoTT.LDV", "intercity"]) /
-#       (TravTimeCostBasePars["VMTtot.LDV", "local"] + TravTimeCostBasePars["VMTtot.LDV", "intercity"]),
-#   "$/hr.\n"
-# )
-#
-# cat(
-#   "Check: Average TTC per mile for LDV average value matches VoTT/speed to within",
-#   TravTimeCostBasePars["average_TTC_per_mi.LDV", "average"] - #  [$/hr]/[mi/hr]
-#     TravTimeCostBasePars["VoTT.LDV", "average"] / TravTimeCostBasePars["average_speed.LDV", "average"],
-#   "$/mi.\n"
-# )
-#
-# cat(
-#   "Check: Average TTC per mile for HDV average value matches VoTT/speed to within",
-#   TravTimeCostBasePars["average_TTC_per_mi.HDV", "average"] - #  [$/hr]/[mi/hr]
-#     TravTimeCostBasePars["VoTT.HDV", "average"] / TravTimeCostBasePars["average_speed.HDV", "average"],
-#   "$/mi.\n"
-# )
+# Calculated VoTT for LDV average value matches VMT-weighted average of local and intercity
+
+#  "VoTT.LDV", "average" =
+#     ("VMTtot.LDV", "local"] * "VoTT.LDV", "local"] +
+#       "VMTtot.LDV", "intercity"] * ["VoTT.LDV", "intercity"]) /
+#       (["VMTtot.LDV", "local"] + TravTimeCostBasePars["VMTtot.LDV", "intercity"])
+
+  TravTimeCostBasePars["VoTT.LDV", "average"] =
+     (TravTimeCostBasePars["VMTtot.LDV", "local"] * TravTimeCostBasePars["VoTT.LDV", "local"] +
+       TravTimeCostBasePars["VMTtot.LDV", "intercity"] * TravTimeCostBasePars["VoTT.LDV", "intercity"]) /
+       (TravTimeCostBasePars["VMTtot.LDV", "local"] + TravTimeCostBasePars["VMTtot.LDV", "intercity"])
+  # "$/hr.\n"
+
+# average_TTC_per_mi = VoTT / average_speed # for V_Class = LDV, HDV, region = local, intercity, average
+
+# Calculated Average TTC per mile for LDV average value matches VoTT/speed to within",
+  TravTimeCostBasePars["average_TTC_per_mi.LDV", "average"] = #  [$/hr]/[mi/hr]
+    TravTimeCostBasePars["VoTT.LDV", "average"] / TravTimeCostBasePars["average_speed.LDV", "average"]
+  # "$/mi.\n"
+
+# Calculated Average TTC per mile for HDV average value matches VoTT/speed to within",
+  TravTimeCostBasePars["average_TTC_per_mi.HDV", "average"] = #  [$/hr]/[mi/hr]
+    TravTimeCostBasePars["VoTT.HDV", "average"] / TravTimeCostBasePars["average_speed.HDV", "average"]
+  # "$/mi.\n"
+  
+TravTimeCostBasePars
 ```
 
 Travel time parameter values for LDVs are currently an average for Car and Light-truck vehicle types, and in per-mile terms they depend directly on average travel speed.
 
-**ToDo** Needed data: Seek to benchmark average speed for local and intercity driving, for both LDVs and HDVs. These regional values should be consistent with overall average speed.
-**ToDo** Better-represent ways CAVs could alter average speed, and therefor travel time cost per mile.
+- **ToDo** Needed data: Seek to benchmark average speed for local and intercity driving, for both LDVs and HDVs. These regional values should be consistent with overall average speed.
+- **ToDo** Better-represent ways CAVs could alter average speed, and therefor travel time cost per mile.
 
 ### Base (Conventional) Vehicle Travel Cost Components
 
@@ -909,7 +919,6 @@ if (abs(sum(ChkErrorDiff)) > errTol) {
 # sum across categories (excl miles and total) to check total cost by VehType
 
 # Note this approach to add totals also works
-library(janitor)
 y <- VTCostBase %>%
   spread(key = VehType, value = VTCost_cpm) %>% # pivot wide
   adorn_totals() %>% # append sum for rows for each column but first (each VehType)
