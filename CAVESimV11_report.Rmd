@@ -648,11 +648,14 @@ In addition to the changes in energy intensity we account for an endogenous trav
 4.1 Key parameters for Demand scenarios
 -----------------------
 
+### 4.1.1 Establish Demand Response Parameters
+
 The following are the default parameter values that influence scenarios for the cost-based demand response. They include exogenous fractional shifts for multiple vehicle travel cost components other than energy, e.g. insurance costs, vehicle capital costs, and time costs ("Value of Travel Time", or `VoTT`). They also include alternative values for the elasticity of travel demand with respect to full generalized cost per mile, `ElasVKT`.
 
 **Note**: This is actually ElasPKT, which equals ElasVKT for fixed occupancy at the reference level. ElasVKT will vary with occupancy.
 
-(Aside Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "`DemScenCostChange`" vs "`DemRespParams`" tables. 
+(Aside Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "`DemScenCostChange`" vs "`DemRespParams`" tables.
+The former `DemScenCostChange` only provides C_deltaInsur and C_deltaVoTT.)
 The "Low, Med, High" cases in `DemRespParams` table are separate from the Demand Scenario cases in `DemScenCostChange` table (section 4.3 below)).
 
 ```{r demandScenParams, echo=echoWorking}
@@ -676,30 +679,30 @@ I_deltaCAV       : Fuel energy cost reduction (from effic, fraction, computed fr
 
 DemRespParams <- read.delim(textConnection("
 case                  Zero    Low     Med     High
-LDV.ElasVKT           0       -1      -1      -1
-LDV.ExclVehCapCost    0       0       0       0
-LDV.C_deltaMaint      0       0       0       0
-LDV.C_deltaInsurX     0       -0.40   -0.60   -0.80
-LDV.C_deltaCapCost    0       0       0       0
-LDV.C_deltaTolls      0       0       0       0
-LDV.C_deltaPrkng      0       0       0       0
-LDV.C_deltaRegis      0       0       0       0
-LDV.C_deltaVoTTHwy    0       -0.10   -0.30   -0.65
-LDV.C_deltaVoTTArt    0       -0.10   -0.30   -0.65
-LDV.ShrECostInt       1       1       1       1
-LDV.I_deltaCAV        0       -.7186  -.7186  -.7186
-HDV.ElasVKT           0       -0.97   -0.97   -2
-HDV.ExclVehCapCost    0       0       0       0
-HDV.C_deltaMaint      0       0       0       0  
-HDV.C_deltaInsurX     0       -0.40   -0.60   -0.80
-HDV.C_deltaCapCost    0       0       0       0
-HDV.C_deltaTolls      0       0       0       0
-HDV.C_deltaPrkng      0       0       0       0
-HDV.C_deltaRegis      0       0       0       0
-HDV.C_deltaVoTTHwy    0       -0.10   -0.30   -0.65
-HDV.C_deltaVoTTArt    0       -0.10   -0.30   -0.65
-HDV.ShrECostInt       1       1       1       1
-HDV.I_deltaCAV        0       -.2815  -.2815  -.2815
+LDV.ElasVKT           0.0     -1      -1      -1
+LDV.ExclVehCapCost    0.0     0       0       0
+LDV.C_deltaMaint      0.0     0       0       0
+LDV.C_deltaInsurX     0.0     -0.40   -0.60   -0.80
+LDV.C_deltaCapCost    0.0     0       0       0
+LDV.C_deltaTolls      0.0     0       0       0
+LDV.C_deltaPrkng      0.0     0       0       0
+LDV.C_deltaRegis      0.0     0       0       0
+LDV.C_deltaVoTTHwy    0.0     -0.10   -0.30   -0.65
+LDV.C_deltaVoTTArt    0.0     -0.10   -0.30   -0.65
+LDV.ShrECostInt       1.0      1       1       1
+LDV.I_deltaCAV        0.0     -.7186  -.7186  -.7186
+HDV.ElasVKT           0.0     -0.97   -0.97   -2
+HDV.ExclVehCapCost    0.0     0       0       0
+HDV.C_deltaMaint      0.0     0       0       0  
+HDV.C_deltaInsurX     0.0     -0.40   -0.60   -0.80
+HDV.C_deltaCapCost    0.0     0       0       0
+HDV.C_deltaTolls      0.0     0       0       0
+HDV.C_deltaPrkng      0.0     0       0       0
+HDV.C_deltaRegis      0.0     0       0       0
+HDV.C_deltaVoTTHwy    0.0     -0.10   -0.30   -0.65
+HDV.C_deltaVoTTArt    0.0     -0.10   -0.30   -0.65
+HDV.ShrECostInt       1.0     1       1       1
+HDV.I_deltaCAV        0.0     -.2815  -.2815  -.2815
 "), header = TRUE, sep = "", strip.white = TRUE) # ;
 # Corresponds to data in "Demand Response Key parameters", but omits low value for HDV.ElasVKT of 0.5 (unused)
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024.xlsx]calcul Dem_HDV'!$A$4:$L$10 and 'calcul Dem_LDV'!$A$4:$L$10
@@ -785,9 +788,12 @@ kable(
 )
 ```
 
-### Establish the Reference Mix of Vehicle Types in the Desired Demand Scenarios
+### 4.1.2 Establish the Reference Mix of Vehicle Types in the Desired Demand Scenarios
 
-We adopt reference vehicle mix from DOE's SMART Mobility FY19 SMART Workflow Scenario Common Assumptions. This provides vehicle share by class, fuel-technology (drivetrain), degree of automation, and the fraction of base trips provided by shared vehicle services (TNCs).
+We adopt reference vehicle mix from DOE's SMART Mobility FY19 SMART Workflow Scenario Common Assumptions.
+For each scenario, this provides vehicle share by class, fuel-technology
+(drivetrain), degree of automation, and the fraction of base trips provided
+by shared vehicle services (TNCs).
 
 
 ```{r readSMARTFY19CommonAssumptions, echo=echoWorking}
@@ -798,9 +804,9 @@ shares_by_F_A <-
   shares_by_F_A %>%
   ungroup() %>%
   spread(key = DemScen, value = F_A_Shares) %>%
-  mutate( # new Scenarios - full automation, no automation
-    Test = ifelse((Automation == "Full") & (Fuel == "Gas"), 1, 0),
-    Zero = ifelse((Automation == "No") & (Fuel == "Gas"), 1, 0)
+  mutate( # new Scenarios
+    Test = ifelse((Automation == "Full") & (Fuel == "Gas"), 1, 0), # Full Automation Gaso
+    Zero = ifelse((Automation == "No") & (Fuel == "Gas"), 1, 0) # No Automation Gaso
   ) %>%
   gather(key = DemScen, value = F_A_Shares, -c(VC, Automation, Fuel))
 
@@ -808,14 +814,14 @@ shares_by_U <-
   shares_by_U %>%
   ungroup() %>%
   spread(key = DemScen, value = U_Shares) %>%
-  mutate( # new Scenarios - full automation, no automation
-    Test = ifelse(Use == "Shared", 1, 0),
-    Zero = ifelse(Use == "Private", 1, 0)
+  mutate( # new Scenarios
+    Test = ifelse(Use == "Shared", 1, 0), # full Shared
+    Zero = ifelse(Use == "Private", 1, 0) # no Shared (full Private)
   ) %>%
   gather(key = DemScen, value = U_Shares, -c(VC, Use))
 ```
 
-### Select a Single Technology Scenario and Year to Examine
+### 4.1.3 Select a Single Technology Scenario and Year to Examine
 
 ```{r singleScenarioSelect, echo=echoWorking}
 CurrTechScen <- 4
