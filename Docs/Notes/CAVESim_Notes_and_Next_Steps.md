@@ -206,6 +206,8 @@ ToDo Next 20191127
     - or get estimate of ave power use by vehicle
 - [ ] 5b. More careful Update VoTT cases to conform to the scenarios detail
 - [ ] 5c. More careful Update VoTT cases to conform to the scenarios detail
+- [ ] 5d. Refine speed calculations, distinguishing between Highway and Arterial reference speed (this influences trip time and VoTT calculation per mile) 
+- [ ] 5e. Refine speed calculations, better-accounting for effect of autmation on (average) traffic speed (see ReductPaceAutomation) (this influences trip time and VoTT calculation per mile) 
 - [ ] 6. Refine vehicle categories and stock-related data to conform to the analysis
     - K_CSFAO
         - [X] C "VehClass/VC": LDV vs MDHDV
