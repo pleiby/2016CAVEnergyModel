@@ -320,6 +320,12 @@ HDV  2050   Automation_accessory_load     0.0     2.0     5.0
 # Source: "='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024.xlsx]Energy Intensity Impacts'!$A$1:$M$26"
 # Note: Mid is average of Opt and Pess
 
+IEffects <- IEffects %>%
+  mutate(
+    VC = as.character(VC),
+    Mech = as.character(Mech)
+  )
+
 IEffects$Zero <- 0.0 # include additional case of no-impact for each mechanism
 ```
 
@@ -568,14 +574,14 @@ mechsBarChart <- function(mechs_df,
 }
 ```
 
-#### Intensity Mechanisms Summary
+#### Energy Intensity Mechanisms Summary
 
 Here is a summary of the mechanisms affecting energy intensity, and their impact ranges.
 
 ```{r summaryIntensityMechanisms, echo=echoWorking, dpi=300}
 # IEffects[,order(ncol(IEffects):1)] %>% # reverse column order (has no effect)
 # IEffects$Mech <- factor(IEffects$name, levels = IEffects$name[order(x$val)])
-IEffects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech)))) # reverse alphabetic order 
+# IEffects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech)))) # reverse alphabetic order 
 IEffects %>%
 #  select()
   mechsBarChart()
@@ -586,7 +592,7 @@ Repeat mechanisms bar chart with wider fig.width specification.
 ```{r summaryIntensityMechanisms_wide, echo=echoWorking, dpi=300, fig.width=7}
 # IEffects[,order(ncol(IEffects):1)] %>% # reverse column order (has no effect)
 # IEffects$Mech <- factor(IEffects$name, levels = IEffects$name[order(x$val)])
-IEffects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech))))
+# IEffects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech))))
 IEffects %>%
 #  select()
   mechsBarChart()
@@ -605,6 +611,11 @@ LDV : 2050  : D_Ride_Hailing_Empty_Miles  : -20 : 30  : 50    : 0
 LDV : 2050  : D_Induced_VMT_Demand        : 15  : 25  : 67    : 0
 "), header = TRUE, sep = ":", strip.white = TRUE) # ;
 
+DEffectsTemp <- DEffectsTemp %>%
+  mutate(
+    VC = as.character(VC),
+    Mech = as.character(Mech)
+  )
 # Difficulty controlling order of bars in bar chart:
 #Effects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech)))) # does not work
 # DEffectsTemp %>%
@@ -639,7 +650,7 @@ In addition to the changes in energy intensity we account for an endogenous trav
 
 The following are the default parameter values that influence scenarios for the cost-based demand response. They include exogenous fractional shifts for multiple vehicle travel cost components other than energy, e.g. insurance costs, vehicle capital costs, and time costs ("Value of Travel Time", or `VoTT`). They also include alternative values for the elasticity of travel demand with respect to full generalized cost per mile, `ElasVKT`.
 
-**Note**: This is actually ElasPKT, which equals ElasVKT for fixed occupancy. ElasVKT will vary with occupancy.
+**Note**: This is actually ElasPKT, which equals ElasVKT for fixed occupancy at the reference level. ElasVKT will vary with occupancy.
 
 (Aside Note: Need to be clear which version of certain parameters dominate in subsequent application, e.g. from "`DemScenCostChange`" vs "`DemRespParams`" tables. 
 The "Low, Med, High" cases in `DemRespParams` table are separate from the Demand Scenario cases in `DemScenCostChange` table (section 4.3 below)).
@@ -664,31 +675,31 @@ I_deltaCAV       : Fuel energy cost reduction (from effic, fraction, computed fr
 "), header = TRUE, sep = ":", strip.white = TRUE)
 
 DemRespParams <- read.delim(textConnection("
-                      Low     Med     High
-LDV.ElasVKT           -1      -1      -1
-LDV.ExclVehCapCost    0       0       0
-LDV.C_deltaMaint      0       0       0
-LDV.C_deltaInsurX     -0.40   -0.60   -0.80
-LDV.C_deltaCapCost    0       0       0
-LDV.C_deltaTolls      0       0       0
-LDV.C_deltaPrkng      0       0       0
-LDV.C_deltaRegis      0       0       0
-LDV.C_deltaVoTTHwy    -0.10   -0.30   -0.65
-LDV.C_deltaVoTTArt    -0.10   -0.30   -0.65
-LDV.ShrECostInt       1       1       1
-LDV.I_deltaCAV        -.7186  -.7186  -.7186
-HDV.ElasVKT           -0.97   -0.97   -2
-HDV.ExclVehCapCost    0       0       0
-HDV.C_deltaMaint      0       0       0  
-HDV.C_deltaInsurX     -0.40   -0.60   -0.80
-HDV.C_deltaCapCost    0       0       0
-HDV.C_deltaTolls      0       0       0
-HDV.C_deltaPrkng      0       0       0
-HDV.C_deltaRegis      0       0       0
-HDV.C_deltaVoTTHwy    -0.10   -0.30   -0.65
-HDV.C_deltaVoTTArt    -0.10   -0.30   -0.65
-HDV.ShrECostInt       1       1       1
-HDV.I_deltaCAV        -.2815  -.2815  -.2815
+case                  Zero    Low     Med     High
+LDV.ElasVKT           0       -1      -1      -1
+LDV.ExclVehCapCost    0       0       0       0
+LDV.C_deltaMaint      0       0       0       0
+LDV.C_deltaInsurX     0       -0.40   -0.60   -0.80
+LDV.C_deltaCapCost    0       0       0       0
+LDV.C_deltaTolls      0       0       0       0
+LDV.C_deltaPrkng      0       0       0       0
+LDV.C_deltaRegis      0       0       0       0
+LDV.C_deltaVoTTHwy    0       -0.10   -0.30   -0.65
+LDV.C_deltaVoTTArt    0       -0.10   -0.30   -0.65
+LDV.ShrECostInt       1       1       1       1
+LDV.I_deltaCAV        0       -.7186  -.7186  -.7186
+HDV.ElasVKT           0       -0.97   -0.97   -2
+HDV.ExclVehCapCost    0       0       0       0
+HDV.C_deltaMaint      0       0       0       0  
+HDV.C_deltaInsurX     0       -0.40   -0.60   -0.80
+HDV.C_deltaCapCost    0       0       0       0
+HDV.C_deltaTolls      0       0       0       0
+HDV.C_deltaPrkng      0       0       0       0
+HDV.C_deltaRegis      0       0       0       0
+HDV.C_deltaVoTTHwy    0       -0.10   -0.30   -0.65
+HDV.C_deltaVoTTArt    0       -0.10   -0.30   -0.65
+HDV.ShrECostInt       1       1       1       1
+HDV.I_deltaCAV        0       -.2815  -.2815  -.2815
 "), header = TRUE, sep = "", strip.white = TRUE) # ;
 # Corresponds to data in "Demand Response Key parameters", but omits low value for HDV.ElasVKT of 0.5 (unused)
 #  ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024.xlsx]calcul Dem_HDV'!$A$4:$L$10 and 'calcul Dem_LDV'!$A$4:$L$10
@@ -703,11 +714,6 @@ HDV.I_deltaCAV        -.2815  -.2815  -.2815
 #   HDV ElasVKT         Cambridge Sytematics, 2009
 #   I_DeltaCAV          Import/update from 'Policy+Scenario' calculation for currently chosen technology scenario
 
-DemRespParams$Zero <- 0.0 # establish zero effect case (zero reductions, zero elas)
-DemRespParams["LDV.ShrECostInt", "Zero"] <- 1.0 # kludge to fix this parameter to non-zero val
-DemRespParams["HDV.ShrECostInt", "Zero"] <- 1.0
-
-DemRespParams$case <- row.names(DemRespParams)
 DemRespParams <- separate(data = DemRespParams, col = case, into = c("VC", "Parameter"), sep = "\\.")
 # DemRespParamsm <- DemRespParams %>% gather(key = EffectCase, value = "value", Low:Zero)
 
