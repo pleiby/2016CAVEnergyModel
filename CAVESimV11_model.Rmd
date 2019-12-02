@@ -54,19 +54,19 @@ echoTests <- TRUE # set TRUE to see printed test values ("Check: ...")
 
 
 
-From this *Kaya* or *ASIF* decomposition approach the total GHG emissions are the product of
-
-Energy use for a particular vehicle type is given by total activity (passenger travel demand) level $A_{tv}$ 
+From this *Kaya* or *ASIF* decomposition approach the energy use for a particular
+vehicle type is given by total activity (passenger travel demand) level $A_{tv}$ 
 divided by vehicle occupancy level $o_{tv}$ to yield vehicle travel (VMT), 
 the share $\sigma_{tmv}$ of travel on mode *m* and the average share-weighted
 energy intensity $I_{tmv}$ of travel by vehicle type and mode.
 
 Vehicle energy intensity *I* is a function of:
+
 - $\vec x_{tmv}$ a vector of CAV mechanism/technology levels,
   as well as 
 - $\phi_{tmvf}$ the mix of fuel-drivetrains used (extent of electrification).
 
-$G_$ Transportation GHG emissions
+- $G_t$ Transportation GHG emissions
 $$G_t = \Sigma_{m,v} (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I(\vec x_{tmv}) ~\Sigma_f g_{tf} \phi_{tmvf}$$
 
 #### Defining indices
@@ -350,11 +350,10 @@ Actual achieved vehicle energy intensity will depend on the economic responses o
 # Overall energy intensity for the scenario is the product of mechanism multipliers
 EnergyIntensityChanges <- msa %>%
   group_by(Year, VC, TechScen) %>%
-  summarize(NIE = prod(IM) - 1) # product of multipliers across all Mech(anisms)
-# minus 1 for net change
-
-# Energy Intensity Impacts by Mechanism, EffectCase-level, Year, and vehicle type (LDV, HDV)
-EnergyIntensityChanges <- arrange(EnergyIntensityChanges, TechScen, VC, Year)
+  summarize(NIE = prod(IM) - 1) %>% # product of multipliers across all Mech(anisms)
+  # minus 1 for net change
+  # Energy Intensity Impacts by Mechanism, EffectCase-level, Year, and vehicle type (LDV, HDV)
+  arrange(TechScen, VC, Year)
 ```
 
 ```{r constructIntensityComponsByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
@@ -365,27 +364,13 @@ EnergyIntensityCompons <- msa %>%
   left_join(EnergyIntensityChanges, by = c("TechScen", "VC", "Year"))
 ```
 
-```{r fixVariantTechCaseIntensity, echo=echoWorking}
-variantTechScen4 <- F
-if (variantTechScen4) {
-  cat("!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved for TechScen 4 and LDVs.\n")
-  # !!! NOTE THIS VARIANT ENERGY INTENSITY (FUEL COST) FOR TEST!!: Energy Intensity Reduction is halved for TechScen 4 and LDVs)
-  EnergyIntensityChanges <- EnergyIntensityChanges %>%
-    mutate( # only alter the TechScen==2 energy intensity (doubling
-      NIE = ifelse((TechScen == 4) & (VC == "LDV"), (1 + NIE) * 2 - 1, NIE)
-    )
-}
-```
-
 ```{r displayNetIntensityChangeByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
-NetEnergyIntensityChangeTable <- EnergyIntensityChanges %>%
+EnergyIntensityChanges %>%
   unite(col = VC_Year, VC, Year, sep = "_") %>%
-  spread(key = VC_Year, value = NIE)
-
-kable(
-  x = NetEnergyIntensityChangeTable,
-  caption = "Table: Net Energy Intensity Change by Technology Scenario, Vehicle-type, and Year"
-)
+  spread(key = VC_Year, value = NIE) %>%
+  kable(
+    caption = "Table: Net Energy Intensity Change by Technology Scenario, Vehicle-type, and Year"
+  )
 ```
 
 This table is the fractional change in vehicle energy use per mile-travelled, as a result of the combined effect of the (`r length(unique(IEffects$Mech))`) identified technological mechanisms by which automation alters vehicle energy intensity.
@@ -1547,7 +1532,7 @@ Create a dataframe of changes in Energy Intensity and Travel Demand, for all Com
 Energy intensity changes (net, accounting for the influence of all identified mechanisms)  
 have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `EnergyIntensityChanges`:
 
-$$\Delta I_{tkv} = 1 - \mu_{jtv}$$
+$$\Delta I_{tjv} = 1 - \mu_{jtv}$$
 The _cost-elastic_ travel demand or VMT fractional changes have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `VMTIncrease`.
 
 $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1$$
