@@ -7,18 +7,18 @@ author:
   email: leibypn@ornl.gov
 date: Rev. 2019-11-26, Printed `r Sys.Date()`
 output:
-  html_document:
-    df_print: paged
-    fig_caption: yes
-    fig_height: 5
-    fig_width: 7
-    toc: yes
   word_document:
     df_print: kable
     fig_caption: yes
     fig_height: 5
     fig_width: 7
     reference_docx: Template_CAVs_CapstoneReport_20190701.docx
+    toc: yes
+  html_document:
+    df_print: paged
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 7
     toc: yes
 file: CAVESimV11_report.Rmd
 keywords: automated vehicles, transportation energy efficiency, travel demand, aggregate
@@ -75,6 +75,9 @@ $$G_t = \Sigma_{m,v} (A_{tv}/o_{tv}) ~ \sigma_{tmv} ~I(\vec x_{tmv}) ~\Sigma_f g
 - v = vehicle type
 - f = fuel type
 - t = time period (year)
+- k = mechanisms that alter energy intensity or demand
+- j = technology case
+- d = demand case
 
 for sets[^2]
 
@@ -82,6 +85,9 @@ for sets[^2]
 - V = set of vehicle types *v*
 - F = set of fuel types *f*
 - T = set of time periods *t*
+- K = set of mechanisms *k* that alter energy or demand
+- J = set of technology cases *j*
+- D = set of demand cases *d*.
 
 [^2]: Additional potential disaggregations include by region, vehicle size class, drivetrain type, and time of day (e.g. operating behavior and costs vary by time of day, as described in Bösch et al. 2017).
 
@@ -123,7 +129,7 @@ We identified a set *K* of "Mechanisms" or "Technologies" associated with vehicl
 - vehicle energy intensities *I*, or 
 - mode and fuel shares $\sigma, \phi$.
 
-Taking a Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. For each scenario values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Combined Technology/Demand scenario *s*, i.e. $\mu_{tvks}$???.
+Taking a Scenario Approach, we can construct scenarios *s* that combine technology cases $j \in J$ and demand cases $d \in D$. For each scenario values are indexed by year *t* (for selected years), vehicle class *v*, mechanism *k* and by the Combined Technology/Demand scenario *s*, i.e. $\mu_{tvks}$ for $s_{jtvk}$ defines an alternative `EffectCase` for mechanism *k* and technology scenario *j*(???).
 
 ``` {r defineIndexSets, echo=echoWorking}
 # [Aside: how to bold E in equation?](https://tex.stackexchange.com/questions/595/how-can-i-get-bold-math-symbols)  \mathbf for bold non-italic \boldsymbol for bold_italic
@@ -142,13 +148,17 @@ SetK_Mechs <- c( # mechanisms k by which automation alters energy and/or demand
   # "Ride_hailing",    # Q: Demand Mechanism set should include this
   # "Electrification_BEV", # need to include this intensity effect
   # "Electrification_PHEV"
+  # Demand Mechanism set ncludes these
+  # "D_Underserved_travelers",
+  # "D_Ride_Hailing_Empty_Miles",
+  # "D_Induced_VMT_Demand"
 )
 
 SetV_Class <- c("LDV", "HDV") # Vehicle Classes v
 SetT_Years <- c(2035, 2050) # Years t
 SetJ_TechScen <- 1:9 # Scenarios j ??? ToDo: make this a result of read tables
 SetD_DemScen <- 1:7 # ??? ToDo: make this a result of read tables
-SetS_Sense <- c( # Sensitivity cases s for mechanism effects
+SetS_Sense <- c( # Sensitivity EffectCases s for mechanism effects
   "Opt",
   "Mid",
   "Pess",
@@ -338,7 +348,7 @@ msa %>%
 The total energy intensity multiplier for each technology scenario *j* is the product of all mechanism multipliers^[Here mode *m* and fuel *f* are initially fixed and suppressed, i.e. *m* = road_vehicle and *f* = petroleum.] 
 $\mu_{jtv} = \prod_{k} \mu_{tvk{s_{jtvk}}}$
 
-For each technology technology scenario *j* the effect sensitivity case is (exogenously) specified for each mechanism *k* on vehicle class *v* in year *t*, and thus the sensitivity case *s* is subscripted ${s_{jtvk}}$.
+For each technology technology scenario *j* the effect sensitivity case is (exogenously) specified for each mechanism *k* on vehicle class *v* in year *t*, and thus the technology-scenario-specific effect case *s* is subscripted ${s_{jtvk}}$.
 
 The Net Energy Intensity change NIE for the technology scenario *j* is the difference between the combined effect of the intensity mechanism multipliers and 1.0.
 
@@ -346,6 +356,12 @@ $$\Delta I_{jtv} \equiv \mu_{jtv}-1 ~=~ \prod_{k} \mu_{tvk{s_{jtvk}}}-1$$
 
 This establishes the reference change in vehicle energy intensity associated with technology scenario *j* (`TechScen`).
 Actual achieved vehicle energy intensity will depend on the economic responses of travelers based on costs and the utility maximization.
+
+Note: Here 
+
+- $\mu_{tvk{s_{jtvk}}}$ = `IM`
+- $\mu_{tjv}$ = `prod(IM)`
+- $\Delta I_{jtv}$ = `NIE`
 
 ```{r constructIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # Overall energy intensity for the scenario is the product of mechanism multipliers
@@ -364,6 +380,8 @@ EnergyIntensityCompons <- msa %>%
   spread(key = Mech, value = IM) %>%
   left_join(EnergyIntensityChanges, by = c("TechScen", "VC", "Year"))
 ```
+The results for Net Energy Intensity changes ($\Delta I_{jtv}$) 
+by fixed technology scenario are as follows.
 
 ```{r displayNetIntensityChangeByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 EnergyIntensityChanges %>%
@@ -1355,7 +1373,7 @@ The fractional increase in VKT
 
 $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj} )^{ElasVKT_{dv}}-1$$
 
-The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. This elasticity reflects the long-run response of road travel to travel cost changes, but is not meant to include the demand response of new/underserved user groups, or the VMT effects of ride hailing/pooling. Based on how they were generated, the parameter values selected may or may not include mode substitution/switching effects, and longer-run locational choices. The generalize vehicle travel costs considered here and in the cost-measure associated with this elasticity include vehicle capital and operation costs, including fuel, insurance, maintenance, fees, and travel-time costs.
+The Elasticity of VKT with respect to (generalized) travel cost is a key assumption. This elasticity reflects the long-run response of road travel to travel cost changes, but is not meant to include the demand response of new/underserved user groups, or the VKT effects of ride hailing/pooling. Based on how they were generated, the parameter values selected may or may not include mode substitution/switching effects, and longer-run locational choices. The generalize vehicle travel costs considered here and in the cost-measure associated with this elasticity include vehicle capital and operation costs, including fuel, insurance, maintenance, fees, and travel-time costs.
 
 Current sources for ElasVKT: (HERS-ST technical report, August 2005 + Graham and Glaister 2002)
 
@@ -1366,7 +1384,7 @@ In the CAVSIM framework, additional adjustments to the fractional change in VKT 
 <!---
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$39:$K$44
 -->
-- multiplier factors on VMT to account for VKT increase or decline in response to ride-hailing/ride-pooling, for the same level of PKT.
+- multiplier factors on VKT to account for increase or decline in response to ride-hailing/ride-pooling, for the same level of PKT.
 <!---
     - Aside on original ests: ='[CAV Energy ASIF Framework WadudMacKenzieLeiby V20161024_Test.xlsx]calcul Dem_LDV'!$I$46:$K$48
 -->
@@ -1444,7 +1462,7 @@ cat(
 The fractional change in VMT demand due to the cost-elastic response is augmented by adjustments reflecting:
 
 - estimated additional road travel by underserved/non-driving populations, specifically older and young people;
-- a shift from ride hailing/pooling.
+- a shift (increase or reduction) from ride hailing/pooling.
 
 ```{r defVMTAdjustments, echo=echoWorking}
 # multiplier factors on VMT to include larger travel by the underserved (incl. elderly, youth)
@@ -1476,9 +1494,11 @@ Private :Full       :0.0     :0.0     :0.3    :0.6
 # Only applies for DemScen and VC with flag for non-zero RidePoolAdj (Mult for HDV=1.0).
 ```
 
-Specify Combined Scenarios. A combined scenario $CS_d$ associates each Demand Scenario $DS_d$ with and Underserved Multiplier Option `USOption` and possible further VMT adjustment for ride hailing/pooling (`refRideHailingPoolingAdj`). Note that all of these demand adjustments, for cost-response $m_{vtdj}(c_{rel,vtdj})$, underserved-demand multiplier $\gamma_{USD,vd}$, and ride hailing/pooling demand shift $\rho_{HailPool,vd}$, are applied multiplicatively to the base demand level:
+Specify Combined Scenarios. A combined scenario $CS_d$ associates each Demand Scenario $DS_d$ with and Underserved Multiplier Option `USOption` and possible further VMT adjustment for ride hailing/pooling (`refRideHailingPoolingAdj`). Note that all of these demand adjustments, for cost-based demand response $m_{vtdj}(c_{rel,vtdj})$, underserved-demand multiplier $\gamma_{USD,vd}$, and ride hailing/pooling demand shift $\rho_{HailPool,vd}$, are applied multiplicatively to the base demand level through net effect $M_{vtdsj}$.
 
-$$c_{rel,vtdsj} ~\equiv~ RelTotalCost_{vtdsj}$$
+Given the relative cost per unit distance for vehicle class *v* in time *t*, demand scenario *d*, technology scenario *j* and elasticity case *s*
+
+$$c_{rel,vtdsj} ~\equiv~ RelTotCost_{vtdsj}$$
 (Note: relative total cost is also indexed by ElasCase *s*, for $s \in \{High, Low\}$)
 
 $$\begin {align}
@@ -1490,7 +1510,10 @@ $$
 
 And the proportional change in VMT for the combined scenario is
 
-$$\Delta M_{vtdsj} = 1 - M_{vtdsj}$$
+$$\Delta M_{vtdsj} = M_{vtdsj} - 1$$
+
+Note: $\Delta M_{vtdsj}  \equiv \text{fracVMTIncr}$ after final net adjustments.
+
 Note: in the table `VMTIncrease`, the time *t* and TechScen index *j* associated with the cases are both implicit and not recorded in the table.
 
 ```{r VMTAdjustments, echo=echoWorking}
