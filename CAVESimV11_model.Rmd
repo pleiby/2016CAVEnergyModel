@@ -443,7 +443,7 @@ mechsBarChart <- function(mechs_df,
       # uplim = ifelse(Opt < 0, Opt-Pess, Pess-Opt),
       # lolim = ifelse(Opt < 0, Pess, Opt)
       # try to generalize fn mechsBarChart() to account for bars spanning from negative to postive values (fails)
-      neglim = ifelse(Opt < 0 & Pess > 0, Opt, 0), # plot this neg bar segment
+      neglim = ifelse(Opt < 0 & Pess > 0, Opt, 0), # plot this neg bar segment if cross 0
       uplim = ifelse(Opt < 0 & Pess > 0,
                      Pess,
                      ifelse( Opt < 0,  
@@ -463,7 +463,7 @@ mechsBarChart <- function(mechs_df,
   temp_df %>%
     ggplot(aes(x=factor(Mech), y = value, fill=case))+
     geom_bar(stat="identity", width=0.7) + #fill="steelblue")+
-    # scale_fill_manual(values = c("blue", "steelblue", "red")) + # suppress the plotting of the lower/second bar
+    # scale_fill_manual(values = c("blue", "steelblue", "red")) + # for testing the 3 segments
     scale_fill_manual(values = c("steelblue", "steelblue", NA)) + # suppress the plotting of the lower/second bar
     coord_flip() +
     theme(legend.position = "none") + 
