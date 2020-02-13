@@ -2808,8 +2808,8 @@ AltVMT %>%
   filter(DemScen == test_DemScen) %>%
   select(-DemScen, -VMT, -PMT) %>%
   spread(key = ElasTourLengthWithPooling, value = Energy) %>%
-  kable(digits = 4, caption = paste0("Energy Use Relative to Reference (", test_DemScen, "), by Occupancy and Route Length Elasticity"))
-
+  kable(digits = 4, caption = paste0("Table: Energy Use Relative to Reference (", test_DemScen, "), by Occupancy and Route Length Elasticity"))
+```
 
 ```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 # cols <- brewer.pal(3, "BuGn")
