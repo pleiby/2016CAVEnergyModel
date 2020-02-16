@@ -1,7 +1,7 @@
 #---
 #title: "CAVESim_DataPrep"
 #author: "Paul Leiby"
-#date: "9/25/2019"
+#date: "02/16/2020"
 #output: html_document
 #---
 #
@@ -10,6 +10,7 @@
 #echoWorking = TRUE
 ##```
 
+verbose = T # give more printed feedback on actions
 
 #```{r readScenarioCommonAssumptions, echo = echoWorking}
 # These are tne names of the Scenario Common Assumptions Files, 
@@ -27,6 +28,16 @@ Scenario_Assumptions_Sharing_filename = "SMART_FY19_Scenario_Assumptions_Vehicle
 
 # read the Scenario Common Assumptions Files,
 library(tidyverse)
+
+if (verbose) {
+  cat("The following SMART scenario data files are read:\n")
+  cat("  Basic assumptions:", Scenario_Assumptions_Basic_filename, "\n")
+  cat("  LDV vehicle assumptions:", Scenario_Assumptions_Vehicles_LDV_filename, "\n")
+  cat("  HDV vehicle assumptions:", Scenario_Assumptions_Vehicles_HDV_filename, "\n")
+  cat("  VOTT assumptions:", Scenario_Assumptions_VoTT_filename, "\n")
+  cat("  Ride hailing/sharing assumptions:", Scenario_Assumptions_Sharing_filename, "\n")
+  cat("\n")
+}
 
 # This data file includes overall SMART Scenario assumptions (across Scenario in columns) for
 #   Overall assumed penetration shares, by 
@@ -236,8 +247,10 @@ shares_by_F_A = HDV_shares_by_F_A %>%
   #union(LDV_shares_by_F_A)
   bind_rows(LDV_shares_by_F_A)
 
-
-glimpse(shares_by_F_A)
+if (verbose) {
+  cat("Data for shares by Fuel/drivetrain type and Automation: \n")
+  glimpse(shares_by_F_A)
+}
 
 # Checks - should all be 1.0
 shares_by_F_A %>%
