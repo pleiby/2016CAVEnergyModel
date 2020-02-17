@@ -528,7 +528,7 @@ DEffectsTemp <- DEffectsTemp %>%
 
 ```
 
-#### Combining Demand Mechanism with Energy Intensity Mechanisms is Summary Bar Chart
+#### Combining Demand Mechanisms with Energy Intensity Mechanisms in Summary Bar Chart
 
 ```{r combBar, echo=echoWorking, dpi=300, fig.width=7}
 # Following renaming is a crude way to force ordering of mechanism/effects
@@ -743,11 +743,15 @@ CurrYear <- 2050
 CurrDemScen <- "DS1" # Unused
 ```
 
-Energy Intensity change is dependent on the Technology Scenario, and year of interest. For example consider Technology Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
+Energy Intensity change is determined by on the Technology Scenario, and year of interest. For example consider Technology Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
 
-Demand response is a function of full (generalized) travel cost, and energy intensity affects the energy component of travel cost.[^*] The full scenario requires updating Demand Response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario and year, and updating other costs (travel time cost, accident/insurance costs, vehicle capital and maintenance costs) based on the Demand Scenario assumptions.
+Demand response is a function of full (generalized) travel cost, and energy intensity affects the energy component of travel cost.[^*] The full scenario requires updating Demand Response parameters with energy intensity reduction (by vehicle class and year) for this Technology Scenario and year, and updating other costs (travel time cost, accident/insurance costs, vehicle capital and maintenance costs) based on the Demand Scenario assumptions.[^x]
 
-[^*]: Note that energy cost implications of automation are also influenced by the choice of drivetrain/fuel, i.e. the extent to which CAVs are electrifiction compared to Manual Vehicles. This vehicle technology choice could also alter other capital and operating costs.
+[^*]: Note that the energy-cost implications of automation are also influenced by the choice of drivetrain/fuel, i.e. the extent to which CAVs are electrified compared to Manual Vehicles. This vehicle technology choice could also alter other capital and operating costs. We take the share of vehicles electrified (i.e., the share of gasoline, PHEV, and BEV vehicles), by vehicle class, automation, and use-case, as exogenous scenario inputs.
+
+[^x]: *Note:* For variant cost-sensitivity exploration of the scenarios, 
+we could add an endogenous energy-cost dependent change in intensity at this point, 
+based on historical information about the elaticity of vehicle fuel economy.
 
 ```{r defFn_nieForScenYear, echo=echoWorking}
 # define function to extract net energy intensity change by Veh Class for TechScen and Year
@@ -755,7 +759,7 @@ nieForScenYear <- function(EIChanges, TechScenWanted, YearWanted) {
   EIChanges %>%
     ungroup() %>%
     filter(TechScen == TechScenWanted, Year == YearWanted) %>%
-    select(VC, NIE) # leaves a small df with net intensity changes for each vehicle class
+    select(VC, NIE) # leaves and returns a small df with net intensity changes for each vehicle class
 }
 ```
 
