@@ -245,3 +245,34 @@ ToDo Next 20191127
         - account for overall demand reduction with VMT (from efficient tax computation)
         - exclude shift toward pooled with universal VMT charge
         - exclude shift away from pooled with shared veh-only VMT charge
+
+Summary of CAVESIM Model Steps (as of 20200216)
+-------------------------------------------
+1. Establish set of Technology Mechanisms `IEffectsm$Mech`
+  - a. that can alter vehicle energy intensity
+  - b. that can shift/alter VMT demand
+1. Establish range of impacts $\mu_{tvks}$ or `IEffectsm$IM`, for each of those Mechanisms for 4 "EffectCase" (Zero, Pess, Mid, Opt) 
+  - plot range by mechanism in bar graph
+1. Define `TechScen` technology scenarios that establish fractional changes in vehicle energy intensity for each Mechanism $s_{tjvk}$, which associates an `EffectCase` *s* for each `Mech` *k* and `TechScen` *j*.
+  - the $s_{tjvk}$ are indicated in `msa$EffectCase`
+1. Calculate Net Energy Intensity change for each TechScen as the product of the individual mechanism multipliers minus 1.0
+  - $\Delta I_{jtv}$ = `EnergyIntensityChanges$NIE`
+  - also $\Delta I_{jtv}$ = `EnergyIntensityCompons$NIE`, which also includes the multipliers for each of the (9) intensity mechanisms `Mech`
+1. Plots (Sec 3.3):
+  - Plots of (net) Energy Intensity Changes by Technology Scenario (Year and VC)
+  - Plot of Energy Intensity Effect ranges by Mechanism
+1. (Sec. 3.4) Establish Cases for Exogenous Demand Effects 
+  - in `DemRespParams` for `VC`, `Parameter`, `EffectCase`.
+    - ElasVKT, ExclVehCapCost, C_x, for x in {deltaMaint, deltaInsurX, deltaCapCost, deltaTolls, deltaParking, deltaRegis, deltaVoTTHwy, deltaVoTTArt}
+  - in `DemScenCostChange` for `DemScen`, `C_deltaVoTT`, `C_deltaInsur`
+    - `DemScen` set include numbered DSn and selected SMART Scenarios, and "Zero"
+1. (Sec 4.1.2) Establish the Reference Mix of Vehicle Types in the Desired Demand Scenarios
+  - yields `shares_by_F_A` F_A_Shares by VC, Automation, Fuel, DemScen.
+  - yields `shares_by_U` U_Shares by VC, Use, DemScen.
+1. (Sec 4.1.3) Select a Single Technology Scenario and Year to Examine
+  - define `updateI_deltaCAVinDemRespParams()` to Update `I_deltaCAV`, net energy intensity change, to be consistent with current TechScen
+  - define `nieForScenYear()` to extract net energy intensity changein `DemRespParams` by Veh Class for TechScen and Year
+1. (Sec 4.2) Establish Base vehicle travel costs, by component
+  - b. that can alter vehicle costs
+
+XXX Exec up to 4.3
