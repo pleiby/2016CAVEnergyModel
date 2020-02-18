@@ -769,7 +769,7 @@ nieForScenYear <- function(EIChanges, TechScenWanted, YearWanted) {
 
 # This assignment is awkward, due to non-ideal organization of data tables.
 # DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
-updateI_deltaCAVinDemRespParams <- function(local_DemRespParams, local_nie) {
+updateI_deltaCAVinDemRespParamsOld <- function(local_DemRespParams, local_nie) { # ***UNUSED***
   local_DemRespParams %>%
     gather(key = Sens, value = value, -c(VC, Parameter)) %>% # following assigns the same
     mutate(
@@ -779,11 +779,33 @@ updateI_deltaCAVinDemRespParams <- function(local_DemRespParams, local_nie) {
     spread(key = Sens, value = value) %>%
     select(c("VC", "Parameter", "Zero", "Low", "Med", "High")) # reorder columns after gather/spread
 }
+
+# DemRespParams$I_deltaCAV <- DemRespParams$NIE <- EnergyIntensityChange$NIE, for matching VC, Year, TechScen
+updateI_deltaCAVinDemRespParams <- function(
+    local_DemRespParams, # df with VC, Parameter, and values for alt EffectCase(s)
+    local_nie # net energy intensity changes for Current TechScen and Year, both vehicle classes
+  ) {
+  local_DemRespParams %>%
+    gather(key = Sens, value = value, -c(VC, Parameter)) %>% 
+    spread(key = Parameter, value = value) %>% # cols are now parameter values, by VA and "Sens" (EffectCase)
+    left_join(local_nie, by = c("VC")) %>% # add column for nie over VC
+    mutate(
+      I_deltaCAV = NIE # update/replace with NIE for current TechScen
+    ) %>%
+    select(-NIE) %>%
+    gather(key = Parameter, value = value, -c(VC, Sens)) %>% 
+    spread(key = Sens, value = value) %>%
+    select(c("VC", "Parameter", "Zero", "Low", "Med", "High")) # reorder columns after gather/spread
+}
+
 ```
 
 
 ```{r updateAndReportDemRespParams, echo=echoWorking}
-# Select energy intensity changes and other cost and demand response parameters for the current Technology and Demand Scenario
+# Select net energy intensity changes and other cost and demand response parameters
+#   for the current Technology and Demand Scenario, and Year
+
+# First select net energy intensity changes for the current Technology and Year
 nie <- nieForScenYear(EnergyIntensityChanges, CurrTechScen, CurrYear)
 
 # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
@@ -1633,7 +1655,7 @@ Note: this calculation applies the VKT elasticity, estimated and appropriate for
 ```{r constructTechScenEffectsIE, echo=echoWorking}
 
 # This is all vehicle energy intensity changes for all values of TechScen, Year, and Vehicle Class
-TechScenEffectsEI <- EnergyIntensityChanges %>%
+TechScenEffectsEI <- EnergyIntensityChanges %>% # ***UNUSED***
   ungroup() %>%
   select(TechScen, Year, VC, NIE)
 ```
@@ -1660,52 +1682,58 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   #   - elasticity cases ElasCase
   #   - vehicle clases VC
   # Requires globals:
-  #   - EnergyIntensityChanges: dataframe of ref energy intensity changes NIE by TechScen, VC, Year
+  #   - EnergyIntensityCompons: dataframe of energy intensity changes by TechScen, VC, Year
+  #                    (intensity change columns include Net Intensity Effects NIE and all compon mechanisms)
   #   - DemRepsParams: demand params `value` by Parameter, VC, Zero, Low, Mid, High (EffectCase)
   #                    (Parameter includes cost changes, ElasVKT, overall intensity change I_deltaCAV)
-  #   - EnergyIntensityCompons: dataframe of re energy intensity changes by TechScen, VC, Year
-  #                    (intensity change columns inluce NIE and all compon mechanisms)
+  #   - VTCShrBase: df of base cost component shares `VTCost_shr`, by VehType, CostCat. 
   # 
     
   # Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
   #   leaves a small df with net intensity changes for each vehicle class
-  nie <- nieForScenYear(EnergyIntensityChanges, CurrTS, CurrYr)
+  nie <- nieForScenYear(EnergyIntensityCompons, CurrTS, CurrYr)
 
-  # IDEA: ToDo: Better to skip this step, updating I_deltaCAV, and just use NIE directly
+  # IDEA: ToDo: Better to skip this step calling updateI_deltaCAVinDemRespParams,
+  #   instead updating I_deltaCAV, and just use NIE directly.
   # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
   # Transcribe current (computed) net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
   #  Get updated change in net energy intensity (based on product of active mechanisms in current tech scenario and year)
-  DemRespParams <- updateI_deltaCAVinDemRespParams(DemRespParams, nie)
+  # DemRespParams <- updateI_deltaCAVinDemRespParams(DemRespParams, nie)
 
   # Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases
   y <- DemRespParams %>%
     select(-c(Zero, Med)) %>%
     gather(key = Case, value = value, Low:High) %>% # for two cases (Low and High)
     spread(key = Parameter, value = value) %>%
-    right_join(nie, by="VC") %>% 
-    rename(TEMP_NIE = NIE)
+    right_join(nie, by="VC") %>%
+    mutate(I_deltaCAV = NIE) %>% # update to net intensity effect for curr TechScen
+    rename(TEMP_NIE = NIE) # kept only for check
 
   # VTCShrAlt
 
   # Start with dataframe replicates the Base Vehicle Travel Cost Shares for each Demand Scenario
-  VTCShrAlt <- VTCShrBase %>%
-    mutate(
-      DS1 = VTCost_shr, # initialize to base cost shares (4 Demand Scenarios)
-      DS2 = VTCost_shr,
-      DS3 = VTCost_shr,
-      DS4 = VTCost_shr,
-      DS5 = VTCost_shr,
-      DS6 = VTCost_shr,
-      DS7 = VTCost_shr,
-      Test = VTCost_shr,
-      Zero = VTCost_shr,
-      Base = VTCost_shr,
-      B_Low = VTCost_shr,
-      B_High = VTCost_shr,
-      C_Low = VTCost_shr,
-      C_High = VTCost_shr,
-      VC = substr(as.character(VehType), 1, 3)
-    ) %>%
+  VTCShrAlt <- VTCShrBase
+  # KLUDGE: duplicate column, w/o good names
+  VTCShrAlt[,(ncol(VTCShrAlt)+1):(ncol(VTCShrAlt)+length(DetailedDemScens))] = VTCShrAlt$VTCost_shr
+  names(VTCShrAlt) <- c(names(VTCShrBase), DetailedDemScens)
+  #  mutate(
+  #    DS1 = VTCost_shr, # initialize to base cost shares (4 Demand Scenarios)
+  #    DS2 = VTCost_shr,
+  #    DS3 = VTCost_shr,
+  #    DS4 = VTCost_shr,
+  #    DS5 = VTCost_shr,
+  #    DS6 = VTCost_shr,
+  #    DS7 = VTCost_shr,
+  #    Test = VTCost_shr,
+  #    Zero = VTCost_shr,
+  #    Base = VTCost_shr,
+  #    B_Low = VTCost_shr,
+  #    B_High = VTCost_shr,
+  #    C_Low = VTCost_shr,
+  #    C_High = VTCost_shr,
+  #    VC = substr(as.character(VehType), 1, 3)
+  #  ) %>%
+  VTCShrAlt <- VTCShrAlt %>%
     select(-VTCost_shr) # could also keep as Base case, DS0
   # rename(Base = VTCost_Shr)
 
@@ -1846,7 +1874,7 @@ Construct details of scenario, disaggregated by vehicle class, automation, fuel 
 # here detail parameters are defined for 
 #   Intensity multipliers by vehicle type (A, F), and
 #   demand shift multipliers by Use case U
-DisaggParams <- DemScenAdjustments %>%
+DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
   filter(DemScen %in% DetailedDemScens) %>%
   select(-Comments) %>%
   left_join(shares_by_F_A, by = c("VC", "DemScen")) %>% # starting with Fuel and Automation shares by VC and DemScen
@@ -1900,6 +1928,7 @@ CaseAssumpsResults <- CaseAssumpsResults_many %>%
 CaseAssumpsResults <- CaseAssumpsResults %>%
   left_join(shares_by_F_A, b = c("VC", "DemScen")) %>% # add Fuel and Automation shares
   left_join(shares_by_U, by = c("VC", "DemScen")) # add Use (Sharing, Hailing/Pooling) shares
+
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
     mI_A = ifelse(Automation == "Full", 1.0,
