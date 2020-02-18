@@ -278,3 +278,12 @@ Summary of CAVESIM Model Steps (as of 20200216)
     - b. that can alter vehicle costs
 
 XXX Exec up to 4.3
+1. (Sec 5) Execute Policy and Combined Scenario Calculations
+1. Create a dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios.
+  - Note: Demand calculation applies the VKT elasticity indicating cost response at the reference level (near zero) pooling
+1. Given a set *D* of demand scenarios (`DetailedDemScens`) Loop over all Tech Scenarios (TechScen) and develop a table of all combinations of Tech Scenarios and Demand 
+  `Scenarios.CombScenInputsAndResultsForOneTechScen`(CurrTechScen, CurrYear, DetailedDemScens))
+  
+  
+  
+streamline functions: updateI_deltaCAVinDemRespParams
