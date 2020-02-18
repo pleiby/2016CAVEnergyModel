@@ -751,7 +751,7 @@ Demand response is a function of full (generalized) travel cost, and energy inte
 
 [^x]: *Note:* For variant cost-sensitivity exploration of the scenarios, 
 we could add an endogenous energy-cost dependent change in intensity at this point, 
-based on historical information about the elaticity of vehicle fuel economy.
+based on historical information about the elasticity of vehicle fuel economy.
 
 ```{r defFn_nieForScenYear, echo=echoWorking}
 # define function to extract net energy intensity change by Veh Class for TechScen and Year
@@ -759,13 +759,13 @@ nieForScenYear <- function(EIChanges, TechScenWanted, YearWanted) {
   EIChanges %>%
     ungroup() %>%
     filter(TechScen == TechScenWanted, Year == YearWanted) %>%
-    select(VC, NIE) # leaves and returns a small df with net intensity changes for each vehicle class
+    select(VC, NIE) # returns a small df with net intensity changes for each vehicle class
 }
 ```
 
 ```{r defFn_updateI_deltaCAVinDemRespParams, echo=echoWorking}
 # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
-# Transcribe current (computed) net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
+# Transcribe current (computed) net intensity effects (nie) to the I_deltaCAV variable in DemRespParams
 
 # This assignment is awkward, due to non-ideal organization of data tables.
 # DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
@@ -1659,7 +1659,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   #   - demand scenarios DemScen
   #   - elasticity cases ElasCase
   #   - vehicle clases VC
-  # Requires:
+  # Requires globals:
   #   - EnergyIntensityChanges: dataframe of ref energy intensity changes NIE by TechScen, VC, Year
   #   - DemRepsParams: demand params `value` by Parameter, VC, Zero, Low, Mid, High (EffectCase)
   #                    (Parameter includes cost changes, ElasVKT, overall intensity change I_deltaCAV)
@@ -1843,6 +1843,9 @@ for (CurrTechScen in techScensWanted) {
 Construct details of scenario, disaggregated by vehicle class, automation, fuel technology, use type.
 
 ```{r defineDisaggParams, echo=echoWorking}
+# here detail parameters are defined for 
+#   Intensity multipliers by vehicle type (A, F), and
+#   demand shift multipliers by Use case U
 DisaggParams <- DemScenAdjustments %>%
   filter(DemScen %in% DetailedDemScens) %>%
   select(-Comments) %>%
