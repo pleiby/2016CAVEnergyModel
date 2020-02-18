@@ -1713,27 +1713,15 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
 
   # Start with dataframe replicates the Base Vehicle Travel Cost Shares for each Demand Scenario
   VTCShrAlt <- VTCShrBase
-  # KLUDGE: duplicate column, w/o good names
-  VTCShrAlt[,(ncol(VTCShrAlt)+1):(ncol(VTCShrAlt)+length(DetailedDemScens))] = VTCShrAlt$VTCost_shr
-  names(VTCShrAlt) <- c(names(VTCShrBase), DetailedDemScens)
-  #  mutate(
-  #    DS1 = VTCost_shr, # initialize to base cost shares (4 Demand Scenarios)
-  #    DS2 = VTCost_shr,
-  #    DS3 = VTCost_shr,
-  #    DS4 = VTCost_shr,
-  #    DS5 = VTCost_shr,
-  #    DS6 = VTCost_shr,
-  #    DS7 = VTCost_shr,
-  #    Test = VTCost_shr,
-  #    Zero = VTCost_shr,
-  #    Base = VTCost_shr,
-  #    B_Low = VTCost_shr,
-  #    B_High = VTCost_shr,
-  #    C_Low = VTCost_shr,
-  #    C_High = VTCost_shr,
-  #    VC = substr(as.character(VehType), 1, 3)
-  #  ) %>%
+  # duplicate Base column, for desired Demand Scenarios
+  oldDemScens = c("DS1", "DS2", "DS3", "DS4", "DS5", "DS6", "DS7", "Test", "Zero") # not really needed
+  VTCShrAlt[oldDemScens] = VTCShrAlt$VTCost_shr
+  VTCShrAlt[demScensWanted] = VTCShrAlt$VTCost_shr
+  
   VTCShrAlt <- VTCShrAlt %>%
+    mutate(
+      VC = substr(as.character(VehType), 1, 3)
+    ) %>%
     select(-VTCost_shr) # could also keep as Base case, DS0
   # rename(Base = VTCost_Shr)
 
