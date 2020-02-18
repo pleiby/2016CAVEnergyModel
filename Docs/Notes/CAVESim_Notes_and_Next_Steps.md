@@ -270,7 +270,7 @@ Summary of CAVESIM Model Steps (as of 20200216)
   - yields `shares_by_F_A` F_A_Shares by VC, Automation, Fuel, DemScen.
   - yields `shares_by_U` U_Shares by VC, Use, DemScen.
 1. (Sec 4.1.3) Select a Single Technology Scenario and Year to Examine
-  - define `updateI_deltaCAVinDemRespParams()` to Update `I_deltaCAV`, net energy intensity change, to be consistent with current TechScen
+  - define `updateI_deltaCAVinDemRespParams()` to Update `I_deltaCAV`, net energy intensity change, in `DemRespParams`, to be consistent with current TechScen
   - define `nieForScenYear()` to extract net energy intensity changein `DemRespParams` by Veh Class for TechScen and Year
 1. (Sec 4.2) Establish Base vehicle travel costs, by component
   - b. that can alter vehicle costs
