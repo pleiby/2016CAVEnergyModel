@@ -1838,7 +1838,7 @@ This calculates the fractional change in energy Intensity, VMT, and Energy Use b
 ```{r selectScensToPostProcess, echo=echoWorking, warning=F}
 # first select only scenarios for which we have disaggregated tech shares
 DetailedDemScens <- unique(shares_by_F_A$DemScen)
-DetailedDemScens <- DetailedDemScens[!(DetailedDemScens %in% c("Zero", "B_Low", "C_Low", "Test"))] # not of interest, Zero does what is says
+DetailedDemScens <- DetailedDemScens[!(DetailedDemScens %in% c("Zero", "A_Low", "A_High", "B_Low", "C_Low", "Test"))] # not of interest, Zero does what is says
 # DetailedDemScens
 ```
 
