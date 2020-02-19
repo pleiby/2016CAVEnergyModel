@@ -266,22 +266,48 @@ Summary of CAVESIM Model Steps (as of 20200216)
     - Plots of (net) Energy Intensity Changes by Technology Scenario (Year and VC)
     - Plot of Energy Intensity Effect ranges by Mechanism
 1. (Sec. 3.4) Establish Cases for Exogenous Demand Effects 
-    - in `DemRespParams` for `VC`, `Parameter`, `EffectCase`.
-        - ElasVKT, ExclVehCapCost, C_x, for x in {deltaMaint, deltaInsurX, deltaCapCost, deltaTolls, deltaParking, deltaRegis, deltaVoTTHwy, deltaVoTTArt}
+    - `DEffectsTemp` specifies demand mechanism values in 4 EffectCase for 
+        - `D_Underserved_travelers`, `D_Ride_Hailing_Empty_Miles`, `D_Induced_VMT_Demand`
+    - combine this with `IEffects` to `CombIDEffects` and plot bar chart of mechanism effect ranges
+1. (Sec 4) Develop Demand Response to CAVs: exegenous demand shifts and an endogenous travel demand response to net change in generalized travel cost
+1. (Sec 4.1.1) Establish Demand Response Parameters in df `DemRespParams`
+    - in `DemRespParams` for `VC`, `Parameter`, and 4 `EffectCase`s.
+        - `ElasVKT`, `ExclVehCapCost`, `C_xxx`, for xxx in {deltaMaint, deltaInsurX, deltaCapCost, deltaTolls, deltaParking, deltaRegis, deltaVoTTHwy, deltaVoTTArt}
     - in `DemScenCostChange` for `DemScen`, `C_deltaVoTT`, `C_deltaInsur`
         - `DemScen` set include numbered DSn and selected SMART Scenarios, and "Zero"
-1. (Sec 4.1.2) Establish the Reference Mix of Vehicle Types in the Desired Demand Scenarios
+1. (Sec 4.1.2) Establish the (exog) Reference Mix of Vehicle Types in the Desired Demand Scenarios
     - yields `shares_by_F_A` F_A_Shares by VC, Automation, Fuel, DemScen.
     - yields `shares_by_U` U_Shares by VC, Use, DemScen.
 1. (Sec 4.1.3) Select a Single Technology Scenario and Year to Examine
     - define `updateI_deltaCAVinDemRespParams()` to Update `I_deltaCAV`, net energy intensity change, in `DemRespParams`, to be consistent with current TechScen
     - define `nieForScenYear()` to extract net energy intensity change in `DemRespParams` by Veh Class for TechScen and Year
-1. (Sec 4.2) Establish Base vehicle travel costs, by component
-    - b. that can alter vehicle costs
+1. (Sec 4.2) Establish Base vehicle travel costs, and cost shares, by component
+    - establish df `VTCostBase`, which has `VTCost_cpm` by `VehType` and `CostCat`
+    - travel time costs per mile `TTC_per_mi`, based on ave `speed` and `VoTT`, calculated and copied to `VTCost_cpm` for `CostCat` == `Time`)
+    - base cost shares in `VTCShrBase`
+1. (Sec 4.3) Cost Changes and Fractional Increase in VKT for Demand/Technology Scenarios
+    - Calculate fractional change in demand, for Demand Scenario *d*, Year *t*, and VehicleClass *v*, based on changes in time cost, other vehicle fuel and operating costs, and VMT demand elasticity w.r.t generalized cost.
+    - calc `VTCShrAlt` and `VTCostAlt`:
+    - (Sec 4.4) Calculate Adjusted Travel Cost Components for Demand Scenario Conditions
+        - Updated cost component table VTCShrAlt based on *Demand* Scenario adjustments to VoTT and other costs.
+        - Calculate cost component as relative fractions (pseudo-shares) for all demand scenarios.
+    - calc `RelTotCost` as total cost ("Total") by "DemScen", "VehType", "VC", "Case"
+1. Plot, for a set of DemScen/TechScen combos
+    - relative total costs (shares) and relative component shares (with `plotStackedBarShares()` fn)
+    - costs (cents/mi) and component costs (with `plotStackedBarCostCompons()` fn)
+1. (Sec 4.5) Calc Fractional VMT Changes in CAV Demand Scenario (Single Tech Case)
+    - append, `RelTotCost` associated variables `ElasVKT` and compute `fracVMTIncr`, the cost-elastic response
+    - then apply (multiplicative) exog demand shifts
+        - Effects on VMT Demand from Underserved Population, and Ride Hailing & Pooling
+            - from table/df `UnderservedVMTmult` (`USDmult` for each `USOption`)
+            - from table/df `refRideHailingPoolingAdj` (adj fractional change by vehicle `Use`, `Automation`, and `EffectCase` (Zero ... High))
+        - values of each exog demand effect determined in table `DemScenAdjustments`
+            - which specifies selected `USOption` and `RidePoolAdj` (`EffectCase`) to apply by `VC`, and `DemScen`
+    - suitable numerical multipliers/shifts are compiled in table `DemScenAdjustments`
+        - gives `USDmult` and `RidePoolAdjFrac` (shift) values by "VC", "DemScen", "USOption", and "RidePoolAdj"
+    - these exog effects are applied to `fracVMTIncr` in df `VMTIncrease`
 
-1. XXX Exec up to 4.3
-
-1. (Sec 5) Execute Policy and Combined Scenario Calculations
+### 1. (Sec 5) Execute Policy and Combined Scenario Calculations
 1. Create a dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios.
   - Note: Demand calculation applies the VKT elasticity indicating cost response at the reference level (near zero) pooling
 1. Given a set *D* of demand scenarios (`DetailedDemScens`) Loop over all Tech Scenarios (TechScen) and develop a table of all combinations of Tech Scenarios and Demand 
