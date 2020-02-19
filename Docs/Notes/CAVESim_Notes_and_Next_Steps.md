@@ -1,7 +1,7 @@
 ---
 title: "CAVESIM Notes and Next Steps"
 author: "Paul Leiby"
-date: "11/26/2019"
+date: "02/19/2020"
 output:
   html_document:
     df_print: paged
@@ -247,6 +247,8 @@ ToDo Next 20191127
         - account for overall demand reduction with VMT (from efficient tax computation)
         - exclude shift toward pooled with universal VMT charge
         - exclude shift away from pooled with shared veh-only VMT charge
+- [ ] Code clarification and streamlining
+    - streamline functions: updateI_deltaCAVinDemRespParams
 
 Summary of CAVESIM Model Steps (as of 20200216)
 -------------------------------------------
@@ -273,17 +275,15 @@ Summary of CAVESIM Model Steps (as of 20200216)
     - yields `shares_by_U` U_Shares by VC, Use, DemScen.
 1. (Sec 4.1.3) Select a Single Technology Scenario and Year to Examine
     - define `updateI_deltaCAVinDemRespParams()` to Update `I_deltaCAV`, net energy intensity change, in `DemRespParams`, to be consistent with current TechScen
-    - define `nieForScenYear()` to extract net energy intensity changein `DemRespParams` by Veh Class for TechScen and Year
+    - define `nieForScenYear()` to extract net energy intensity change in `DemRespParams` by Veh Class for TechScen and Year
 1. (Sec 4.2) Establish Base vehicle travel costs, by component
     - b. that can alter vehicle costs
 
-XXX Exec up to 4.3
+1. XXX Exec up to 4.3
+
 1. (Sec 5) Execute Policy and Combined Scenario Calculations
 1. Create a dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios.
   - Note: Demand calculation applies the VKT elasticity indicating cost response at the reference level (near zero) pooling
 1. Given a set *D* of demand scenarios (`DetailedDemScens`) Loop over all Tech Scenarios (TechScen) and develop a table of all combinations of Tech Scenarios and Demand 
   `Scenarios.CombScenInputsAndResultsForOneTechScen`(CurrTechScen, CurrYear, DetailedDemScens))
   
-  
-  
-streamline functions: updateI_deltaCAVinDemRespParams
