@@ -550,7 +550,7 @@ CombIDEffects %>%
 
 # 4. Demand Response to CAVs
 
-In addition to the changes in energy intensity we account for an endogenous travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
+In addition to the changes in energy intensity we account for exegenous demand shifts and an endogenous travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
 
 4.1 Key parameters for Demand scenarios
 -----------------------
@@ -740,7 +740,6 @@ shares_by_U <-
 CurrTechScen <- 4
 CurrYear <- 2050
 
-CurrDemScen <- "DS1" # Unused
 ```
 
 Energy Intensity change is determined by on the Technology Scenario, and year of interest. For example consider Technology Scenario `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario, in year `r CurrYear`. 
@@ -1247,8 +1246,8 @@ DemScenParameterRange %>%
 #   filter(maxminusmin>0)
 ```
 
-Updated cost component table based on *Demand* Scenario VoTT and other costs.
-Calculate cost component relative fractions (pseudo-shares) for all demand scenarios. 
+Updated cost component table based on *Demand* Scenario adjustments to VoTT and other travel costs.
+Calculate cost component as relative fractions (pseudo-shares) for all demand scenarios. 
 For the cost component calculations below, Technology (energy intensity) scenario is currently held 
 at number `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name"]]`" scenario. This determines the fuel cost.
 
@@ -2082,10 +2081,10 @@ CaseAssumpsResults <- CaseAssumpsResults %>% select(names(CaseEffects), everythi
 write_csv(CaseAssumpsResults, path = "CAV_Scenario_results.csv")
 ```
 
-Define the Combined Scenarios `CombScen`, in terms of name, year, vehicle class,
+Define the Combined Scenarios `CombScen`, in terms of name, `Year`, vehicle class `VC`,
 energy-intensity related automation technology changes (`TechScen`),
 VMT demand related changes (`DemScen`) (cost shifts, vehicle sharing responses and exogenous demand shifts),
-and demand
+and VKT demand elasticity `ElasCase`.
 
 ```{r defineCombScenariosTable, echo=echoWorking}
 CombScen_Combinations <- read.delim(textConnection("
@@ -3030,18 +3029,17 @@ get_legend <- function(myggplot){
 }
 ```
 
-```{r dualOccupancyPlot, echo=echoWorking, dpi=300, fig.width=5, fig.height=3.0}
+```{r dualOccupancyPlot, echo=echoWorking, dpi=300, fig.width=7, fig.height=3.0}
 # grid.arrange() [in gridExtra]:
 
 library("gridExtra")
 plt1 = plotOccupancyEffects(occupancyEffects,
                      curr_subtitle = "Ideal routing efficiency, no disutility to sharing space. Demand rebound to cost.")
 plt2 = plotOccupancyEffects(occupancyEffects1,
-                     curr_subtitle = "Partial routing efficiency, small sharing disutility, no road charge. Demand rebound to cost.")
+                     curr_subtitle = "Partial routing efficiency, small sharing disutility. Demand rebound to cost.")
 
 #grid.arrange(plt1 + theme(legend.position="none"), plt2, # + rremove("x.text"), 
-grid.arrange(plt1, plt2, # + rremove("x.text"), 
-             ncol = 2, nrow = 1)
+#grid.arrange(plt1, plt2, # + rremove("x.text"), ncol = 2, nrow = 1)
 
 legend <- get_legend(plt1)
 # 3. Remove the legend from the box plot
