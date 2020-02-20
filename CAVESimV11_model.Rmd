@@ -1266,7 +1266,6 @@ at number `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name
 VTCShrAlt <- VTCShrAlt %>% mutate(
   Fuel = Fuel * (1.0 + I_deltaCAV * ShrECostInt),
   # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
-  # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
   Maintenance = Maintenance * (1.0 + C_deltaMaint),
   AccAndIns = AccAndIns * (1.0 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
   VehCapCost = VehCapCost * (1.0 + C_deltaCapCost), # (1+CapitalCostChange)
@@ -1698,7 +1697,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   #   - DemRepsParams: demand params `value` by Parameter, VC, Zero, Low, Mid, High (EffectCase)
   #                    (Parameter includes cost changes, ElasVKT, overall intensity change I_deltaCAV)
   #   - VTCShrBase: df of base cost component shares `VTCost_shr`, by VehType, CostCat. 
-  # 
+  #   - DemScenCostChang: 
     
   # VTCShrAlt
 
@@ -1706,9 +1705,8 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   VTCShrAlt <- VTCShrBase
   # duplicate Base column, for desired Demand Scenarios
   oldDemScens = c("DS1", "DS2", "DS3", "DS4", "DS5", "DS6", "DS7", "Test", "Zero") # not really needed
-  VTCShrAlt[oldDemScens] = VTCShrAlt$VTCost_shr
-  VTCShrAlt[demScensWanted] = VTCShrAlt$VTCost_shr
-  
+  VTCShrAlt[c(oldDemScens, demScensWanted)] = VTCShrAlt$VTCost_shr
+
   VTCShrAlt <- VTCShrAlt %>%
     mutate(
       VC = substr(as.character(VehType), 1, 3)
@@ -1760,7 +1758,6 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   VTCShrAlt <- VTCShrAlt %>% mutate(
     Fuel = Fuel * (1.0 + I_deltaCAV * ShrECostInt),
     # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
-    # "Fuel energy cost reduction" = 'Policy+Scenario'!D$11
     Maintenance = Maintenance * (1.0 + C_deltaMaint),
     AccAndIns = AccAndIns * (1.0 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
     VehCapCost = VehCapCost * (1.0 + C_deltaCapCost), # (1+CapitalCostChange)
@@ -1857,19 +1854,63 @@ DetailedDemScens <- DetailedDemScens[!(DetailedDemScens %in% c("Zero", "A_Low", 
 
 ```{r multCombScenarioResultsAndAssumptionsLoop, echo=echoWorking}
 CurrYear <- 2050
-techScensWanted <- unique(msa$TechScen)
+techScensWanted <- unique(msa$TechScen) # all TechScens in data set
 
 # This loop builds a dataframe of Combined Scenario (CombScen) assumptions and results
 CaseAssumpsResults_many <- data.frame() # simplest empty dataframe
 
 for (CurrTechScen in techScensWanted) {
+  # this type of loop is slowed by the building/copying of the dataframe each iteration
+  #  faster to fill a list of df with the loop, then unnest. But still fast.
   CaseAssumpsResults_many <- rbind(
     CaseAssumpsResults_many, 
     CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear, DetailedDemScens))
 }
 ```
 
+5.1 Construct Detailed Scenarios Disaggregated by Vehicle Sub-types
+-------------------------------------------------------------------
+
 Construct details of scenario, disaggregated by vehicle class, automation, fuel technology, use type.
+
+For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_High), and for each vehicle class `VC`, specify and apply disaggregated demand and intensity adjustment factors by Vehicle Fuel, Automation and Use (*F*, *A* and *U*) categories.
+
+```{r}
+#    mI_A   Automation Value 
+#    mI_A   "Full",    1.0,
+#    mI_A   "Partial", 0.5,
+#    mI_A   "No",      0.0,
+#    mI_A   otherwise, NA
+#
+#    mI_C   VC    Value
+#    mI_C   = 1.0,
+#    mI_C   "LDV", 1.0,
+#    mI_C   "HDV", 0.5,
+#    mI_C   otherwise, NA
+#
+#    # Note these are all adjustments to the incremental effect of automation,
+#    #  for the effect on energy use of electrification
+#    mI_FA  Fuel,  Value
+#    mI_FA  "Gas", 1.0,
+#    mI_FA  "PHEV", 0.9,
+#    mI_FA  "BEV", 0.5,
+#    mI_FA  otherwise, NA
+#
+#    # Note these are adjustments to the base vehicle energy efficiency,
+#    #  for the effect on energy use of electrification
+#    mI_FB  Fuel,  Value
+#    mI_FB  "Gas", 1.0,
+#    mI_FB  "PHEV", 0.9,
+#    mI_FB  "BEV", 0.5,
+#    mI_FB  otherwise NA
+#
+#        # Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use
+#    mD_U   Use,    Value
+#    mD_U   "Private", 1.0,
+#    # estab Shared repositioning demand mults/shifts
+#    mD_U   "Shared", (1 + RidePoolAdjFrac)
+#    mD_U   otherwise NA
+```
 
 ```{r defineDisaggParams, echo=echoWorking}
 # here detail parameters are defined for 
@@ -1888,12 +1929,14 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
         )
       )
     ),
+    # Note these are all adjustments to the incremental effect of automation,
+    #  note to the effect on energy use of electrification
     mI_C = 1.0,
     # mI_C = ifelse(VC=="LDV", 1.0,
     #              ifelse(VC=="HDV", 0.5,
     #                     NA)),
     # Note these are all adjustments to the incremental effect of automation,
-    #  note to the effect on energy use of electrification
+    #  for to the effect on energy use of electrification
     mI_FA = ifelse(Fuel == "Gas", 1.0,
       ifelse(Fuel == "PHEV", 0.9,
         ifelse(Fuel == "BEV", 0.5,
@@ -1902,7 +1945,7 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
       )
     ),
     # Note these are adjustments to the base vehicle energy efficiency,
-    #  note to the effect on energy use of electrification
+    #  for the effect on energy use of electrification
     mI_FB = ifelse(Fuel == "Gas", 1.0,
       ifelse(Fuel == "PHEV", 0.9,
         ifelse(Fuel == "BEV", 0.5,
@@ -1921,7 +1964,11 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
 
 ```
 
-```{r postProcessCombScenarioResults, echo=echoWorking, warning=F}
+Create `CaseAssumpsResults` from `CaseAssumptionsResults_Many` for selected `DemScen` in `DetailedDemScens`.
+
+Add vehicle shares by F & A, and by U, to each combination of `VC` and `DemScen` `CaseAssumpsResults`.
+
+```{r postProcessCombScenarioResults1, echo=echoWorking, warning=F}
 
 CaseAssumpsResults <- CaseAssumpsResults_many %>%
   filter(DemScen %in% DetailedDemScens)
@@ -1943,8 +1990,8 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     # mI_C = ifelse(VC=="LDV", 1.0,
     #              ifelse(VC=="HDV", 0.5,
     #                     NA)),
-    # Note these are all adjustments to the incremental effect of automation,
-    #  note to the effect on energy use of electrification
+    # Note these are all adjustments for the incremental effect of automation,
+    #  not for the effect on energy use of electrification
     mI_FA = ifelse(Fuel == "Gas", 1.0,
       ifelse(Fuel == "PHEV", 0.9,
         ifelse(Fuel == "BEV", 0.5,
@@ -1953,7 +2000,7 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
       )
     ),
     # Note these are adjustments to the base vehicle energy efficiency,
-    #  note to the effect on energy use of electrification
+    #  for the effect on energy use of electrification
     mI_FB = ifelse(Fuel == "Gas", 1.0,
       ifelse(Fuel == "PHEV", 0.9,
         ifelse(Fuel == "BEV", 0.5,
@@ -1969,7 +2016,12 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
       )
     )
   )
+```
 
+Then compute disaggregated Intensity, VMT Demand and Energy Use impact
+for each vehicle category and scenario.
+
+```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
 # Compute Disagg Intensity, VMT Demand and Energy Use impact (could do this earlier)
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
@@ -2304,7 +2356,7 @@ cat(
 )
 ```
 
-5.1 Final Scenario Results Table for 2050
+5.2 Final Scenario Results Table for 2050
 ------------------------
 
 NOTE: FOLLOWING ARE HISTORICAL, SUPERCEDED CASES
@@ -2373,7 +2425,7 @@ table(CWE_test$TechScen, CWE_test$DemScen)
 ```
 
 
-5.2 Bar Chart Representation of Results
+5.3 Bar Chart Representation of Results
 ------------------
 
 ```{r defFn_barPlotScenarioSetIntVMTEnergy, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
