@@ -206,8 +206,8 @@ ToDo Next 20191127
 - [ ] 4. Revisit Automation_accessory_Load Energy use 
     - (convert kW to fraction of base vehicle average energy use (V [MPH] / E [MPG]) * kWh/Gal * EngineEffiency= kWh/h 
     - or get estimate of ave power use by vehicle
-- [ ] 5b. More careful Update VoTT cases to conform to the scenarios detail
-- [ ] 5c. More careful Update VoTT cases to conform to the scenarios detail
+- [ ] 5b. More careful Update VoTT cases to conform to the scenarios detail (`C_deltaVoTT` should be dependent on Automation and Use (Sharing/Pooling))
+- [ ] 5c. More careful Update VoTT cases to conform to the scenarios detail ??? duplicate
 - [ ] 5d. Refine speed calculations, distinguishing between Highway and Arterial reference speed (this influences trip time and VoTT calculation per mile) 
 - [ ] 5e. Refine speed calculations, better-accounting for effect of autmation on (average) traffic speed (see ReductPaceAutomation) (this influences trip time and VoTT calculation per mile) 
 - [ ] 6. Refine vehicle categories and stock-related data to conform to the analysis
@@ -289,7 +289,7 @@ Summary of CAVESIM Model Steps (as of 20200216)
     - Calculate fractional change in demand, for Demand Scenario *d*, Year *t*, and VehicleClass *v*, based on changes in time cost, other vehicle fuel and operating costs, and VMT demand elasticity w.r.t generalized cost.
     - calc `VTCShrAlt` and `VTCostAlt`:
     - (Sec 4.4) Calculate Adjusted Travel Cost Components for Demand Scenario Conditions
-        - Updated cost component table VTCShrAlt based on *Demand* Scenario adjustments to VoTT and other costs.
+        - Updated cost component table VTCShrAlt based on *Demand* Scenario adjustments to VoTT (`C_deltaVoTT`) and other costs.
         - Calculate cost component as relative fractions (pseudo-shares) for all demand scenarios.
     - calc `RelTotCost` as total cost ("Total") by "DemScen", "VehType", "VC", "Case"
 1. Plot, for a set of DemScen/TechScen combos
@@ -307,16 +307,40 @@ Summary of CAVESIM Model Steps (as of 20200216)
         - gives `USDmult` and `RidePoolAdjFrac` (shift) values by "VC", "DemScen", "USOption", and "RidePoolAdj"
     - these exog effects are applied to `fracVMTIncr` in df `VMTIncrease`
 
-### 1. (Sec 5) Execute Policy and Combined Scenario Calculations
+1. (Sec 5) Execute Policy and Combined Scenario Calculations
 1. Create a dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios.
-  - Note: Demand calculation applies the VKT elasticity indicating cost response at the reference level (near zero) pooling
+    - Note: Demand calculation applies the VKT elasticity indicating cost response at the reference level (near zero) pooling
 1. Given a set *D* of demand scenarios (`DetailedDemScens`) Loop over all Tech Scenarios (TechScen) and develop a table of all combinations of Tech Scenarios and Demand Scenarios
-  - apply fn `CombScenInputsAndResultsForOneTechScen`(CurrTechScen, CurrYear, DetailedDemScens))
-  - produced df `CaseAssumpsResults_many`
+    - apply fn `CombScenInputsAndResultsForOneTechScen`(CurrTechScen, CurrYear, DetailedDemScens))
+    - produced df `CaseAssumpsResults_many`
 1. Construct details of scenario, disaggregated by vehicle class, automation, fuel technology, use type.
     - DemScenAdjustments is `RidePoolAdjFrac` and `USDmult` for each `VC` and `DemScen` (which determine case categorical vars `USDOption` and `RidePoolAdj`)
-- `DisaggParams` 
+1. Establish `DisaggParams` 
     - for a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_High), and for each vehicle class `VC`
     - specifies disaggregated demand and intensity adjustment factors for `VC` and `DemScen` by Vehicle Fuel, Automation and Use (F, A and U) categories.
 1. Create `CaseAssumpsResults` from `CaseAssumptionsResults_Many` for selected `DemScen` in `DetailedDemScens`
-1. Add vehicle shares by F&A, and by U, to each combination of `VC` and `DemScen` `CaseAssumpsResults`
+1. Add vehicle shares by F&A, and by U, to each combination of `VC` and `DemScen` in `CaseAssumpsResults`
+    - Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
+    - (replicates rows card(A) x card(F) x card(U) times and appends shares
+
+
+
+CAVESim ToDo Next 20200220
+---------------------------
+- [ ] ToDo: distinguish between local and intercity speed and time cost (VoTT, `VTCost_cpm$Time`) per mile in scenarios.
+- [ ] In Sec 5.1 (fn `CombScenInputsAndResultsForOneTechScen()`)
+    - [ ] ToDo: generalize `DemRespParams$C_deltaXxx` to include potential shifts on _all_ travel cost components, and vary by Veh technology
+    - [ ] ToDo: apply vehicle-technology specific `I_deltaCAV` to costs prior to application of `ElasVKT`. I.e., `I_deltaCAV` to vary with level of Automation and Electrification (Fuel).
+- [ ] ToDo: Needed data: Seek to benchmark average speed for local and intercity driving, for both LDVs and HDVs. These regional values should be consistent with overall average speed.
+- [ ] ToDo: Better-represent ways CAVs could alter average speed, and therefor travel time cost per mile.
+- [ ] ToDo: Note: total relative travel cost per mile and its fuel and non-fuel components will vary with
+Automation *A* and Fuel/Drivetrain type *F*. Previous cost components were for Full Automation,
+and each associated Technology and Demand scenario.
+- [ ] ToDo: Increase flexibility in accomodating different fractions of automated, electrified and shared mobility in the scenario. (currently these are exogenous and fixed, and not all cost/intensity/VMT effects are accounted)
+- [ ] In sec 6 calculation of `OccupancyEffects`:
+    - [ ] ToDo: Need Sharing disutility here
+    - [ ] ToDo: Account for deadheading/respositioning miles in ref (No Pooling) case
+- [ ] ToDo: make enumeration of elements in SetJ_TechScen (Scenarios j) and SetD_DemScen a result of read tables, rather than explicit
+    - originally, `C_Time` at this point differentiated only by `VC` and `DemScen`
+- [ ] ToDo: get ShrECostInt to do recalc of `fracVMTIncr` in disaggregation of `CaseAssumpsResults` by veh subcat
+    
