@@ -374,7 +374,7 @@ Note: Here
 
 - $\mu_{tvk{s_{jtvk}}}$ = `IM`
 - $\mu_{tjv}$ = `prod(IM)`
-- $\Delta I_{jtv}$ = `NIE`
+- $\Delta I_{jtv}$ = `NIE` = $\mu_{jtv} - 1$
 
 ```{r constructIntensityByScenario, echo=echoWorking, warning=FALSE, message=FALSE}
 # Overall energy intensity for the scenario is the product of mechanism multipliers
@@ -550,7 +550,7 @@ CombIDEffects %>%
 
 # 4. Demand Response to CAVs
 
-In addition to the changes in energy intensity we account for exegenous demand shifts and an endogenous travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
+In addition to the changes in energy intensity we account for exogenous demand shifts and an endogenous travel demand response based on the net change in generalized cost of travel. The change in generalized costs reflects both the change in energy cost per mile and potential changes in several other cost components, including travel time cost and other vehicle capital and operating cost.
 
 4.1 Key parameters for Demand scenarios
 -----------------------
@@ -1128,7 +1128,8 @@ e.g. from underserved population groups.
 
 CAV penetration is exogenous, and initially assumed 100%, or other specified scenario level.
 <!---
-ToDo: Increase flexibility in accomodating differenet fractions of automated and shared mobility in the scenario. 
+ToDo: Increase flexibility in accomodating differenet fractions of automated,
+electrified and shared mobility in the scenario. 
 -->
 
 Additional VMT and PMT demand responses from shared mobility (and its costs and travel efficiency) are computed subsequently. 
@@ -1262,7 +1263,7 @@ at number `r CurrTechScen`, the "`r mechScenAssumps[[CurrTechScen,"Scenario_Name
 
 # Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
 # Note that this is perceived/internalized cost (may not include all energy gains)
-# **ToDo**: generalize to include potential shifts on _all_ cost components
+# **ToDo**: generalize C_deltaXxx to include potential shifts on _all_ travel cost components, and vary by Veh technology
 VTCShrAlt <- VTCShrAlt %>% mutate(
   Fuel = Fuel * (1.0 + I_deltaCAV * ShrECostInt),
   # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
@@ -1725,8 +1726,8 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   #   leaves a small df with net intensity changes for each vehicle class
   nie <- nieForScenYear(EnergyIntensityCompons, CurrTS, CurrYr)
 
-  # IDEA: ToDo: Better to skip this step calling updateI_deltaCAVinDemRespParams,
-  #   instead updating I_deltaCAV, and just use NIE directly.
+  # Better to skip this step calling updateI_deltaCAVinDemRespParams,
+  #   instead updating I_deltaCAV, and just use NIE and needed parts of DemRespParams directly.
   # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
   # Transcribe current (computed) net intensity changes (nie) to the I_deltaCAV variable in DemRespParams
   #  Get updated change in net energy intensity (based on product of active mechanisms in current tech scenario and year)
@@ -1753,8 +1754,10 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
 
   # Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
   # Note that this is perceived/internalized cost (may not include all energy gains)
-  # **ToDo**: generalize to include potential shifts on _all_ cost components
-  # **ToDo**: apply vehicle-technology specific I_deltaCAv to costs
+  # **ToDo**: generalize C_deltaXxx to include potential shifts on _all_ travel cost components,
+  #   and vary by Veh technology
+  # **ToDo**: apply vehicle-technology specific I_deltaCAV to costs prior to application of ElasVKT. 
+  #   I.e., I_deltaCAV to vary with level of Automation and Electrification.
   VTCShrAlt <- VTCShrAlt %>% mutate(
     Fuel = Fuel * (1.0 + I_deltaCAV * ShrECostInt),
     # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
@@ -1875,13 +1878,16 @@ Construct details of scenario, disaggregated by vehicle class, automation, fuel 
 
 For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_High), and for each vehicle class `VC`, specify and apply disaggregated demand and intensity adjustment factors by Vehicle Fuel, Automation and Use (*F*, *A* and *U*) categories.
 
-```{r}
+```{r tablesForDisaggEffectsByVehSubcat, echo=echoWorking}
+#    # Note these are all adjustments to the incremental effect of full automation
+#    # Fraction of estimated Net Energy Intensity Effect gained by Partial or No Automation
 #    mI_A   Automation Value 
 #    mI_A   "Full",    1.0,
 #    mI_A   "Partial", 0.5,
 #    mI_A   "No",      0.0,
 #    mI_A   otherwise, NA
 #
+#    # Relative Energy Intensity effect of full automation by Vehicle Class (LDV/HDV)
 #    mI_C   VC    Value
 #    mI_C   = 1.0,
 #    mI_C   "LDV", 1.0,
@@ -1904,7 +1910,7 @@ For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_
 #    mI_FB  "BEV", 0.5,
 #    mI_FB  otherwise NA
 #
-#        # Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use
+#    # Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use
 #    mD_U   Use,    Value
 #    mD_U   "Private", 1.0,
 #    # estab Shared repositioning demand mults/shifts
@@ -1922,6 +1928,8 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
   left_join(shares_by_F_A, by = c("VC", "DemScen")) %>% # starting with Fuel and Automation shares by VC and DemScen
   left_join(shares_by_U, by = c("VC", "DemScen")) %>% # add Use (Sharing, Hailing/Pooling) shares
   mutate(
+    # Note these are all adjustments to the incremental effect of full automation
+    # Fraction of estimated Net Energy Intensity Effect gained by Partial or No Automation
     mI_A = ifelse(Automation == "Full", 1.0,
       ifelse(Automation == "Partial", 0.5,
         ifelse(Automation == "No", 0.0,
@@ -1929,14 +1937,13 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
         )
       )
     ),
-    # Note these are all adjustments to the incremental effect of automation,
-    #  note to the effect on energy use of electrification
+    # Relative Energy Intensity effect of full automation by Vehicle Class (LDV/HDV)
     mI_C = 1.0,
     # mI_C = ifelse(VC=="LDV", 1.0,
     #              ifelse(VC=="HDV", 0.5,
     #                     NA)),
     # Note these are all adjustments to the incremental effect of automation,
-    #  for to the effect on energy use of electrification
+    #  for the effect on energy use of electrification
     mI_FA = ifelse(Fuel == "Gas", 1.0,
       ifelse(Fuel == "PHEV", 0.9,
         ifelse(Fuel == "BEV", 0.5,
@@ -1972,13 +1979,17 @@ Add vehicle shares by F & A, and by U, to each combination of `VC` and `DemScen`
 
 CaseAssumpsResults <- CaseAssumpsResults_many %>%
   filter(DemScen %in% DetailedDemScens)
-# Expand table to disaggregate by Vehicle Fuel Type and Automation
+# Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
+#  (replicates rows card(A) x card(F) x card(U) times and appends shares
+#  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
 CaseAssumpsResults <- CaseAssumpsResults %>%
   left_join(shares_by_F_A, b = c("VC", "DemScen")) %>% # add Fuel and Automation shares
   left_join(shares_by_U, by = c("VC", "DemScen")) # add Use (Sharing, Hailing/Pooling) shares
 
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
+    # Note these are all adjustments to the incremental effect of full automation
+    # Fraction of estimated Net Energy Intensity Effect gained by Partial or No Automation
     mI_A = ifelse(Automation == "Full", 1.0,
       ifelse(Automation == "Partial", 0.5,
         ifelse(Automation == "No", 0.0,
@@ -1986,12 +1997,13 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
         )
       )
     ),
+    # Relative Energy Intensity effect of full automation by Vehicle Class (LDV/HDV)
     mI_C = 1.0,
     # mI_C = ifelse(VC=="LDV", 1.0,
     #              ifelse(VC=="HDV", 0.5,
     #                     NA)),
-    # Note these are all adjustments for the incremental effect of automation,
-    #  not for the effect on energy use of electrification
+    # Note these are all adjustments to the incremental effect of automation,
+    #  for the effect on energy use of electrification
     mI_FA = ifelse(Fuel == "Gas", 1.0,
       ifelse(Fuel == "PHEV", 0.9,
         ifelse(Fuel == "BEV", 0.5,
@@ -2018,33 +2030,52 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
   )
 ```
 
+#### Compute disaggregated Intensity, VMT Demand and Energy Use impact
+
 Then compute disaggregated Intensity, VMT Demand and Energy Use impact
-for each vehicle category and scenario.
+for each vehicle category (Automation, Fuel, Use), vehicle class and scenario.
+
+$\Delta I_{jtv} = \mu_{jtv} - 1$ = `NIE` 
+
+$$\Delta I_{jtv, FAU} = \Delta I_{jtv, FAU} \cdot m_{I,Cx} \cdot m_{I,Ax} \cdot  m_{I,FAx} $$
+
+Also adjust costs accordingly, for correct demand response calculation.
+
+Note: total relative travel cost per mile and its fuel and non-fuel components will vary with
+Automation *A* and Fuel/Drivetrain type *F*. Previous cost components were for Full Automation,
+and each associated Technology and Demand scenario.
+
 
 ```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
-# Compute Disagg Intensity, VMT Demand and Energy Use impact (could do this earlier)
+# Compute Disagg Intensity, Costs, VMT Demand and Energy Use impact by veh type (C, A, F, U) (could do this earlier)
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
-    # adjust intensity for Veh Class, Automation, Fuel tech
+    # adjust intensity change for Veh Class, Automation, Fuel tech
     NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0,
     
     # if (TRUE) {
-    # WARNING: Now need to adjust Fuel Cost based on NIE
+    # WARNING: Now need to adjust costs (identity is C_Total = C_Fuel + C_VNonF + C_Time)
+    #   - adjust Fuel Cost based on NIE
     #   Correct old Fuel Cost (and dependent components) for previous calcs, that were for Automated CAV, Gas, vehicle
     old_C_Fuel = C_Fuel,
     old_C_VNonF = C_VNonF,
-    # old_C_Veh = C_Veh,  # Not tracked int the AssumpsResults dataframe
+    old_C_Time = C_Time, # C_Time at this point differentiated only by VC and DemScen
+    # old_C_Veh = C_VNonF + C_Fuel, # Not directly tracked in AssumpsResults df: veh costs, excl. Time
     old_C_Total = C_Total,
     old_fracVMTIncr = fracVMTIncr,
+    # ToDo: do not have ShrECostInt to do next, so count on it being 1.0!
     # C_Fuel = C_Fuel * (1.0 + NIE * ShrECostInt) / (1.0 + I_deltaCAV * ShrECostInt), # undo/redo this calc with NIE
-    C_Fuel = C_Fuel * (1.0 + NIE  * 1.0         ) / (1.0 + I_deltaCAV * 1.0      ), # undo/redo this calc with NIE
-    C_Total = C_Total + (C_Fuel - old_C_Fuel), 
+    C_Fuel = old_C_Fuel * (1.0 + NIE  * 1.0         ) / (1.0 + I_deltaCAV * 1.0      ), # undo/redo this calc with NIE
+    C_VNonF = old_C_VNonF,
+    C_Time = old_C_Time,                          # No change?
+    C_Total = C_Total + (C_Fuel - old_C_Fuel) + (C_Time - old_C_Time), 
     C_VNonF = C_Total - C_Fuel - C_Time, # non-fuel (and non-time) vehicle financial costs. Includes accident.
     # C_Veh = C_Fuel + C_VNonF, # vehicle capital and operating costs, c/mi (excl. time)
+    C_Total = C_Fuel + C_VNonF + C_Time, 
     fracVMTIncr = (1 + fracVMTIncr) / USDmult - 1, # undo this calc
     fracVMTIncr = C_Total^ElasVKT - 1.0, # fractional VMT increase base on elastic response to Total cost
     fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1, 
-    old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # should only apply to Shared travel (LDV)
+    old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # ??? should only apply to Shared travel (LDV)
     # }
 
     # adjust VMT Demand for vehicle Use case (Shared or Private)
@@ -2098,7 +2129,7 @@ cat(
 
 temp = CaseAssumpsResults %>% mutate(testTEST_NIE = abs(I_deltaCAV - NIE)) %>% 
   select(VC, DemScen, ElasCase, TechScen, Automation, Fuel, Use, I_deltaCAV, NIE, testTEST_NIE, 
-         old_C_Fuel, C_Fuel, old_C_VNonF, C_VNonF, old_C_Total, C_Total,
+         old_C_Fuel, C_Fuel, old_C_VNonF, C_VNonF, old_C_Time, old_C_Total, C_Total,
          old_fracVMTIncr, fracVMTIncr, old_fracEnergyUse, fracEnergyUse, old_EnergyUse, EnergyUse)
 temp %>% 
   mutate(testTEST_NIE = (testTEST_NIE  >1E-10)) %>% pull(testTEST_NIE) %>% sum()
@@ -3712,3 +3743,5 @@ CAVmod$CAVpenetration <- # Fractional Increase in VMT for Demand Scenarios
 * Thomas, J., Hwang, H.-L., West, B., & Huff, S. (2013). Predicting Light-Duty Vehicle Fuel Economy as a Function of Highway Speed. SAE International Journal of Passenger Cars - Mechanical Systems, 6(2), 2013-01-1113. doi:10.4271/2013-01-1113
 * Wadud, Z., MacKenzie, D., & Leiby, P. (2016). Help or hindrance? The travel, energy and carbon impacts of highly automated vehicles. Transportation Research Part A: Policy and Practice, 86, 1-18. doi:10.1016/j.tra.2015.12.001
 * Wenzel, Tom, Clement Rames, Eleftheria Kontou, and Alejandro Henao. 2019. “Travel and Energy Implications of Ridesourcing Service in Austin, Texas.” _Transportation Research Part D: Transport and Environment_ 70: 18–34. https://doi.org/https://doi.org/10.1016/j.trd.2019.03.005.
+
+
