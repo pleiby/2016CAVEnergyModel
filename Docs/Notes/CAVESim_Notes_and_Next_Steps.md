@@ -310,6 +310,13 @@ Summary of CAVESIM Model Steps (as of 20200216)
 ### 1. (Sec 5) Execute Policy and Combined Scenario Calculations
 1. Create a dataframe of changes in Energy Intensity and Travel Demand, for all Combined Scenarios.
   - Note: Demand calculation applies the VKT elasticity indicating cost response at the reference level (near zero) pooling
-1. Given a set *D* of demand scenarios (`DetailedDemScens`) Loop over all Tech Scenarios (TechScen) and develop a table of all combinations of Tech Scenarios and Demand 
-  `Scenarios.CombScenInputsAndResultsForOneTechScen`(CurrTechScen, CurrYear, DetailedDemScens))
-  
+1. Given a set *D* of demand scenarios (`DetailedDemScens`) Loop over all Tech Scenarios (TechScen) and develop a table of all combinations of Tech Scenarios and Demand Scenarios
+  - apply fn `CombScenInputsAndResultsForOneTechScen`(CurrTechScen, CurrYear, DetailedDemScens))
+  - produced df `CaseAssumpsResults_many`
+1. Construct details of scenario, disaggregated by vehicle class, automation, fuel technology, use type.
+    - DemScenAdjustments is `RidePoolAdjFrac` and `USDmult` for each `VC` and `DemScen` (which determine case categorical vars `USDOption` and `RidePoolAdj`)
+- `DisaggParams` 
+    - for a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_High), and for each vehicle class `VC`
+    - specifies disaggregated demand and intensity adjustment factors for `VC` and `DemScen` by Vehicle Fuel, Automation and Use (F, A and U) categories.
+1. Create `CaseAssumpsResults` from `CaseAssumptionsResults_Many` for selected `DemScen` in `DetailedDemScens`
+1. Add vehicle shares by F&A, and by U, to each combination of `VC` and `DemScen` `CaseAssumpsResults`
