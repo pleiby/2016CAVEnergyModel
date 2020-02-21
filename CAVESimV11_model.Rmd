@@ -2107,10 +2107,15 @@ table(CaseAssumpsResults$VC, round(CaseAssumpsResults$NIE/CaseAssumpsResults$I_d
 ```{r diagnoseDisagg, echo=echoWorking}
 temp <- CaseAssumpsResults %>%
   mutate(
-    NIEratio = round(temp$NIE/temp$I_deltaCAV, 6)
+    NIEratio = # relative adj to agg change in energy intensity, treating numerical error as 0.0
+      ifelse((abs(I_deltaCAV)<1E-10) & (abs(NIE)<1E-10), 1.0, round(NIE/I_deltaCAV, 6)),
+    VMTEratio = # relative adj to agg change in energy intensity, treating numerical error as 0.0
+      ifelse((abs(old_fracVMTIncr)<1E-10) & (abs(fracVMTIncr)<1E-10), 1.0, round(fracVMTIncr/old_fracVMTIncr, 6)),
+    EnUEratio = # relative adj to agg change in energy intensity, treating numerical error as 0.0
+      ifelse((abs(old_EnergyUse)<1E-10) & (abs(EnergyUse)<1E-10), 1.0, round(EnergyUse/old_EnergyUse, 6))
   )
 
-temp <- CaseAssumpsResults %>%
+temp <- temp %>%
   select("VC", "DemScen", "ElasCase", "TechScen",
          "Automation", "Fuel", "Use",
          "C_Fuel", "C_Time", "C_VNonF", "C_Total", 
@@ -2118,57 +2123,169 @@ temp <- CaseAssumpsResults %>%
          "mI_A", "mI_C", "mI_FA", "mI_FB", "mD_U",
          "old_C_Fuel", "old_C_Time", "old_C_VNonF", "old_C_Total",
          "old_fracVMTIncr", "old_fracEnergyUse", "old_EnergyUse",
-         "fracVMTIncr",  "fracEnergyUse",  "EnergyUse" 
+         "fracVMTIncr",  "fracEnergyUse",  "EnergyUse",
+         "NIEratio", "VMTEratio", "EnUEratio"
          ) %>%
-  mutate(
-    NIEratio = round(temp$NIE/temp$I_deltaCAV, 6)
-  ) %>%
   filter(
     VC == "LDV",
     ElasCase == "Low"
   )
 ```
 
-```{r echo=echoWorking}
-table(temp$Automation, temp$NIEratio)
-```
-
-
-```{r echo=echoWorking}
-table(round(temp$I_deltaCAV, 8), temp$TechScen)
-```
-
-
-```{r echo=echoWorking}
-table(round(temp$I_deltaCAV, 8), temp$VC)
-```
-
-```{r echo=echoWorking}
-table(temp$Use, temp$NIEratio)
-```
-
-
-```{r echo=echoWorking}
-table(temp$Use, temp$NIEratio)
-```
-
-
-```{r echo=echoWorking}
-table(temp$Fuel, temp$NIEratio)
-```
-
-```{r echo=echoWorking}
-table(temp$Automation, temp$NIEratio)
-```
-
-```{r echo=echoWorking}
-table(temp$TechScen, temp$NIEratio)
-```
+We focus only on the results from disaggregation on one Vehicle Class (`VC`).
 
 
 ```{r echo=echoWorking}
 table(temp$TechScen, temp$VC)
 ```
+
+Initally, the change in vehicle energy Intensity is uniform for each TechScen
+
+```{r echo=echoWorking}
+table(round(temp$I_deltaCAV, 8), temp$TechScen)
+```
+
+```{r echo=echoWorking}
+table(round(temp$I_deltaCAV, 8), temp$VC)
+```
+
+After disaggregation by vehicle sub-type (A, F, U), there is 
+substantial variation in Net Intensity Effect (`NIE`), or
+net change in vehicle energy intensity, across
+`TechScen`:
+
+```{r echo=echoWorking}
+table(temp$NIE, temp$TechScen)
+```
+
+We can see the effect of dissaggregation by vehicle
+sub-type by looking at the ratio `NIEratio` of adjusted to unadjusted
+`NIE` (ratio of disaggregated to `VC`-aggregate `NIE`).
+These `NIEratio` are the disaggregation adjustment factors to original
+`NIE` (or equivalently, `I_deltaCAV`).
+
+```{r echo=echoWorking}
+table(temp$NIEratio, temp$TechScen)
+# tempX <- temp %>%
+#   filter(TechScen==6) %>%
+#   mutate(bothzero = (abs(I_deltaCAV)<1E-10) & (abs(NIE)<1E-10)) %>%
+#   select(I_deltaCAV, NIE, NIEratio, bothzero)
+#   pull(I_deltaCAV) #%>%
+#   summary()
+```
+
+**Note** these are multiplicative adjustments to `I_deltaCAV`,
+that is, adjustments to the change (reduction) in energy
+intensity estimated for a fully automated CAV, using
+conventional gasoline drivetrain, and in private use.
+So the adjustments `NIEratio` all reduce, or at best
+maintain, the `I_deltaCAV` effect on intensity.
+
+The adjustment to Net vehicle energy intensity change (`NIE`) varies 
+strongly by `Automation`:
+
+```{r echo=echoWorking}
+table(temp$NIEratio, temp$Automation)
+```
+
+Vehicle energy intensity *change* is also adjusted based on `Fuel` (drivetrain) sub-type
+
+```{r echo=echoWorking}
+table(temp$NIEratio, temp$Fuel)
+```
+
+But vehicle energy intenstity changes are distributed the same way
+(unaltered by) vehicle `Use` (sharing or private) ownership.
+
+```{r echo=echoWorking}
+table(temp$NIEratio, temp$Use)
+#table(temp$NIE, temp$Use)
+```
+
+Looking now at effects on estimated changes to Intensity, VKT and Energy Use,
+by vehicle sub-type.
+
+```{r}
+temp %>% 
+  mutate(
+    #AutomationCode = relevel(as.numeric(Automation),
+    Automation = as.factor(Automation),
+    Automation = ordered(Automation, levels = c("Full", "Partial", "No"))
+  ) %>%
+  ggplot(aes(x=NIE, y=fracVMTIncr, size=Automation, color=Fuel, shape=Use, alpha=0.5)) +
+  geom_point() +
+  ggtitle("Change in Vehicle Intensity and VKT by Vehicle Sub-category")
+```
+
+```{r echo=echoWorking}
+temp %>% 
+  mutate(
+    # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
+    Automation = as.factor(Automation),
+    Automation = ordered(Automation, levels = c("Full", "Partial", "No"))
+  ) %>%
+  group_by(Automation, Fuel, Use) %>%
+  ggplot(aes(x=NIE, y=EnergyUse, size=Automation, color=Fuel, shape=Use, alpha=0.5)) +
+  geom_point() +
+  ggtitle("Change in Vehicle Intensity and Energy Use by Vehicle Sub-category")
+
+#table(temp$VMTEratio, temp$Fuel)
+#table(temp$NIE, temp$Use)
+```
+
+```{r}
+hist(temp$VMTEratio, breaks = 20)
+g <- temp %>%
+  mutate(
+    # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
+    Automation = as.factor(Automation),
+    Automation = ordered(Automation, levels = c("No", "Partial", "Full"))
+  ) %>%
+  ggplot(aes(VMTEratio)) + scale_fill_brewer(palette = "Spectral") + 
+  geom_histogram(aes(fill=Automation), 
+                   binwidth = .1, 
+                   col="black", 
+                   size=.1) +  # change binwidth
+  labs(title="Histogram of VKT Effect Over Cases", 
+       subtitle="VKT Effect Ratio across Vehicle Automation")  
+g
+```
+
+```{r}
+temp %>%
+  mutate(
+    # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
+    Automation = as.factor(Automation),
+    Automation = ordered(Automation, levels = c("No", "Partial", "Full"))
+  ) %>%
+  ggplot(aes(fracVMTIncr)) + scale_fill_brewer(palette = "Spectral") + 
+  geom_histogram(aes(fill=Automation), 
+                   binwidth = .02, 
+                   col="black", 
+                   size=.1) +  # change binwidth
+  labs(title="Histogram of Fractional VKT Increase Over Cases", 
+       subtitle="VKT Effect Ratio across Vehicle Automation")  
+```
+
+```{r}
+temp %>%
+  mutate(
+    # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
+    Automation = as.factor(Automation),
+    Automation = ordered(Automation, levels = c("No", "Partial", "Full"))
+  ) %>%
+  ggplot(aes(EnergyUse)) + scale_fill_brewer(palette = "Spectral") + 
+  geom_histogram(aes(fill=Automation), 
+                   binwidth = .02, 
+                   col="black", 
+                   size=.1) +  # change binwidth
+  labs(title="Histogram of Fractional Energy Change Increase Over Cases", 
+       subtitle="Energy Use Effect across Vehicle Automation")  
+
+hist(temp$EnUEratio, breaks = 20)
+```
+
+Checks on Shares
 
 ```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
