@@ -2074,6 +2074,7 @@ $$\Delta E_{x,FAU} = ((1 + \Delta I_{jtv, FAU}) \cdot (1 + \Delta K_{x,FAU}) - 1
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
     # adjust intensity change for Veh Class, Automation, Fuel tech
+    old_NIE = NIE,
     NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0,
     
     # if (TRUE) {
@@ -2112,11 +2113,8 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
     # actual energy use (relative to base for this vehicle segment)
     # ? EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0,
-    old_fracEnergyUse = ((1 + NIE) * (1 + old_fracVMTIncr) - 1),
-    old_EnergyUse = ((1 + NIE) * (1 + old_fracVMTIncr) - 1) * F_A_Shares * U_Shares,
-    
-    fracEnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1),
-    EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1) * F_A_Shares * U_Shares
+    old_EnergyUse = ((1 + old_NIE) * (1 + old_fracVMTIncr) - 1),
+    EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1)  # do NOT weight by shares yet
   )
 ```
 
@@ -2145,9 +2143,10 @@ temp <- temp %>%
          "ElasVKT", "I_deltaCAV", "C_deltaVoTT", "NIE",
          "mI_A", "mI_C", "mI_FA", "mI_FB", "mD_U",
          "old_C_Fuel", "old_C_Time", "old_C_VNonF", "old_C_Total",
-         "old_fracVMTIncr", "old_fracEnergyUse", "old_EnergyUse",
-         "fracVMTIncr",  "fracEnergyUse",  "EnergyUse",
-         "NIEratio", "VKEratio", "EnUEratio"
+         "old_fracVMTIncr", "old_EnergyUse",
+         "fracVMTIncr",  "EnergyUse",
+         "NIEratio", "VKEratio", "EnUEratio",
+         "F_A_Shares", "U_Shares"
          ) %>%
   filter(
     VC == "LDV",
@@ -2256,8 +2255,26 @@ temp %>%
 #table(temp$NIE, temp$Use)
 ```
 
+
 ```{r echo=echoWorking}
-hist(temp$VKEratio, breaks = 20)
+temp %>% 
+  mutate(
+    # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
+    Automation = as.factor(Automation),
+    Automation = ordered(Automation, levels = c("Full", "Partial", "No")),
+    shrXEnergyUse = EnergyUse * F_A_Shares * U_Shares # share-weighted Energy Use change
+  ) %>%
+  group_by(Automation, Fuel, Use) %>%
+  ggplot(aes(x=NIE, y=shrXEnergyUse, size=Automation, color=Fuel, shape=Use, alpha=0.5)) +
+  geom_point() +
+  ggtitle("Change in Intensity and Share-weighted Energy Use by Vehicle Sub-category")
+
+#table(temp$VKEratio, temp$Fuel)
+#table(temp$NIE, temp$Use)
+```
+
+```{r echo=echoWorking}
+# hist(temp$VKEratio, breaks = 20)
 g <- temp %>%
   mutate(
     # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
@@ -2316,9 +2333,9 @@ Net Energy Use will be the _unweighted_ sum of the term, for a given scenario.
 ```{r testShareAddingUp, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
 temp <- CaseAssumpsResults %>%
-  mutate(share_prods = F_A_Shares * U_Shares) %>%
+  mutate(Joint_FAU_Share = F_A_Shares * U_Shares) %>%
   group_by(DemScen, TechScen, ElasCase, VC, Year) %>%
-  summarize(TotShare = sum(share_prods)) %>%
+  summarize(TotShare = sum(Joint_FAU_Share)) %>%
   ungroup()
 ChkErrorDiff = sum(abs(temp$TotShare -1.0)) # should all equal 1.0
 cat(
@@ -2352,7 +2369,7 @@ cat(
 temp = CaseAssumpsResults %>% mutate(testTEST_NIE = abs(I_deltaCAV - NIE)) %>% 
   select(VC, DemScen, ElasCase, TechScen, Automation, Fuel, Use, I_deltaCAV, NIE, testTEST_NIE, 
          old_C_Fuel, C_Fuel, old_C_VNonF, C_VNonF, old_C_Time, old_C_Total, C_Total,
-         old_fracVMTIncr, fracVMTIncr, old_fracEnergyUse, fracEnergyUse,
+         old_fracVMTIncr, fracVMTIncr,
          old_EnergyUse, EnergyUse)
 temp %>% 
   mutate(testTEST_NIE = (testTEST_NIE  >1E-10)) %>% pull(testTEST_NIE) %>% sum()
@@ -2537,7 +2554,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
     mutate( # convert all result vars to versions weighted by joint FAU share
       fracVMTIncr = fracVMTIncr * Joint_FAU_Share,
       NIE = NIE * Joint_FAU_Share,
-      # EnergyUse: this has already been weighted by joint shares of veh sub-types
+      EnergyUse = EnergyUse * Joint_FAU_Share, # no longer already weighted by joint shares of veh sub-types
       C_Fuel = C_Fuel * Joint_FAU_Share,
       C_Time = C_Time * Joint_FAU_Share,
       C_VNonF = C_VNonF * Joint_FAU_Share,
@@ -2605,7 +2622,7 @@ aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
     #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
     mutate(Joint_FAU_Share = F_A_Shares * U_Shares) %>%
     mutate( # to share-weighted values
-      # EnergyUse: this has already been weighted by joint shares of veh sub-types
+      EnergyUse = EnergyUse * Joint_FAU_Share, # no longer already been weighted by joint shares of veh sub-types
       fracVMTIncr = fracVMTIncr * Joint_FAU_Share,
       NIE = NIE * Joint_FAU_Share
     ) %>%
@@ -2744,13 +2761,15 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
                                            subtitle = "LDVs, Excludes Ride-Pooling") {
   thisdata %>%
     select(c(CombScen, Year, VC, ElasCase, DemScen, TechScen, NIE, fracVMTIncr, EnergyUse)) %>%
-    # CaseWantedAggEffects %>%
-    arrange(CombScen, Year, VC, ElasCase) %>%
-    gather(key = variable, value = calcValue, resultVars) %>%
     # rename variable names, establish as factor in correct order for bar plot
-    mutate(variable = ifelse(variable == "NIE", "Intensity",
-      ifelse(variable == "fracVMTIncr", "VMT", "Energy")
-    )) %>%
+    rename(
+      Intensity = NIE,
+      VMT = fracVMTIncr,
+      Energy = EnergyUse
+    ) %>% # CaseWantedAggEffects %>%
+    arrange(CombScen, Year, VC, ElasCase) %>%
+    gather(key = variable, value = calcValue, c("Intensity", "VMT", "Energy")) %>%
+    # rename variable names, establish as factor in correct order for bar plot
     mutate(variable = factor(variable, levels = c("Intensity", "VMT", "Energy"))) %>%
   # Faceting
     filter(VC == "LDV") %>%
@@ -2764,7 +2783,7 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
     ) +
     ylim(-0.5, 0.75) +
     geom_bar(stat = "identity") +
-    facet_wrap(~CombScen) +
+    facet_wrap(~DemScen) + # use DemScen instead of CombScen, because names clearer
     scale_fill_brewer(palette = "Spectral") + # color with RcolorBrewer
     theme(axis.title=element_text(face="bold",size="14",color="black"),
           axis.text=element_text(size=14,face="bold")) +
@@ -2777,7 +2796,7 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
 # all LDV
 barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumps,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios", 
-                               subtitle = "LDV Mix, Shared mobility xcludes Ride-Pooling") 
+                               subtitle = "LDV Mix, Shared mobility Excludes Ride-Pooling") 
 ```
 
 
@@ -2787,7 +2806,7 @@ The results for Automated Private Vehicles are more dramatic:
 CaseWantedAggAssumpsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes),
-  auto_set = c("Full"),
+  auto_set = c("Full"), # must call the aggregation fn to assure rescaled on share of these
   fuel_set = c("Gas"),
   use_set = c("Private")
   )
