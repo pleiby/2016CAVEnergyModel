@@ -2076,7 +2076,7 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1, 
     # adjust VMT Demand for vehicle Use case (Shared or Private)
     # fracVMTIncr so far is dependent on cost elasticity
-    old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # ??? should only apply to Shared travel (LDV)
+    old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # ??? WHY do this? should only apply to Shared travel (LDV)
     fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1
     
     # #   Not: mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
@@ -2205,7 +2205,7 @@ table(temp$NIEratio, temp$Use)
 Looking now at effects on estimated changes to Intensity, VKT and Energy Use,
 by vehicle sub-type.
 
-```{r}
+```{r echo=echoWorking}
 temp %>% 
   mutate(
     #AutomationCode = relevel(as.numeric(Automation),
@@ -2233,7 +2233,7 @@ temp %>%
 #table(temp$NIE, temp$Use)
 ```
 
-```{r}
+```{r echo=echoWorking}
 hist(temp$VMTEratio, breaks = 20)
 g <- temp %>%
   mutate(
@@ -2251,7 +2251,7 @@ g <- temp %>%
 g
 ```
 
-```{r}
+```{r echo=echoWorking}
 temp %>%
   mutate(
     # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
@@ -2264,10 +2264,10 @@ temp %>%
                    col="black", 
                    size=.1) +  # change binwidth
   labs(title="Histogram of Fractional VKT Increase Over Cases", 
-       subtitle="VKT Effect Ratio across Vehicle Automation")  
+       subtitle="VKT Effect across Vehicle Automation")  
 ```
 
-```{r}
+```{r echo=echoWorking}
 temp %>%
   mutate(
     # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
@@ -2279,10 +2279,10 @@ temp %>%
                    binwidth = .02, 
                    col="black", 
                    size=.1) +  # change binwidth
-  labs(title="Histogram of Fractional Energy Change Increase Over Cases", 
+  labs(title="Histogram of Fractional Energy Change Over Cases", 
        subtitle="Energy Use Effect across Vehicle Automation")  
 
-hist(temp$EnUEratio, breaks = 20)
+# hist(temp$EnUEratio, breaks = 20)
 ```
 
 Checks on Shares
@@ -2348,29 +2348,36 @@ cat(
   paste(sum(testEnergyDiffs)), "cases, due to minor numerical differences.\n"
 )
 
-temp %>% # Note: no Full Auto Private Gas vehicles were altered
+temp %>% # Note: Expect no alteration of energy use for Full Auto Private Gas vehicles
   filter(
     Automation == "Full",
     Fuel == "Gas",
     Use == "Private"
   ) %>%
   mutate(
-    testTEST_NIE = abs(I_deltaCAV - NIE),
-    testEnergy = abs(old_EnergyUse - EnergyUse),
-    testfracVMTIncr = abs(old_fracVMTIncr - fracVMTIncr),
+    testNIE = (NIE - I_deltaCAV),
+    testEnergy = (EnergyUse - old_EnergyUse),
+    testfracVMTIncr = (fracVMTIncr - old_fracVMTIncr),
     # testTEST_NIE = (testTEST_NIE  >1E-10)) %>% pull(testTEST_NIE) %>% sum()
-    testTEST = (testEnergy > 1E-6)
+    testTEST = (abs(testEnergy) > 1E-6)
   ) %>% 
-  filter(testTEST) %>% 
-  pull(testEnergy) -> testEnergy
+  # filter(testTEST) %>% 
+  select(testTEST, testNIE, testfracVMTIncr, testEnergy) -> testEnergy
+
 cat(
-  "Check: Maximum observed difference in EnergyUse, disagg vs agg, is",
-  paste(max(testEnergy)), ".\n"
+  "\nCheck: Private, Gas CAVs - Maximum observed absolute difference in EnergyUse, disagg vs agg, is",
+  paste(max(abs(testEnergy$testEnergy))), ".\n"
 )
+
+cat("Check: Private, Gas CAVs - Statistics for observed differences are: \n")
+summary(testEnergy)
+```
+
+```{r echo=echoWorking}
+# testEnergy %>% filter(testTEST == T)
 
 ```
 
-XXX
 
 ```{r extractCaseEffects, echo=echoWorking}
 # Other Points where share-weighted disaggretation is possible, given
@@ -3852,7 +3859,7 @@ HDV Total Energy =  Motor Gasoline+ Distillate Fuel Oil (diesel)+ Compressed Nat
 
 Formula: SUM(LDV Total Energy, CLT Total Energy, HDV Total Energy)/SUM(LDV Total Energy Ref, CLT Total Energy Ref, HDV Total Energy Ref)-1
 
-```{r}
+```{r echo=echoWorking}
 
 ```
 
