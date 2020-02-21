@@ -2042,8 +2042,26 @@ $$\Delta I_{jtv, FAU} = \Delta I_{jtv, FAU} \cdot m_{I,Cx} \cdot m_{I,Ax} \cdot 
 Also adjust costs accordingly, for correct demand response calculation.
 
 Note: total relative travel cost per mile and its fuel and non-fuel components will vary with
-Automation *A* and Fuel/Drivetrain type *F*. Previous cost components were for Full Automation,
+Automation *A* and with Fuel/Drivetrain type *F* interacting with Automation. 
+Previous cost components were for Full Automation,
 and each associated Technology and Demand scenario.
+
+Fractional VMT increase (`fracVMTIncr` or $\Delta K$) are based on elastic
+response to Total cost, with exogenous demand
+shift effects associated with underserved demand groups, as assumed for the
+combined technology/demand/vehicle-class/year scenario *x* ($x = jtvd$). 
+Further VKT shifts associated with ZOV travel of ride sharing apply only
+to vehicles of `Use` category (*U*) `Shared`.
+
+$$\Delta K_{x,FAU} = (1 + C_{Total,x,FAU}^{E_x}) m_{D,x,US} * m_{D,x,U} - 1.0$$
+
+Energy Use impacts are based on the combined effect of intensity and VKT demand changes.
+Then each energy change by vehicle sub-type (`Automation`, `Fuel` and `Use`)
+is weighted by vehicle sub-type shares $s_{x,FA}$ and $s_{x,U}$ for scenario *x*,
+allowing summation across subcategories
+to get the total energy effect.
+
+$$\Delta E_{x,FAU} = ((1 + \Delta I_{jtv, FAU}) \cdot (1 + \Delta K_{x,FAU}) - 1) \cdot s_{x,FA} \cdot s_{x,U}$$
 
 
 ```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
@@ -2084,7 +2102,7 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
 
   )
 
-# then weight VMT demand by shares, allowing summation across subcategories
+# then weight VMT demand by vehicle sub-type shares, allowing summation across subcategories
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
     # actual energy use (relative to base for this vehicle segment)
