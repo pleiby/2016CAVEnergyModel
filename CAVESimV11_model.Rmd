@@ -2097,9 +2097,21 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
   )
 ```
 
+#### Diagnosis/Testing: tables of revised intensities, `NIE` over original (`deltaCAV`)
+
+```{r echo=echoWorking}
+# look at changes in NIE (old_NIE = I_deltaCAV)
+table(CaseAssumpsResults$VC, round(CaseAssumpsResults$NIE/CaseAssumpsResults$I_deltaCAV, 4))
+```
+
 ```{r diagnoseDisagg, echo=echoWorking}
 temp <- CaseAssumpsResults %>%
-  select("VC", "DemScen", "ElasCase",
+  mutate(
+    NIEratio = round(temp$NIE/temp$I_deltaCAV, 6)
+  )
+
+temp <- CaseAssumpsResults %>%
+  select("VC", "DemScen", "ElasCase", "TechScen",
          "Automation", "Fuel", "Use",
          "C_Fuel", "C_Time", "C_VNonF", "C_Total", 
          "ElasVKT", "I_deltaCAV", "C_deltaVoTT", "NIE",
@@ -2108,32 +2120,55 @@ temp <- CaseAssumpsResults %>%
          "old_fracVMTIncr", "old_fracEnergyUse", "old_EnergyUse",
          "fracVMTIncr",  "fracEnergyUse",  "EnergyUse" 
          ) %>%
+  mutate(
+    NIEratio = round(temp$NIE/temp$I_deltaCAV, 6)
+  ) %>%
   filter(
     VC == "LDV",
     ElasCase == "Low"
   )
 ```
 
-#### Diagnosis/Testing: tables of revised intensities, `NIE` over original (`deltaCAV`)
-
 ```{r echo=echoWorking}
-# look at changes in NIE (old_NIE = I_deltaCAV)
-table(CaseAssumpsResults$VC, round(CaseAssumpsResults$NIE/CaseAssumpsResults$I_deltaCAV, 4))
-```
-
-```{r echo=echoWorking}
-table(temp$Automation, round(temp$NIE/temp$I_deltaCAV, 4))
-```
-
-```{r echo=echoWorking}
-table(temp$Use, round(temp$NIE/temp$I_deltaCAV, 4))
+table(temp$Automation, temp$NIEratio)
 ```
 
 
 ```{r echo=echoWorking}
-table(temp$Fuel, round(temp$NIE/temp$I_deltaCAV, 4))
+table(round(temp$I_deltaCAV, 8), temp$TechScen)
 ```
 
+
+```{r echo=echoWorking}
+table(round(temp$I_deltaCAV, 8), temp$VC)
+```
+
+```{r echo=echoWorking}
+table(temp$Use, temp$NIEratio)
+```
+
+
+```{r echo=echoWorking}
+table(temp$Use, temp$NIEratio)
+```
+
+
+```{r echo=echoWorking}
+table(temp$Fuel, temp$NIEratio)
+```
+
+```{r echo=echoWorking}
+table(temp$Automation, temp$NIEratio)
+```
+
+```{r echo=echoWorking}
+table(temp$TechScen, temp$NIEratio)
+```
+
+
+```{r echo=echoWorking}
+table(temp$TechScen, temp$VC)
+```
 
 ```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
@@ -2169,7 +2204,8 @@ cat(
 temp = CaseAssumpsResults %>% mutate(testTEST_NIE = abs(I_deltaCAV - NIE)) %>% 
   select(VC, DemScen, ElasCase, TechScen, Automation, Fuel, Use, I_deltaCAV, NIE, testTEST_NIE, 
          old_C_Fuel, C_Fuel, old_C_VNonF, C_VNonF, old_C_Time, old_C_Total, C_Total,
-         old_fracVMTIncr, fracVMTIncr, old_fracEnergyUse, fracEnergyUse, old_EnergyUse, EnergyUse)
+         old_fracVMTIncr, fracVMTIncr, old_fracEnergyUse, fracEnergyUse,
+         old_EnergyUse, EnergyUse)
 temp %>% 
   mutate(testTEST_NIE = (testTEST_NIE  >1E-10)) %>% pull(testTEST_NIE) %>% sum()
 
@@ -2233,7 +2269,9 @@ CaseEffects <- CaseAssumpsResults %>% # extract a key set of results and identif
 # To move specific columns to the beginning or end of a data.frame,
 # use select from the dplyr package and its everything() fn.
 # In this example we are sending (assumptions) to the end:
-CaseAssumpsResults <- CaseAssumpsResults %>% select(names(CaseEffects), everything())
+CaseAssumpsResults <- CaseAssumpsResults %>% 
+  select(names(CaseEffects), everything()) %>%
+  select(-old_C_Time, everything(), old_C_Time) # move old_C_time to end for comparability
 ```
 
 ```{r saveCombScenResultsAndAssumptions, echo=echoWorking}
