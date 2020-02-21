@@ -322,8 +322,37 @@ Summary of CAVESIM Model Steps (as of 20200216)
 1. Add vehicle shares by F&A, and by U, to each combination of `VC` and `DemScen` in `CaseAssumpsResults`
     - Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
     - (replicates rows card(A) x card(F) x card(U) times and appends shares
+1. Compute `NIE`, `fracVMTIncr`, `EnergyUse` (change) for each TechScen/DemScen/Year scenario and each vehicle sub-cat (F, A, U) within class `VC`
+1. Weight `EnergyUse` by shares for `Fuel`-`Automation` combinations *F-A*, and for `Use` *U*
+1. Preform diagnostic ond resulting disaggregated case outcomes
+    - tables for adjustment multipliers by TechScen, Automation, Fuel, Use
+    - Checks on Shares: that the combined share weights add up to 1.0 as expected
+    - Checks on Disagg Calculations: Comparison with Original CAV results
+1. write full df of to CSV file
+1. (Sec 5.2) Define Combined Scenarios of Interest and Develop Functions to Re-aggregate Over Vehicle Sub-types
+1. (Sec 5.2.1) Select Predefined combinations of Tech and Demand scenarios from the full set of cross-combinations, with effects disaggregated by vehicle type and technology
+1. For defined combined scenarios `CombScen`, select cases wanted `CaseWantedAssumpsResults` from the larger set `CaseAssumpsResults`
+1. (Sec. 5.2.2) Develop Functions to Re-aggregate Over Vehicle Sub-types
+    - Define function `aggregateSelectedCaseAssumpsResults()` to Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
+    to Aggregate Case assumps and results across Automation type, Fuel type, and shared Use
+        - allows spec of subset if cases to be aggregated (CombScen, Year, ElasCase, VC, TechScen, DemScen)
+        - allows spec of subset of vehicle sub-types (demand segments) to be aggregated
+        - returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
+    - define function `aggregateSelectedCaseEffects()` to Aggregate Case key result vars over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
+        - returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 4 final results vars (incl TotShare)
+1. (Sec 5.2.3) Compare Final Scenario Results Table for 2050 - *Note: This backward check does not yet work because the matching scenarios and scenario IDs have not been
+identified.*
+
+1. (Sec. 5.3) Bar Chart Representation of Results
+    1. define function `barPlotScenarioSetIntVMTEnergy()`, produces panel graph with bar chart for each scenario, showing Intensity, VMT, and Energy effects
 
 
+
+1. (Sec 6) Examination of VMT and PMT Given Various Levels of Pooling
+1. (Sec 6.1) Consider alternative occupancy levels, and their effects on costs, PMT, and VMT.
+1. (Sec 6.2) Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
+1. (Sec 6.3) Estimate Scenario effects
+    - Estimate Scenario effects, with economic responses to ride pooling
 
 CAVESim ToDo Next 20200220
 ---------------------------
@@ -343,4 +372,5 @@ and each associated Technology and Demand scenario.
 - [ ] ToDo: make enumeration of elements in SetJ_TechScen (Scenarios j) and SetD_DemScen a result of read tables, rather than explicit
     - originally, `C_Time` at this point differentiated only by `VC` and `DemScen`
 - [ ] ToDo: get ShrECostInt to do recalc of `fracVMTIncr` in disaggregation of `CaseAssumpsResults` by veh subcat
+    
     
