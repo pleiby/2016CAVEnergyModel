@@ -2037,7 +2037,7 @@ for each vehicle category (Automation, Fuel, Use), vehicle class and scenario.
 
 $\Delta I_{jtv} = \mu_{jtv} - 1$ = `NIE` 
 
-$$\Delta I_{jtv, FAU} = \Delta I_{jtv, FAU} \cdot m_{I,Cx} \cdot m_{I,Ax} \cdot  m_{I,FAx} $$
+$$\Delta I_{jtv, FAU} = \Delta I_{jtv} \cdot m_{I,Cx} \cdot m_{I,Ax} \cdot  m_{I,FAx} $$
 
 Also adjust costs accordingly, for correct demand response calculation.
 
@@ -2053,7 +2053,12 @@ combined technology/demand/vehicle-class/year scenario *x* ($x = jtvd$).
 Further VKT shifts associated with ZOV travel of ride sharing apply only
 to vehicles of `Use` category (*U*) `Shared`.
 
-$$\Delta K_{x,FAU} = (1 + C_{Total,x,FAU}^{E_x}) m_{D,x,US} * m_{D,x,U} - 1.0$$
+$$\Delta K_{x,FAU} = (1 + R_{Total,x,FAU}^{E_x}) m_{D,x,US} * m_{D,x,U} - 1.0$$
+
+Here $R$ is relative total cost compared to the base vehicle and $E_x$ is the elasticity of VKT
+for scenario *x*.
+
+$$R_{Total,x,FAU}(\Delta C_{Fuel}(\Delta I_{jtv, FAU}), \Delta C_{VNonFuel}, \Delta C_{Time}) = \frac {C_{Total,x,FAU}} {C_{Total,base}}$$
 
 Energy Use impacts are based on the combined effect of intensity and VKT demand changes.
 Then each energy change by vehicle sub-type (`Automation`, `Fuel` and `Use`)
@@ -2127,7 +2132,7 @@ temp <- CaseAssumpsResults %>%
   mutate(
     NIEratio = # relative adj to agg change in energy intensity, treating numerical error as 0.0
       ifelse((abs(I_deltaCAV)<1E-10) & (abs(NIE)<1E-10), 1.0, round(NIE/I_deltaCAV, 6)),
-    VMTEratio = # relative adj to agg change in energy intensity, treating numerical error as 0.0
+    VKEratio = # relative adj to agg change in energy intensity, treating numerical error as 0.0
       ifelse((abs(old_fracVMTIncr)<1E-10) & (abs(fracVMTIncr)<1E-10), 1.0, round(fracVMTIncr/old_fracVMTIncr, 6)),
     EnUEratio = # relative adj to agg change in energy intensity, treating numerical error as 0.0
       ifelse((abs(old_EnergyUse)<1E-10) & (abs(EnergyUse)<1E-10), 1.0, round(EnergyUse/old_EnergyUse, 6))
@@ -2142,7 +2147,7 @@ temp <- temp %>%
          "old_C_Fuel", "old_C_Time", "old_C_VNonF", "old_C_Total",
          "old_fracVMTIncr", "old_fracEnergyUse", "old_EnergyUse",
          "fracVMTIncr",  "fracEnergyUse",  "EnergyUse",
-         "NIEratio", "VMTEratio", "EnUEratio"
+         "NIEratio", "VKEratio", "EnUEratio"
          ) %>%
   filter(
     VC == "LDV",
@@ -2247,21 +2252,21 @@ temp %>%
   geom_point() +
   ggtitle("Change in Vehicle Intensity and Energy Use by Vehicle Sub-category")
 
-#table(temp$VMTEratio, temp$Fuel)
+#table(temp$VKEratio, temp$Fuel)
 #table(temp$NIE, temp$Use)
 ```
 
 ```{r echo=echoWorking}
-hist(temp$VMTEratio, breaks = 20)
+hist(temp$VKEratio, breaks = 20)
 g <- temp %>%
   mutate(
     # Fuel = ordered(Fuel, levels = c("Gas", "BEV", "PHEV")),
     Automation = as.factor(Automation),
     Automation = ordered(Automation, levels = c("No", "Partial", "Full"))
   ) %>%
-  ggplot(aes(VMTEratio)) + scale_fill_brewer(palette = "Spectral") + 
+  ggplot(aes(VKEratio)) + scale_fill_brewer(palette = "Spectral") + 
   geom_histogram(aes(fill=Automation), 
-                   binwidth = .1, 
+                   binwidth = .02, 
                    col="black", 
                    size=.1) +  # change binwidth
   labs(title="Histogram of VKT Effect Over Cases", 
@@ -2303,9 +2308,12 @@ temp %>%
 # hist(temp$EnUEratio, breaks = 20)
 ```
 
-Checks on Shares
+**Note** these EnergyUse changes are already share-weighted, hence appear smaller.
+Net Energy Use will be the _unweighted_ sum of the term, for a given scenario.
 
-```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
+#### Checks on Shares: that the combined share weights add up to 1.0 as expected
+
+```{r testShareAddingUp, echo=echoWorking, include=echoTests}
 # Aside: Test summation of disaggregated shares
 temp <- CaseAssumpsResults %>%
   mutate(share_prods = F_A_Shares * U_Shares) %>%
@@ -2327,7 +2335,12 @@ cat(
   "Check: Calculated total shares across all demand Use segments and they match 1.0 to within total error",
   paste(ChkErrorDiff), ".\n"
 )
+```
 
+#### Checks on Disagg Calculations: Comparison with Original CAV results
+
+
+```{r testShareAllocationSum, echo=echoWorking, include=echoTests}
 temp = CaseAssumpsResults %>% mutate(testTEST_NIE = abs(I_deltaCAV - NIE)) %>% 
   select(VC, DemScen, ElasCase, TechScen, Automation, Fuel, Use, I_deltaCAV, NIE, testTEST_NIE)
   
@@ -2420,6 +2433,11 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
 write_csv(CaseAssumpsResults, path = "CAV_Scenario_results.csv")
 ```
 
+5.2 Define Combined Scenarios of Interest and Develop Functions to Re-aggregate Over Vehicle Sub-types
+------------------------
+
+### 5.2.1 Define Combined Scenarios of Interest
+
 Define the Combined Scenarios `CombScen`, in terms of name, `Year`, vehicle class `VC`,
 energy-intensity related automation technology changes (`TechScen`),
 VMT demand related changes (`DemScen`) (cost shifts, vehicle sharing responses and exogenous demand shifts),
@@ -2475,7 +2493,7 @@ CombScen_Combinations %>%
   )
 ```
 
-Select Predefined combinations of Tech and Demand scenarios from the full set of cross-combinations,
+Select Predefined combinations `CombScen` of Tech and Demand scenarios from the full set of cross-combinations,
 with effects disaggregated by vehicle type and technology 
 
 (Note: so far, ran all combinations, and then choose the ones to report.)
@@ -2491,13 +2509,9 @@ CaseWantedAssumpsResults <- CaseAssumpsResults %>%
   # filter(DemScen %in% unique(CaseAssumpsResults$DemScen)) %>%
   # keep all rows in CaseAssumps that match row in CombScen_Combinations
   right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
-
-CaseWantedEffects <- CaseEffects %>%
-  # filter(Year==CurrYear) %>%
-  right_join(select(CombScen_Combinations_subset, -Notes),
-    by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")
-  )
 ```
+
+### 5.2.2 Develop Functions to Re-aggregate Over Vehicle Sub-types (Demand Segments)
 
 We can aggregated Case results across Automation type, Fuel type, and shared Use,
 based on disaggregated effects and demand shares associated with each
@@ -2505,22 +2519,25 @@ travel demand segment.
 
 
 ```{r defFn_aggregateSelectedCaseAssumpsResults, echo = echoWorking}
-# Aggregate Case assumps and results across Automation type, Fuel type, and shared Use
-aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, 
-                                                comb_subset, # subset of cases to be aggregated
+aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with precalc assumps & results
+                                                comb_subset, # df case subset to be aggregated (CombScen, Year, ElasCase, VC, TechScen, DemScen)
+                                                # optionally can call for particular vehicle sub-cat
                                                 use_set = c("Private", "Shared"),
                                                 fuel_set = c("Gas", "PHEV", "BEV"),
                                                 auto_set = c("No", "Partial", "Full")
                                                 ) {
+  # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
+  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
   case_assumps_results %>%
     # filter(Year==CurrYear) %>%
     right_join(comb_subset, # join assumps_results cols for cases matching rows in comb_subset
       by = c("Year", "ElasCase", "VC", "TechScen", "DemScen") # case selectors
     ) %>%
     mutate(Joint_FAU_Share = F_A_Shares * U_Shares) %>%
-    mutate(
+    mutate( # convert all result vars to versions weighted by joint FAU share
       fracVMTIncr = fracVMTIncr * Joint_FAU_Share,
       NIE = NIE * Joint_FAU_Share,
+      # EnergyUse: this has already been weighted by joint shares of veh sub-types
       C_Fuel = C_Fuel * Joint_FAU_Share,
       C_Time = C_Time * Joint_FAU_Share,
       C_VNonF = C_VNonF * Joint_FAU_Share,
@@ -2540,10 +2557,11 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
     filter(Use %in% use_set) %>%
     group_by(CombScen, DemScen, TechScen, ElasCase, VC, Year) %>%
     summarize(
+      # construct vehicle share-weighted average of these vars for each "scenario"
       fracVMTIncr = sum(fracVMTIncr),
       NIE = sum(NIE),
       EnergyUse = sum(EnergyUse),
-      totshare = sum(Joint_FAU_Share),
+      totshare = sum(Joint_FAU_Share), # needed if aggregating sub-segments
       F_A_Shares = sum(F_A_Shares),
       U_Shares = sum(U_Shares),
       C_Fuel = sum(C_Fuel),
@@ -2570,11 +2588,13 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results,
 }
 
 # Specify key test outcomes of interest
-testVars <- c("fracVMTIncr", "NIE", "EnergyUse")
+resultVars <- c("fracVMTIncr", "NIE", "EnergyUse")
 ```
 
 ```{r defFn_aggregateSelectedCaseEffects, echo = echoWorking}
 aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
+  # Aggregate Case key result vars over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
+  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 4 final results vars (incl TotShare)
   case_effects %>%
     # Aggregate Case effects (results) across Automation type, Fuel type, and shared Use
     # filter(Year==CurrYear) %>%
@@ -2585,6 +2605,7 @@ aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
     #             by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
     mutate(Joint_FAU_Share = F_A_Shares * U_Shares) %>%
     mutate( # to share-weighted values
+      # EnergyUse: this has already been weighted by joint shares of veh sub-types
       fracVMTIncr = fracVMTIncr * Joint_FAU_Share,
       NIE = NIE * Joint_FAU_Share
     ) %>%
@@ -2596,6 +2617,7 @@ aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
       totshare = sum(Joint_FAU_Share) # this is a check
     ) %>%
     ungroup() # %>%
+  # should not need to divide by totshare, because this function applies to all vehicle sub-types
 }
 
 ```
@@ -2620,17 +2642,24 @@ testAggregation <- CaseWantedAggEffects %>%
   mutate(
     EnergyUseAlt = (1 + fracVMTIncr) * (1 + NIE) - 1,
     EUA_over_EU = EnergyUseAlt / EnergyUse,
-    testDiff = EnergyUseAlt - EnergyUse
+    testEDiff = EnergyUseAlt - EnergyUse,
+    testERatio = ifelse((abs(EnergyUseAlt)<1E-10) & (abs(EnergyUse)<1E-10), 1.0, round(EnergyUseAlt/EnergyUse, 6))
   ) %>%
   select(-Year)
 cat(
   "Check: Calculated aggregate `EnergyUse` changes match product of aggregate energy intensity `NIE` and VMT changes `fracVMTIncr` to within total absolute error (due to composition effects)",
-  sum(abs(testAggregation$testDiff), na.rm = T), ".\n"
+  sum(abs(testAggregation$testEDiff), na.rm = T), ".\n"
 )
+cat(
+  "Check: Calculated aggregate `EnergyUse` changes are",
+  sum(abs(testAggregation$EnergyUse), na.rm = T), ".\n"
+)
+cat(
+  "Check: Statistics on the ratio of aggregate `EnergyUse` the product of aggregate energy intensity `NIE` and `fracVMTIncr` (due to composition effects) are:\n")
+summary(testAggregation$testERatio)
 ```
 
-5.2 Final Scenario Results Table for 2050
-------------------------
+### 5.2.3 Compare Final Scenario Results Table for 2050
 
 NOTE: FOLLOWING ARE HISTORICAL, SUPERCEDED CASES
 
@@ -2665,10 +2694,10 @@ SR_test <- SR_test %>%
   )
 
 SR_test <- SR_test %>%
-  gather(key = varname, value = testValue, testVars) %>%
+  gather(key = varname, value = testValue, resultVars) %>%
   filter(VC != "Tot") # ignore Tot case for new
 CWE_test <- CaseWantedAggEffects %>%
-  gather(key = varname, value = calcValue, testVars) %>%
+  gather(key = varname, value = calcValue, resultVars) %>%
   #  gather(key=varname, value = calcValue, fracVMTIncr, NIE, EnergyUse)
   right_join(SR_test, by = c("VC", "TechScen", "varname")) %>%
   mutate(testDiff = calcValue - testValue)
@@ -2678,6 +2707,9 @@ cat(
   sum(abs(CWE_test$testDiff), na.rm = T), ".\n"
 )
 ```
+
+*Note: This backward check does not yet work because the matching scenarios and scenario IDs have not been
+identified.*
 
 ```{r examineCaseCombinations, echo=echoWorking, include=echoTests}
 # Tables indicating cross-tabs of:
@@ -2692,9 +2724,14 @@ table(CWE_test$TechScen, CWE_test$DemScen)
 ```
 
 ```{r mirrorExtSummaryScenarioResults, echo=echoWorking, include=echoTests}
-# kable(summaryScenarioResultsTableExample,
-#   caption = "Table: Summary Scenario Results from Example in Worksheet", digits = 4
-# )
+CaseWantedAggEffects %>%
+  rename(
+    Intensity = NIE,
+    VKT = fracVMTIncr,
+    Energy = EnergyUse
+  ) %>%
+  select(DemScen, TechScen, ElasCase, VC, Intensity, VKT, Energy) %>%
+  kable(caption = "Table: Summary Scenario Results, Fractional Changes", digits = 4)
 ```
 
 
@@ -2709,7 +2746,7 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
     select(c(CombScen, Year, VC, ElasCase, DemScen, TechScen, NIE, fracVMTIncr, EnergyUse)) %>%
     # CaseWantedAggEffects %>%
     arrange(CombScen, Year, VC, ElasCase) %>%
-    gather(key = variable, value = calcValue, testVars) %>%
+    gather(key = variable, value = calcValue, resultVars) %>%
     # rename variable names, establish as factor in correct order for bar plot
     mutate(variable = ifelse(variable == "NIE", "Intensity",
       ifelse(variable == "fracVMTIncr", "VMT", "Energy")
