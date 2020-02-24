@@ -56,11 +56,12 @@ ScenAssumps_LDV <- read_csv(paste0("./Data/",
                       Scenario_Assumptions_Vehicles_LDV_filename), comment = '#')
 ScenAssumps_HDV <- read_csv(paste0("./Data/", 
                       Scenario_Assumptions_Vehicles_HDV_filename), comment = '#')
-# Data file including VoTT multiplier factors (Arterial and Highway)
-#   by scenario-based "VoTT_Impact" (Zero, Low, High)
-#   by "Congestion" (Low, High)
-#   by "TimeSensitivity" (Low, High)
-#   by "CAVs" automation level (Low, High)
+# Data file including VoTT multiplier factors
+#   by scenario-based "VoTT_Impact" (Zero, Low, High) - multipliers smaller (more VoTT reduction) for High
+#   by "Congestion" (Low, High) - multipliers smaller (more VoTT reduction) for High
+#   by "TimeSensitivity" (Low, High) - multipliers larger (less VoTT reduction) for High
+#   by "CAVs" automation level (Low, High) - multipliers smaller (more VoTT reduction) for High
+#   by Roadtype (Arterial, Highway) - mults usually the same, except Low VoTT_Impact, low CAVs (more VoTT reduction for Hwy)
 ScenAssumps_VoTT <- read_csv(paste0("./Data/", 
                       Scenario_Assumptions_VoTT_filename), comment = '#')
 # This Data file includes benchmarking estimates, by meso-scale Model (POLARIS, BEAM) and SMART Scenario
