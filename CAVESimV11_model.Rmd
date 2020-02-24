@@ -1924,16 +1924,21 @@ For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_
 #    mCT_A   otherwise, NA
 ```
 
-```{r defineDisaggParams, echo=echoWorking}
+```{r defFn_appendDisaggParams, echo=echoWorking}
 # here detail parameters are defined for 
 #   Intensity multipliers by vehicle type (A, F), and
 #   demand shift multipliers by Use case U
 appendDisaggParams <- function(DemScenData) {
+  # Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
+  #  (replicates rows card(A) x card(F) x card(U) times and appends shares
+  #  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
+  # Note these are adjustments to the base vehicle energy efficiency, time cost, or demand shift,
+  #  for the effect on energy use of electrification, automation, sharing
   DemScenData %>%  # ***UNUSED***
-  left_join(shares_by_F_A, by = c("VC", "DemScen")) %>% # starting with Fuel and Automation shares by VC and DemScen
+  left_join(shares_by_F_A, by = c("VC", "DemScen")) %>% # add Fuel and Automation shares by VC and DemScen
   left_join(shares_by_U, by = c("VC", "DemScen")) %>% # add Use (Sharing, Hailing/Pooling) shares
   mutate(
-    # Note these are all adjustments to the incremental effect of full automation
+    # Note these are all adjustments to the incremental effect of full automation, which is the base calculated value
     # Fraction of estimated Net Energy Intensity Effect gained by Partial or No Automation
     mI_A = ifelse(Automation == "Full", 1.0,
       ifelse(Automation == "Partial", 0.5,
@@ -1993,8 +1998,8 @@ appendDisaggParams <- function(DemScenData) {
 } # fn appendDisaggParams
 
 DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
-  filter(DemScen %in% DetailedDemScens) %>%
   select(-Comments) %>%
+  filter(DemScen %in% DetailedDemScens) %>%
   appendDisaggParams()
 ```
 
@@ -2005,74 +2010,13 @@ Add vehicle shares by F & A, and by U, to each combination of `VC` and `DemScen`
 ```{r postProcessCombScenarioResults1, echo=echoWorking, warning=F}
 
 CaseAssumpsResults <- CaseAssumpsResults_many %>%
-  filter(DemScen %in% DetailedDemScens)
-# Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
-#  (replicates rows card(A) x card(F) x card(U) times and appends shares
-#  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
-CaseAssumpsResults <- CaseAssumpsResults %>%
-  left_join(shares_by_F_A, b = c("VC", "DemScen")) %>% # add Fuel and Automation shares
-  left_join(shares_by_U, by = c("VC", "DemScen")) # add Use (Sharing, Hailing/Pooling) shares
-
-CaseAssumpsResults <- CaseAssumpsResults %>%
-  mutate(
-    # Note these are all adjustments to the incremental effect of full automation, which is the base calculated value
-    # Fraction of estimated Net Energy Intensity Effect gained by Partial or No Automation
-    mI_A = ifelse(Automation == "Full", 1.0,
-      ifelse(Automation == "Partial", 0.5,
-        ifelse(Automation == "No", 0.0,
-          NA
-        )
-      )
-    ),
-    # Relative Energy Intensity effect of full automation by Vehicle Class (LDV/HDV)
-    mI_C = 1.0,
-    # mI_C = ifelse(VC=="LDV", 1.0,
-    #              ifelse(VC=="HDV", 0.5,
-    #                     NA)),
-    # Note these are all adjustments to the incremental effect of automation,
-    #  for the effect on energy use of electrification
-    mI_FA = ifelse(Fuel == "Gas", 1.0,
-      ifelse(Fuel == "PHEV", 0.9,
-        ifelse(Fuel == "BEV", 0.5,
-          NA
-        )
-      )
-    ),
-    # Note these are adjustments to the base vehicle energy efficiency,
-    #  for the effect on energy use of electrification
-    mI_FB = ifelse(Fuel == "Gas", 1.0,
-      ifelse(Fuel == "PHEV", 0.9,
-        ifelse(Fuel == "BEV", 0.5,
-          NA
-        )
-      )
-    ),
-    # Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use
-    mD_U = ifelse(Use == "Private", 1.0,
-      # estab Shared repositioning demand mults/shifts
-      ifelse(Use == "Shared", (1 + RidePoolAdjFrac),
-        NA
-      )
-    ),
-    # Fraction of estimated Time Cost Effect (C_deltaVoTT) gained by Partial or No Automation
-    #   "Partial" value based on ratio of VoTT effects for Automation==High vs Automation==Low in ScenAssumps_VoTT
-    mCT_A = ifelse(Automation == "Full", 1.0,
-      ifelse(Automation == "Partial", 0.5, # leads to ~67%- 82% of Multiplier (1-C_deltaVoTT) for Partial
-        ifelse(Automation == "No", 0.0, # assures not reduction
-          NA
-        )
-      )
-    ),
-    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
-    mCT_UA = ifelse(Automation == "Full", 1.0, # ***UNUSED***
-      ifelse(Automation == "Partial", 0.5,
-        ifelse(Automation == "No", 0.0,
-          NA
-        )
-      )
-    )
-
-  )
+  filter(DemScen %in% DetailedDemScens) %>%
+  # Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
+  #  (replicates rows card(A) x card(F) x card(U) times and appends shares
+  #  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
+  # Note these are adjustments to the base vehicle energy efficiency, time cost, or demand shift,
+  #  for the effect on energy use of electrification, automation, sharing
+  appendDisaggParams()
 ```
 
 #### Compute disaggregated Intensity, VMT Demand and Energy Use impact
