@@ -1,5 +1,5 @@
-# this simple test snoippet looks at disaggregated cases,
-#  selection certain variables and cases
+# this simple test snippet looks at disaggregated cases,
+#  selecting certain variables and cases (scenarios)
 
 CaseAssumpsResults %>%
   # filter to choose desired cases
