@@ -1,7 +1,8 @@
 # testResultChange.R
 
 # compare CaseAssumpsResults with this saved file
-oldScenarioResultsCSVfilename = "CAV_Scenario_results_20200219_0450pm.csv"
+#oldScenarioResultsCSVfilename = "CAV_Scenario_results_20200219_0450pm.csv"
+oldScenarioResultsCSVfilename = "CAV_Scenario_results20200221_0542pm.csv"
 
 old = read_csv(oldScenarioResultsCSVfilename)
 new <- CaseAssumpsResults
