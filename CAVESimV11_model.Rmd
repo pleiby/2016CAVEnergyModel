@@ -1928,9 +1928,8 @@ For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_
 # here detail parameters are defined for 
 #   Intensity multipliers by vehicle type (A, F), and
 #   demand shift multipliers by Use case U
-DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
-  filter(DemScen %in% DetailedDemScens) %>%
-  select(-Comments) %>%
+appendDisaggParams <- function(DemScenData) {
+  DemScenData %>%  # ***UNUSED***
   left_join(shares_by_F_A, by = c("VC", "DemScen")) %>% # starting with Fuel and Automation shares by VC and DemScen
   left_join(shares_by_U, by = c("VC", "DemScen")) %>% # add Use (Sharing, Hailing/Pooling) shares
   mutate(
@@ -1973,16 +1972,30 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
         NA
       )
     ),
-    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
+    # Fraction of estimated Time Cost Effect (C_deltaVoTT) gained by Partial or No Automation
+    #   "Partial" value based on ratio of VoTT effects for Automation==High vs Automation==Low in ScenAssumps_VoTT
     mCT_A = ifelse(Automation == "Full", 1.0,
-      ifelse(Automation == "Partial", 1.0, # 0.5,
-        ifelse(Automation == "No", 1.0, # 0.0,
+      ifelse(Automation == "Partial", 0.5, # leads to ~67%- 82% of Multiplier (1-C_deltaVoTT) for Partial
+        ifelse(Automation == "No", 0.0, # assures not reduction
+          NA
+        )
+      )
+    ),
+    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
+    mCT_UA = ifelse(Automation == "Full", 1.0, # ***UNUSED***
+      ifelse(Automation == "Partial", 0.5,
+        ifelse(Automation == "No", 0.0,
           NA
         )
       )
     )
   )
+} # fn appendDisaggParams
 
+DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
+  filter(DemScen %in% DetailedDemScens) %>%
+  select(-Comments) %>%
+  appendDisaggParams()
 ```
 
 Create `CaseAssumpsResults` from `CaseAssumptionsResults_Many` for selected `DemScen` in `DetailedDemScens`.
@@ -2041,14 +2054,24 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
         NA
       )
     ),
-    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
+    # Fraction of estimated Time Cost Effect (C_deltaVoTT) gained by Partial or No Automation
+    #   "Partial" value based on ratio of VoTT effects for Automation==High vs Automation==Low in ScenAssumps_VoTT
     mCT_A = ifelse(Automation == "Full", 1.0,
-      ifelse(Automation == "Partial", 1.0, # 0.5,
-        ifelse(Automation == "No", 1.0, # 0.0,
+      ifelse(Automation == "Partial", 0.5, # leads to ~67%- 82% of Multiplier (1-C_deltaVoTT) for Partial
+        ifelse(Automation == "No", 0.0, # assures not reduction
+          NA
+        )
+      )
+    ),
+    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
+    mCT_UA = ifelse(Automation == "Full", 1.0, # ***UNUSED***
+      ifelse(Automation == "Partial", 0.5,
+        ifelse(Automation == "No", 0.0,
           NA
         )
       )
     )
+
   )
 ```
 
