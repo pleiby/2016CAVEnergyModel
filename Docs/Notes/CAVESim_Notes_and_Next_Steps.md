@@ -370,7 +370,10 @@ and each associated Technology and Demand scenario.
     - [ ] ToDo: Need Sharing disutility here
     - [ ] ToDo: Account for deadheading/respositioning miles in ref (No Pooling) case
 - [ ] ToDo: make enumeration of elements in SetJ_TechScen (Scenarios j) and SetD_DemScen a result of read tables, rather than explicit
-    - originally, `C_Time` at this point differentiated only by `VC` and `DemScen`
 - [ ] ToDo: get ShrECostInt to do recalc of `fracVMTIncr` in disaggregation of `CaseAssumpsResults` by veh subcat
-    
+- [ ] ToDo: disagg VoTT (C_Time) impacts:   Time = Time * (1.0 + C_deltaVoTT), # XXX Applies only to Private, Full CAV
+    - see chunk `CalcTravelCostComponSharesAdjusted`
+    - see fn `CombScenInputsAndResultsForOneTechScen`
+    - in chunk `postProcessCombScenarioResults2`, at that point, `C_Time` originally differentiated only by `VC` and `DemScen`
+  
     
