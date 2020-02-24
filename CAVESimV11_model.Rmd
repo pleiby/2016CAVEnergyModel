@@ -1272,7 +1272,7 @@ VTCShrAlt <- VTCShrAlt %>% mutate(
   VehCapCost = VehCapCost * (1.0 + C_deltaCapCost), # (1+CapitalCostChange)
   TollsFees = TollsFees * (1.0 + C_deltaTolls),
   Parking = Parking * (1.0 + C_deltaPrkng),
-  Time = Time * (1.0 + C_deltaVoTT), # (1-VoTTChang[DemScen]) # = "DemandScenarios!N3"
+  Time = Time * (1.0 + C_deltaVoTT), # This multiplier, from DemScenCostChange, Applies only to Private, Full CAV
   Registration = Registration * (1.0 + C_deltaRegis)
   # Total = CostMult weighted by base CostFraction
 )
@@ -1745,7 +1745,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   # combine base cost shares in VTCShrAlt and Demand Reponse Parameters (Fractional Adjustments) in y for their adjustment
   VTCShrAlt <- left_join(VTCShrAlt, y, by = c("VC")) # note this also duplicates VTCShrAlt (base shares) rows by Sensitivity Case in y
   # append correct Dem Scen multipliers for other vars (VoTT and Insurance)
-  VTCShrAlt <- left_join(VTCShrAlt, select(DemScenCostChange, -Description), by = c("DemScen")) # currently _not_ Sensitivity Case-dependent
+  VTCShrAlt <- left_join(VTCShrAlt, select(DemScenCostChange, -Description), by = c("DemScen")) # currently _not_ Sensitivity Case-dependent, and not disagg by vehicle Automation level or Use case (sharing)
   # ??? do this disaggregation by shares here vs later?
   # left_join(shares_by_F_A, b = c("VC", "DemScen")) %>% # add Fuel and Automation shares
   # left_join(shares_by_U, by = c("VC", "DemScen")) # add Use (Sharing, Hailing/Pooling) shares
@@ -1766,7 +1766,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
     VehCapCost = VehCapCost * (1.0 + C_deltaCapCost), # (1+CapitalCostChange)
     TollsFees = TollsFees * (1.0 + C_deltaTolls),
     Parking = Parking * (1.0 + C_deltaPrkng),
-    Time = Time * (1.0 + C_deltaVoTT), # (1-VoTTChang[DemScen]) # = "DemandScenarios!N3"
+    Time = Time * (1.0 + C_deltaVoTT), # This multiplier, from DemScenCostChange, Applies only to Private, Full CAV
     Registration = Registration * (1.0 + C_deltaRegis)
     # Total = CostMult weighted by base CostFraction
   )
@@ -1916,6 +1916,12 @@ For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_
 #    # estab Shared repositioning demand mults/shifts
 #    mD_U   "Shared", (1 + RidePoolAdjFrac)
 #    mD_U   otherwise NA
+#
+#    mCT_A   Automation Value 
+#    mCT_A   "Full",    1.0,
+#    mCT_A   "Partial", 0.5,
+#    mCT_A   "No",      0.0,
+#    mCT_A   otherwise, NA
 ```
 
 ```{r defineDisaggParams, echo=echoWorking}
@@ -1966,6 +1972,14 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
       ifelse(Use == "Shared", (1 + RidePoolAdjFrac),
         NA
       )
+    ),
+    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
+    mCT_A = ifelse(Automation == "Full", 1.0,
+      ifelse(Automation == "Partial", 1.0, # 0.5,
+        ifelse(Automation == "No", 1.0, # 0.0,
+          NA
+        )
+      )
     )
   )
 
@@ -1988,7 +2002,7 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
 
 CaseAssumpsResults <- CaseAssumpsResults %>%
   mutate(
-    # Note these are all adjustments to the incremental effect of full automation
+    # Note these are all adjustments to the incremental effect of full automation, which is the base calculated value
     # Fraction of estimated Net Energy Intensity Effect gained by Partial or No Automation
     mI_A = ifelse(Automation == "Full", 1.0,
       ifelse(Automation == "Partial", 0.5,
@@ -2025,6 +2039,14 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
       # estab Shared repositioning demand mults/shifts
       ifelse(Use == "Shared", (1 + RidePoolAdjFrac),
         NA
+      )
+    ),
+    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
+    mCT_A = ifelse(Automation == "Full", 1.0,
+      ifelse(Automation == "Partial", 1.0, # 0.5,
+        ifelse(Automation == "No", 1.0, # 0.0,
+          NA
+        )
       )
     )
   )
@@ -2083,7 +2105,7 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     #   Correct old Fuel Cost (and dependent components) for previous calcs, that were for Automated CAV, Gas, vehicle
     old_C_Fuel = C_Fuel,
     old_C_VNonF = C_VNonF,
-    old_C_Time = C_Time, # C_Time at this point differentiated only by VC and DemScen
+    old_C_Time = C_Time, # C_Time at this point differentiated only by VC and DemScen - should be differentiated Automation, sharing
     # old_C_Veh = C_VNonF + C_Fuel, # Not directly tracked in AssumpsResults df: veh costs, excl. Time
     old_C_Total = C_Total,
     old_fracVMTIncr = fracVMTIncr, # this included USDmult by scen for CAVs, but no Ride-Hail/pool asjust for ZOVKT
@@ -2091,7 +2113,8 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     # C_Fuel = C_Fuel * (1.0 + NIE * ShrECostInt) / (1.0 + I_deltaCAV * ShrECostInt), # undo/redo this calc with NIE
     C_Fuel = old_C_Fuel * (1.0 + NIE  * 1.0         ) / (1.0 + I_deltaCAV * 1.0      ), # undo/redo this calc with NIE
     C_VNonF = old_C_VNonF,    # No change? # non-fuel (and non-time) vehicle financial costs. Includes accident.
-    C_Time = old_C_Time,      # No change?
+    # Unwind adjustment for Full CAV, and apply time-cost adjustment based level of Automation
+    C_Time = old_C_Time*(1.0 + C_deltaVoTT*mCT_A)/(1.0 + C_deltaVoTT),
     # C_Veh = C_Fuel + C_VNonF, # vehicle capital and operating costs, c/mi (excl. time)
     C_Total = C_Fuel + C_VNonF + C_Time, 
 
@@ -2141,7 +2164,7 @@ temp <- temp %>%
          "Automation", "Fuel", "Use",
          "C_Fuel", "C_Time", "C_VNonF", "C_Total", 
          "ElasVKT", "I_deltaCAV", "C_deltaVoTT", "NIE",
-         "mI_A", "mI_C", "mI_FA", "mI_FB", "mD_U",
+         "mI_A", "mI_C", "mI_FA", "mI_FB", "mD_U", "mCT_A",
          "old_C_Fuel", "old_C_Time", "old_C_VNonF", "old_C_Total",
          "old_fracVMTIncr", "old_EnergyUse",
          "fracVMTIncr",  "EnergyUse",
@@ -2566,7 +2589,8 @@ aggregateSelectedCaseAssumpsResults_Old <- function(case_assumps_results, # df w
       mI_C = mI_C * Joint_FAU_Share,
       mI_FA = mI_FA * Joint_FAU_Share,
       mI_FB = mI_FB * Joint_FAU_Share,
-      mD_U = mD_U * Joint_FAU_Share
+      mD_U = mD_U * Joint_FAU_Share,
+      mCT_A = mCT_A * Joint_FAU_Share
     ) %>%
     # Allow aggregation of sub segments of the market
     filter(Automation %in% auto_set) %>%
@@ -2592,14 +2616,15 @@ aggregateSelectedCaseAssumpsResults_Old <- function(case_assumps_results, # df w
       mI_C = sum(mI_C),
       mI_FA = sum(mI_FA),
       mI_FB = sum(mI_FB),
-      mD_U = sum(mD_U)
+      mD_U = sum(mD_U),
+      mCT_A = sum(mCT_A)
     ) %>%
     ungroup() %>%
     # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
     mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>% # replace zero by EPS to avoid divide by zero
     mutate_at(vars(fracVMTIncr, NIE, F_A_Shares, U_Shares, 
                    C_Fuel, C_Time, C_VNonF, C_Total,
-                   ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U),
+                   ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A),
               funs(. / totshare)) %>%
     mutate(totshare = ifelse(totshare == 1E-8, 0, totshare)) # restore zeros to zero from EPS
 }
@@ -2626,7 +2651,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
       vars( # divide each of these variables
         fracVMTIncr, NIE, EnergyUse,
         C_Fuel, C_Time, C_VNonF, C_Total,
-        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U
+        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
       ),
       funs(. * Joint_FAU_Share)
     ) %>%
@@ -2641,7 +2666,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
         fracVMTIncr, NIE, EnergyUse,
         totshare, F_A_Shares, U_Shares,
         C_Fuel, C_Time, C_VNonF, C_Total,
-        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U
+        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
       ),
       .funs = sum
     ) %>% # this is an unweighted mean
@@ -2652,7 +2677,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
       vars(
         fracVMTIncr, NIE, EnergyUse, F_A_Shares, U_Shares, 
         C_Fuel, C_Time, C_VNonF, C_Total,
-        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U
+        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
       ),
       funs(. / totshare)
     ) %>%
