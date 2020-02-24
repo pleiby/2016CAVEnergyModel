@@ -375,5 +375,10 @@ and each associated Technology and Demand scenario.
     - see chunk `CalcTravelCostComponSharesAdjusted`
     - see fn `CombScenInputsAndResultsForOneTechScen`
     - in chunk `postProcessCombScenarioResults2`, at that point, `C_Time` originally differentiated only by `VC` and `DemScen`
+    - SMART Scenario VoTT assumptions are in: `Scenario_Assumptions_VoTT_filename`
+        - read to `ScenAssumps_VoTT` ***UNUSED*** further at this point
+    - SMART Scenario Sharing assumptions are in: `Scenario_Assumptions_Sharing_filename`
+        - read to `ScenAssumps_Sharing` which provides Private and TNC vehicle share, as well as mode share
+        - this is mapped to `Shares_by_U` df
   
     
