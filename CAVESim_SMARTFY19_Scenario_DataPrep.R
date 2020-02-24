@@ -262,3 +262,31 @@ shares_by_Automation %>%
   filter(Fuel == "Unassigned")
 #```
 
+# VMT by Road Type
+VMT_by_Roadtype = tribble(
+~Year, ~Allroads, ~Interstate, ~OtherArterial, ~Collector, ~Local,
+2015, 3095373, 776952, 1466217, 422110, 430095,
+2016, 3174408, 805104, 1505453, 429797, 434055,
+2017, 3212348, 819760, 1516479, 428450, 447657,
+2018, 3240327, 828655, 1533687, 437761, 440224
+)
+# VMT Fraction by Road Type
+VMT_Fraction_by_Roadtype = tribble(
+  ~Year, ~Allroads, ~Interstate, ~OtherArterial, ~Collector, ~Local,
+2015, 1.00000, 0.25100, 0.47368, 0.13637, 0.13895,
+2016, 1.00000, 0.25362, 0.47425, 0.13539, 0.13674,
+2017, 1.00000, 0.25519, 0.47208, 0.13338, 0.13936,
+2018, 1.00000, 0.25573, 0.47331, 0.13510, 0.13586
+)
+# Datafile: "VMT_and_VMTperlanemile_by_Roadway_Class_BTS2020.csv"
+# Source: https://www.bts.gov/content/roadway-vehicle-miles-traveled-vmt-and-vmt-lane-mile-functional-class        
+# Table 1-36:  Roadway Vehicle-Miles Traveled (VMT) and VMT per Lane-Mile by Functional Classa         
+# Units: VMT in millions of veh-miles; VMTPLM in thousands of veh-miles per lane mile         
+# U.S. Department of Transportation, Federal Highway Administration, Highway Statistics (Washington, DC: Annual Issues), table VM-202, available at http://www.fhwa.dot.gov/policyinformation/statistics.cfm as of Dec. 3, 2019.         
+# table_01_36_121719.xlsx; https://www.bts.gov/sites/bts.dot.gov/files/table_01_36_121719.xlsx         
+
+# Take the most recent year fraction of VMT on Interstates as Highway (vs Arterial) fraction,
+#   for the purpose of average VoTT calculation
+HighwayVMTFraction <- VMT_Fraction_by_Roadtype %>%
+  filter(Year == 2018) %>%
+  pull(Interstate)
