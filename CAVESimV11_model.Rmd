@@ -2045,9 +2045,10 @@ to get the total energy effect.
 $$\Delta E_{x,FAU} = ((1 + \Delta I_{jtv, FAU}) \cdot (1 + \Delta K_{x,FAU}) - 1) \cdot s_{x,FA} \cdot s_{x,U}$$
 
 
-```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
+```{r defFn_disaggCombScenResults, echo=echoWorking, warning=F}
 # Compute Disagg Intensity, Costs, VMT Demand and Energy Use impact by veh type (C, A, F, U) (could do this earlier)
-CaseAssumpsResults <- CaseAssumpsResults %>%
+disaggCombScenResults <- function(dfCAR, disaggVoTT = T) {
+  dfCAR %>% # expect input df with case results aggregated as the level of VC, rather than vehicel-subtype (A, F, U)
   mutate(
     # adjust intensity change for Veh Class, Automation, Fuel tech
     old_NIE = NIE,
@@ -2067,8 +2068,12 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     # C_Fuel = C_Fuel * (1.0 + NIE * ShrECostInt) / (1.0 + I_deltaCAV * ShrECostInt), # undo/redo this calc with NIE
     C_Fuel = old_C_Fuel * (1.0 + NIE  * 1.0         ) / (1.0 + I_deltaCAV * 1.0      ), # undo/redo this calc with NIE
     C_VNonF = old_C_VNonF,    # No change? # non-fuel (and non-time) vehicle financial costs. Includes accident.
-    # Unwind adjustment for Full CAV, and apply time-cost adjustment based level of Automation
-    C_Time = old_C_Time*(1.0 + C_deltaVoTT*mCT_A)/(1.0 + C_deltaVoTT),
+    # Unwind adjustment for Full CAV, and apply time-cost adjustment based level of Automation (optional for testing)
+    vec_disaggVoTT = disaggVoTT, # must define a column of logical conditions or ifelse fails
+    C_Time = ifelse(vec_disaggVoTT, # ifelse condition must be a column
+                    old_C_Time*(1.0 + C_deltaVoTT*mCT_A)/(1.0 + C_deltaVoTT),
+                    old_C_Time),
+
     # C_Veh = C_Fuel + C_VNonF, # vehicle capital and operating costs, c/mi (excl. time)
     C_Total = C_Fuel + C_VNonF + C_Time, 
 
@@ -2078,21 +2083,24 @@ CaseAssumpsResults <- CaseAssumpsResults %>%
     # adjust VMT Demand for vehicle Use case (Shared or Private)
     # fracVMTIncr so far is dependent on cost elasticity
     old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # ??? WHY do this? should only apply to Shared travel (LDV)
-    fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1
+    fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1,
     
     # #   Not: mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
     # mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1)
 
-  )
-
-# then weight VMT demand by vehicle sub-type shares, allowing summation across subcategories
-CaseAssumpsResults <- CaseAssumpsResults %>%
-  mutate(
+    # then weight VMT demand by vehicle sub-type shares, allowing summation across subcategories
     # actual energy use (relative to base for this vehicle segment)
     # ? EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0,
     old_EnergyUse = ((1 + old_NIE) * (1 + old_fracVMTIncr) - 1),
     EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1)  # do NOT weight by shares yet
-  )
+  ) %>%
+  select(-vec_disaggVoTT) # remove temp var
+  
+}
+```
+
+```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
+CaseAssumpsResults <- disaggCombScenResults(CaseAssumpsResults, disaggVoTT = T)
 ```
 
 #### Diagnosis/Testing: tables of revised intensities, `NIE` over original (`deltaCAV`)
