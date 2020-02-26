@@ -2100,7 +2100,7 @@ disaggCombScenResults <- function(dfCAR, disaggVoTT = T) {
 ```
 
 ```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
-CaseAssumpsResults <- disaggCombScenResults(CaseAssumpsResults, disaggVoTT = T)
+CaseAssumpsResults <- disaggCombScenResults(CaseAssumpsResults, disaggVoTT = F)
 ```
 
 #### Diagnosis/Testing: tables of revised intensities, `NIE` over original (`deltaCAV`)
