@@ -766,19 +766,6 @@ nieForScenYear <- function(EIChanges, TechScenWanted, YearWanted) {
 # Update I_deltaCAV, net energy intensity change, to be consistent with current TechScen
 # Transcribe current (computed) net intensity effects (nie) to the I_deltaCAV variable in DemRespParams
 
-# This assignment is awkward, due to non-ideal organization of data tables.
-# DemRespParams$NIE = EnergyIntensityChange$NIE  # for matching VC, and Parameter=='I_deltaCAV'
-updateI_deltaCAVinDemRespParamsOld <- function(local_DemRespParams, local_nie) { # ***UNUSED***
-  local_DemRespParams %>%
-    gather(key = Sens, value = value, -c(VC, Parameter)) %>% # following assigns the same
-    mutate(
-      value = ifelse((VC == "LDV" & Parameter == "I_deltaCAV"), local_nie[local_nie$VC == "LDV", ]$NIE, value),
-      value = ifelse((VC == "HDV" & Parameter == "I_deltaCAV"), local_nie[local_nie$VC == "HDV", ]$NIE, value)
-    ) %>%
-    spread(key = Sens, value = value) %>%
-    select(c("VC", "Parameter", "Zero", "Low", "Med", "High")) # reorder columns after gather/spread
-}
-
 # DemRespParams$I_deltaCAV <- DemRespParams$NIE <- EnergyIntensityChange$NIE, for matching VC, Year, TechScen
 updateI_deltaCAVinDemRespParams <- function(
     local_DemRespParams, # df with VC, Parameter, and values for alt EffectCase(s)
@@ -2526,76 +2513,6 @@ travel demand segment.
 
 
 ```{r defFn_aggregateSelectedCaseAssumpsResults, echo = echoWorking}
-aggregateSelectedCaseAssumpsResults_Old <- function(case_assumps_results, # df with precalc assumps & results
-                                                comb_subset, # df case subset to be aggregated (CombScen, Year, ElasCase, VC, TechScen, DemScen)
-                                                # optionally can call for particular vehicle sub-cat
-                                                use_set = c("Private", "Shared"),
-                                                fuel_set = c("Gas", "PHEV", "BEV"),
-                                                auto_set = c("No", "Partial", "Full")
-                                                ) {
-  # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
-  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
-  case_assumps_results %>%
-    # filter(Year==CurrYear) %>%
-    right_join(comb_subset, # join assumps_results cols for cases matching rows in comb_subset
-      by = c("Year", "ElasCase", "VC", "TechScen", "DemScen") # case selectors
-    ) %>%
-    mutate(Joint_FAU_Share = F_A_Shares * U_Shares) %>%
-    mutate( # convert all result vars to versions weighted by joint FAU share
-      fracVMTIncr = fracVMTIncr * Joint_FAU_Share,
-      NIE = NIE * Joint_FAU_Share,
-      EnergyUse = EnergyUse * Joint_FAU_Share, # no longer already weighted by joint shares of veh sub-types
-      C_Fuel = C_Fuel * Joint_FAU_Share,
-      C_Time = C_Time * Joint_FAU_Share,
-      C_VNonF = C_VNonF * Joint_FAU_Share,
-      C_Total = C_Total * Joint_FAU_Share,
-      ElasVKT = ElasVKT * Joint_FAU_Share,
-      RidePoolAdjFrac = RidePoolAdjFrac * Joint_FAU_Share,
-      USDmult = USDmult * Joint_FAU_Share,
-      mI_A = mI_A * Joint_FAU_Share,
-      mI_C = mI_C * Joint_FAU_Share,
-      mI_FA = mI_FA * Joint_FAU_Share,
-      mI_FB = mI_FB * Joint_FAU_Share,
-      mD_U = mD_U * Joint_FAU_Share,
-      mCT_A = mCT_A * Joint_FAU_Share
-    ) %>%
-    # Allow aggregation of sub segments of the market
-    filter(Automation %in% auto_set) %>%
-    filter(Fuel %in% fuel_set) %>%
-    filter(Use %in% use_set) %>%
-    group_by(CombScen, DemScen, TechScen, ElasCase, VC, Year) %>%
-    summarize(
-      # construct vehicle share-weighted average of these vars for each "scenario"
-      fracVMTIncr = sum(fracVMTIncr),
-      NIE = sum(NIE),
-      EnergyUse = sum(EnergyUse),
-      totshare = sum(Joint_FAU_Share), # needed if aggregating sub-segments
-      F_A_Shares = sum(F_A_Shares),
-      U_Shares = sum(U_Shares),
-      C_Fuel = sum(C_Fuel),
-      C_Time = sum(C_Time),
-      C_VNonF = sum(C_VNonF),
-      C_Total = sum(C_Total),
-      ElasVKT = sum(ElasVKT),
-      RidePoolAdjFrac = sum(RidePoolAdjFrac),
-      USDmult = sum(USDmult),
-      mI_A = sum(mI_A),
-      mI_C = sum(mI_C),
-      mI_FA = sum(mI_FA),
-      mI_FB = sum(mI_FB),
-      mD_U = sum(mD_U),
-      mCT_A = sum(mCT_A)
-    ) %>%
-    ungroup() %>%
-    # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
-    mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>% # replace zero by EPS to avoid divide by zero
-    mutate_at(vars(fracVMTIncr, NIE, F_A_Shares, U_Shares, 
-                   C_Fuel, C_Time, C_VNonF, C_Total,
-                   ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A),
-              funs(. / totshare)) %>%
-    mutate(totshare = ifelse(totshare == 1E-8, 0, totshare)) # restore zeros to zero from EPS
-}
-
 aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with precalc assumps & results
                                                 comb_subset, # df case subset to be aggregated (CombScen, Year, ElasCase, VC, TechScen, DemScen)
                                                 # optionally can call for particular vehicle sub-cat
