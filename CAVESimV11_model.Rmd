@@ -3083,6 +3083,11 @@ PacePi <- 1 / 39.98 # base or default pace, hr/mi
 ReductPaceAutomation <- 1 #  PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
 ```
 
+#### Define elasticities:
+- $elas_{C_T,o}$ = `Elas_VoTT_wrt_Pooling`, elasticity of perceived Cost of Travel time $VoTT$, where $C_T = VoTT * \pi$, w.r.t. pooling occupancy. This is an assumption regarding how occupancy (pooling) increases time cost VoTT per hour.
+- $elas_{K_V,o}$ = `Elas_TourLength_wrt_Pooling`, the elasticity of Vehicle tour length $K_V$ (for mult pooled trips) w.r.t. occupancy;
+- $elas_{K_P,o}$ = `Elas_RiderDetour_wrt_Pooling` elasticity of Passenger trip length $K_P$, in _time_ w.r.t. occupancy and pooling
+
 We establish estimates of vehicle travel cost per mile by component category (those related to fuel cost, non-fuel financial costs, and time costs) and estimate how these change with automation and ride sharing at different levels of pooling.
 
 ```{r poolingSelectedCases, echo=echoWorking}
@@ -3115,9 +3120,7 @@ scenAggData <- CaseWantedAggAssumps %>%
   )
 ```
 
-For Base assumptions and Alternative scenario assumptions, .
-
-a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.^[Historically, U.S. average passenger car occupancy in the U.S. has been steady at about 1.5 to 1.6, with van occupancy slightly over 2 (Davis, Williams, & Boundy 2017, Fig 8.1)]
+For Base assumptions and Alternative scenario assumptions, consider a range of vehicle occupancy levels *o*, where $o = 1.0$ corresponds to the current averable level of vehicle occupancy.^[Historically, U.S. average passenger car occupancy in the U.S. has been steady at about 1.5 to 1.6, with van occupancy slightly over 2 (Davis, Williams, & Boundy 2017, Fig 8.1)]
 
 ```{r defFn_extractVehTotalTravelCost, echo=echoWorking}
 # get base travel costs, total, cents/mi
@@ -3131,6 +3134,10 @@ extractVehTotalTravelCost <- function(cost_df, vehtype, costcat) {
     pull(VTCost_cpm)  
 }
 ```
+
+Start with Base cost assumptions for the total travel cost per mile
+for a conventional (gasoline, manually-driven, privately operated) vehicle, 
+and apply the cost adjustment ratios from the  **aggregate** (???) scenario data.
 
 ```{r addVehTravelCostsComponsFromShares, echo=echoWorking}
 # Need base total vehicle cost, which is the reference point for all relative cost estimations
