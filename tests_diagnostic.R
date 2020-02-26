@@ -65,4 +65,40 @@ ScenAssumps_VoTT %>%
 #     MultHwyOverArt = MultiplierHighway/MultiplierArterial,
 #     MultiplierAllroads = 0.26 * MultiplierHighway + (1-0.26) * MultiplierArterial
 # )
-  
+
+# ##################################################################################
+# Test demonstrating the risk of using a scalar as the condition in an `ifelse` statement
+set.seed(42)
+testRandVals = data.frame(samp = runif(100)) # create df of 100 random values
+Condition = T
+# now try to double the sample vector "samp" conditional on Condition
+testRandVals$try_sampX2 = ifelse(Condition, testRandVals$samp*2.0, testRandVals$samp)
+summary(testRandVals)
+
+
+
+set.seed(42)
+testRandVals = tibble(samp = runif(100)) # create df of 100 random values
+scalarCondition = T
+testRandVals %>%
+  mutate(
+    unconditional_sampX2 = samp*2.0,
+    scalarcond_sampX2 = ifelse(scalarCondition, samp*2.0, samp),
+    vec_Condition = scalarCondition, # define a column of logicals
+    vectorcond_sampX2 = ifelse(vec_Condition, samp*2.0, samp),
+    oldsamp = samp # confirm that samp is unchanged
+  ) %>%
+  summary()
+
+
+set.seed(42)
+testRandVals = data.frame(samp = runif(100)) # create df of 100 random values
+scalarCondition = T
+testRandVals$scalarcond_sampX2 = ifelse(scalarCondition, testRandVals$samp*2.0, testRandVals$samp)
+
+testRandVals$unconditional_sampX2 = testRandVals$samp*2.0
+testRandVals$vec_Condition = scalarCondition # define a column of logicals
+testRandVals$vectorcond_sampX2 = ifelse(testRandVals$vec_Condition, testRandVals$samp*2.0, testRandVals$samp)
+testRandVals$oldsamp = testRandVals$samp # confirm that samp is unchanged
+
+summary(testRandVals)
