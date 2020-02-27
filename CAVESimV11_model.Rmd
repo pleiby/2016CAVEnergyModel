@@ -649,21 +649,21 @@ kable(
 #  If so, conflicts with C_deltaCapCost elsewhere in DemRespParams
 
 DemScenCostChange <- read.delim(textConnection("
-DemScen :C_deltaVoTT :C_deltaInsur :Description
-DS1     :0           :-0.60        :Driver assistance, but no self-driving. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
-DS2     :-0.05       :-0.60        :Driver assistance, but no self-driving. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
-DS3     :-0.50       :-0.80        :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
-DS4     :-0.80       :-0.80        :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
-DS5     :-0.80       :-0.80        :Same as DemScen 4, with different exogenous demand effects
-DS6     :-0.80       :-0.80        :Same as DemScen 4, with different exogenous demand effects
-DS7     :-0.50       :-0.80        :Same as DemScen 3, with different exogenous demand effects
-Test    :-0.80       :-0.80        :Same as DemScen 6
-Zero    : 0.00       : 0.00        :No cost changes
-Base    : 0.00       : 0.00        :No cost changes
-B_Low   :-0.10       :-0.40        :SMART Scen Sharing is Caring low
-B_High  :-0.30       :-0.40        :SMART Scen Sharing is Caring high
-C_Low   :-0.10       :-0.40        :SMART Scen All About Me low
-C_High  :-0.50       :-0.40        :SMART Scen All About Me high
+DemScen :C_deltaVoTT :C_deltaInsur :C_deltaCapCostX:Description
+DS1     :0           :-0.60        : 0.00          :Partial automation. Little benefits of comfort (0% reduction in VoT), lower end of insurance benefits (60%)
+DS2     :-0.05       :-0.60        : 0.00          :Partial automation. Some benefits of comfort (5% reduction in VoT), lower end of insurance benefits (60%)
+DS3     :-0.50       :-0.80        : 0.00          :Self driving. Large benefits of comfort + in vehicle use of time (50% reduction in VoT), large benefits of insurance (80%)
+DS4     :-0.80       :-0.80        : 0.00          :Extreme Self driving case. Large benefits of comfort + in vehicle use of time (80% reduction in VoT), large benefits of insurance (80%)
+DS5     :-0.80       :-0.80        : 0.00          :Same as DemScen 4, with different exogenous demand effects
+DS6     :-0.80       :-0.80        : 0.00          :Same as DemScen 4, with different exogenous demand effects
+DS7     :-0.50       :-0.80        : 0.00          :Same as DemScen 3, with different exogenous demand effects
+Test    :-0.80       :-0.80        : 0.00          :Same as DemScen 6
+Zero    : 0.00       : 0.00        : 0.00          :No cost changes
+Base    : 0.00       : 0.00        : 0.00          :No cost changes
+B_Low   :-0.10       :-0.40        : 0.10          :SMART Scen Sharing is Caring low
+B_High  :-0.30       :-0.40        : 0.10          :SMART Scen Sharing is Caring high
+C_Low   :-0.10       :-0.40        : 0.00          :SMART Scen All About Me low
+C_High  :-0.50       :-0.40        : 0.00          :SMART Scen All About Me high
 "), header = TRUE, sep = ":", strip.white = TRUE)
 # DS0     :0           : 0.0         :Base
 DemScenCostChange$DemScen <- as.character(DemScenCostChange$DemScen)
@@ -1176,7 +1176,7 @@ y <- DemRespParams %>%
 
 # combine base cost shares in x and Demand Reponse Parameters (Fractional Adjustments) in y for their adjustment
 x <- left_join(x, y, by = c("VC")) # note this also duplicates x (base shares) rows by Case in y
-x <- left_join(x, select(DemScenCostChange, -Description), by = c("DemScen")) # appends Dem Scen multipliers for other vars (VoTT and Insurance)
+x <- left_join(x, select(DemScenCostChange, -c("C_deltaCapCostX", "Description")), by = c("DemScen")) # appends Dem Scen multipliers for other vars (VoTT and Insurance)
 VTCShrAlt <- x
 
 # At this point, have an array of (base) cost share and demand-scenario related variables that can change cost shares,
@@ -1558,7 +1558,7 @@ M_{vtdsj} &~=~ \left ( (c_{rel,vtdj})^{ElasVKT_{cvs}} \right ) \cdot \gamma_{USD
 \end {align}
 $$
 
-Note: a more refined analysis would account for the the different travel costs faced by ride-hailing/pooling travelers.
+Note: a more refined analysis would account for the different travel costs faced by ride-hailing/pooling travelers.
 
 ```{r VMTAdjustments, echo=echoWorking}
 # extends logic in "calcul Dem_LDV" and "calcul Dem_HDV"
@@ -1653,7 +1653,7 @@ $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1$$
 
 Note: this calculation applies the VKT elasticity, estimated and appropriate for cost response at the reference level (near zero) pooling.
 
-VMT demand is further adjusted base on exogenous demand shifts associated with new use categories and the efect of ride-hailing/ride-pooling on VMT.
+VMT demand is further adjusted based on exogenous demand shifts associated with new use categories and the effect of ride-hailing/ride-pooling on VMT.
 
 ```{r constructTechScenEffectsIE, echo=echoWorking}
 
@@ -1663,7 +1663,7 @@ TechScenEffectsEI <- EnergyIntensityChanges %>% # ***UNUSED***
   select(TechScen, Year, VC, NIE)
 ```
 
-Select Combined Scenario
+#### Select Combined Scenario
 
 Our "combined" scenarios are composed of a technology scenario (`TechScen`) and a demand scenario (`DemScen`).
 
@@ -1732,12 +1732,11 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   # combine base cost shares in VTCShrAlt and Demand Reponse Parameters (Fractional Adjustments) in y for their adjustment
   VTCShrAlt <- left_join(VTCShrAlt, y, by = c("VC")) # note this also duplicates VTCShrAlt (base shares) rows by Sensitivity Case in y
   # append correct Dem Scen multipliers for other vars (VoTT and Insurance)
-  VTCShrAlt <- left_join(VTCShrAlt, select(DemScenCostChange, -Description), by = c("DemScen")) # currently _not_ Sensitivity Case-dependent, and not disagg by vehicle Automation level or Use case (sharing)
+  VTCShrAlt <- left_join(VTCShrAlt, select(DemScenCostChange, -c("C_deltaCapCostX", "Description")),
+                         by = c("DemScen")) # currently _not_ Sensitivity Case-dependent, and not disagg by vehicle Automation level or Use case (sharing)
   # ??? do this disaggregation by shares here vs later?
   # left_join(shares_by_F_A, b = c("VC", "DemScen")) %>% # add Fuel and Automation shares
   # left_join(shares_by_U, by = c("VC", "DemScen")) # add Use (Sharing, Hailing/Pooling) shares
-
-  # VTCShrAlt <- x
 
   # Apply adjustments to Cost (per mi) Components, across Demand Scenario (DemScen), Veh Type, and Case (Low - High)
   # Note that this is perceived/internalized cost (may not include all energy gains)
@@ -1749,7 +1748,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
     Fuel = Fuel * (1.0 + I_deltaCAV * ShrECostInt),
     # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
     Maintenance = Maintenance * (1.0 + C_deltaMaint),
-    AccAndIns = AccAndIns * (1.0 + C_deltaInsur), # (1+InsChange[DemScen]) # = "DemandScenarios!$O3"
+    AccAndIns = AccAndIns * (1.0 + C_deltaInsur), # (1+InsChange[DemScen])
     VehCapCost = VehCapCost * (1.0 + C_deltaCapCost), # (1+CapitalCostChange)
     TollsFees = TollsFees * (1.0 + C_deltaTolls),
     Parking = Parking * (1.0 + C_deltaPrkng),
@@ -2015,7 +2014,7 @@ $\Delta I_{jtv} = \mu_{jtv} - 1$ = `NIE`
 
 $$\Delta I_{jtv, FAU} = \Delta I_{jtv} \cdot m_{I,Cx} \cdot m_{I,Ax} \cdot  m_{I,FAx} $$
 
-Also adjust costs accordingly, for correct demand response calculation.
+Also adjust other costs accordingly, for correct demand response calculation.
 
 Note: total relative travel cost per mile and its fuel and non-fuel components will vary with
 Automation *A* and with Fuel/Drivetrain type *F* interacting with Automation. 
@@ -2029,14 +2028,18 @@ combined technology/demand/vehicle-class/year scenario *x* ($x = jtvd$).
 Further VKT shifts associated with ZOV travel of ride sharing apply only
 to vehicles of `Use` category (*U*) `Shared`.
 
-$$\Delta K_{x,FAU} = (1 + R_{Total,x,FAU}^{E_x}) m_{D,x,US} * m_{D,x,U} - 1.0$$
+$$\Delta K_{x,FAU} = (1 + R_{Total,x,FAU}^{\epsilon_{K,C,x}}) m_{D,x,US} \cdot m_{D,x,U} - 1.0$$
 
-Here $R$ is relative total cost compared to the base vehicle and $E_x$ is the elasticity of VKT
+Here $R$ is relative total cost compared to the base vehicle and $\epsilon_{K,C,x}$ is the elasticity of VKT
 for scenario *x*.
 
 $$R_{Total,x,FAU}(\Delta C_{Fuel}(\Delta I_{jtv, FAU}), \Delta C_{VNonFuel}, \Delta C_{Time}) = \frac {C_{Total,x,FAU}} {C_{Total,base}}$$
 
-Energy Use impacts are based on the combined effect of intensity and VKT demand changes.
+Energy Use impacts are based on the combined effect of intensity and VKT demand changes at the disaggregated
+vehicle segment, or sub-type, `FAU` level:
+
+$$(1 + \Delta I_{jtv, FAU}) \cdot (1 + \Delta K_{x,FAU})$$
+
 Then each energy change by vehicle sub-type (`Automation`, `Fuel` and `Use`)
 is weighted by vehicle sub-type shares $s_{x,FA}$ and $s_{x,U}$ for scenario *x*,
 allowing summation across subcategories
@@ -2050,9 +2053,9 @@ $$\Delta E_{x,FAU} = ((1 + \Delta I_{jtv, FAU}) \cdot (1 + \Delta K_{x,FAU}) - 1
 disaggCombScenResults <- function(dfCAR, disaggVoTT = T) {
   dfCAR %>% # expect input df with case results aggregated as the level of VC, rather than vehicel-subtype (A, F, U)
   mutate(
-    # adjust intensity change for Veh Class, Automation, Fuel tech
+    # adjust net intensity change for Veh Class, Automation, Fuel tech
     old_NIE = NIE,
-    NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0,
+    NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0, # NIE is now disagg by veh sub-type
     
     # if (TRUE) {
     # WARNING: Now need to adjust costs (identity is C_Total = C_Fuel + C_VNonF + C_Time)
@@ -2409,6 +2412,10 @@ summary(testEnergy)
 ```{r echo=echoWorking}
 # testEnergy %>% filter(testTEST == T)
 
+# Look at variations in some cost assumptions:
+# CaseAssumpsResults %>% select(DemScen, C_deltaVoTT) %>% group_by(DemScen) %>% table()
+# CaseAssumpsResults %>% select(DemScen, C_VNonF) %>% group_by(DemScen) %>% table() # look for CapCost effect
+# VTCostAlt %>% filter(CostCat == "VehCapCost") %>% group_by(VehType) %>% select(VehType, VTCost_shr) %>% table()
 ```
 
 
@@ -2513,12 +2520,13 @@ CaseWantedAssumpsResults <- CaseAssumpsResults %>%
   right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
 ```
 
+Tabulate assumptions and results for selected Combined Scenarios in `CaseWantedAssumpsResults`.
+
 ### 5.2.2 Develop Functions to Re-aggregate Over Vehicle Sub-types (Demand Segments)
 
-We can aggregated Case results across Automation type, Fuel type, and shared Use,
-based on disaggregated effects and demand shares associated with each
-travel demand segment.
-
+We can aggregate Case results across Automation type, Fuel type, and shared Use,
+based on disaggregated effects and shares by vehicle sub-type $s_{x,FA}$ and $s_{x,U}$
+for scenario *x* associated with each travel demand segment.
 
 ```{r defFn_aggregateSelectedCaseAssumpsResults, echo = echoWorking}
 aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with precalc assumps & results
@@ -2580,7 +2588,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
 resultVars <- c("fracVMTIncr", "NIE", "EnergyUse")
 ```
 
-```{r defFnselectCaseAssumpsResults, echo=echoWorking}
+```{r defFn_selectCaseAssumpsResults, echo=echoWorking}
 selectCaseAssumpsResults <- function(case_assumps_results, # df with precalc assumps & results
                                                 comb_subset, # df case subset to be aggregated (CombScen, Year, ElasCase, VC, TechScen, DemScen)
                                                 # optionally can call for particular vehicle sub-cat
@@ -2786,8 +2794,10 @@ barPlotScenarioSetIntVMTEnergy <- function(thisdata,
     geom_bar(stat = "identity") +
     facet_wrap(~DemScen) + # use DemScen instead of CombScen, because names clearer
     scale_fill_brewer(palette = "Spectral") + # color with RcolorBrewer
-    theme(axis.title=element_text(face="bold",size="14",color="black"),
-          axis.text=element_text(size=14,face="bold")) +
+    theme(
+      axis.title=element_text(face="bold",size="14",color="black"),
+      axis.text=element_text(size=12,face="bold")
+      ) +
     ggtitle(title, subtitle = subtitle) +
     ylab("Fractional Change")
 }
@@ -3026,11 +3036,11 @@ ElasCaseWanted <- "Low"
 ```{r poolingScenData, echo=echoWorking}
 # Gather assumptions for base and alternative case
 # extract essential cost vars, and combine base and alt scenario cases
-scenData <- CaseWantedAssumpsResults %>%
+scenDisaggData <- CaseWantedAssumpsResults %>%
   filter(
     DemScen %in% DemScenWanted,
     ElasCase == ElasCaseWanted,
-    Fuel == "Gas", # multiple vehicles and techs possible
+    # Fuel == "Gas", # multiple vehicles and techs possible
     # VehType == VehTypeWanted
     VC == VehClassWanted
   )
@@ -3066,7 +3076,7 @@ and apply the cost adjustment ratios from the  **aggregate** (???) scenario data
 
 ```{r addVehTravelCostsComponsFromShares, echo=echoWorking}
 # Need base total vehicle cost, which is the reference point for all relative cost estimations
-C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" )
+C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
 
 scenAggData <- scenAggData %>%
   # construct principal cost components, from cost share to monetary values in c/mi
@@ -3079,6 +3089,8 @@ scenAggData <- scenAggData %>%
   mutate(
     C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
     C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
+    # So:  C_tot = C_F + C_H + C_T
+    #      C_tot = C_V + C_T
   )
 ```
 
@@ -3097,7 +3109,7 @@ Demand scenarios include variation in the value of travel time and the elasticit
 
 ```{r calcCostDataForOccupancyEffectsTest, echo=echoWorking}
 # Keep only needed summary cost variables, [in cents/mi]
-# scenCostData1 <- scenData %>%
+# scenCostData1 <- scenDisaggData %>%
 #   filter(
 #     Automation == "Full",
 #     Fuel == "Gas",
@@ -3138,7 +3150,7 @@ scenCostData %>%
 occupancyEffects <- data.frame("o" = seq(from = 0.8, to = 1.5, by = 0.05)) #  occupancy, unitless (pass/veh, normalized)
 ```
 
-The vehicle (non-time) portion of travel costs can be divided among the occupants, so that pooling (increased occupancy) reduces cost-per-passenger mile while not altering vehicle costs per vehicle mile. Pooling has an uncertain and complex implication for the total VMT, since pooled riders do not necessarily share origins and destinations, and the net change in VMT depends on pooled-ride routing efficiency.
+The vehicle portion of travel costs (fuel and capital/operating costs, not time costs) can be divided among the occupants, so that pooling (increased occupancy) reduces cost-per-passenger mile while not altering vehicle costs per vehicle mile.^[While a non-automated, manually driven ride-hailing vehicle would have labor costs related to time, these are similar to other vehicle operating costs, are proportional to distance for a given average speed, and can be divided among the occupants like all other vehicle costs.] Pooling has an uncertain and complex implication for the total VMT, since pooled riders typically do not share origins and destinations, and the net change in VMT depends on pooled-ride routing efficiency.
 
 For road vehicle travel segment and vehicle type Y,C,A,F,U 
 In the current approach, road travel activity (travel demand) is disaggregated by the vehicle type (Class, Fuel, Automation) and demand segment (Roadtype and Use case, private or shared). Demand in each segment is determined by reference share for vehicle type in each scenario (from the SMART FY19 Scenario Common Assumptions), with VMT responses based on associated changes in total travel cost and consumer utility maximization. Part of travel cost per mile is determined from the vehicles energy intensity (fuel use/mi).  
@@ -3149,6 +3161,10 @@ $$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (1+\Delta I_{r})(1+\Delta I_{c})(1+\Delta 
 $$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (m^I_{r})(m^I_{c})(m^I_{a})(m^I_{fa})(m^I_{u})$$
 The intensity adjustment factors $m^I_{.}$ also depend to some degree on the vehicle/driving categories.
 
+Consider a range of average occupancy levels for ride-hailing vehicles, $o$, from
+`r min(occupancyEffects$o)`} to `r max((occupancyEffects$o))`. 
+Ride-hailing vehicles incur some zero-occupancy travel from "deadheading" and repositioning between rides,
+so average occupancy levels can be below 1.0 in cases of low/no ride pooling. 
 
 ```{r calcOccupancyEffects, echo=echoWorking}
 # dplyr fn for full-join with no common vars (all combinations)
@@ -3173,9 +3189,9 @@ occupancyEffects <- occupancyEffects %>%
   )
 ```
 
-Pooling, or increased occupancy, reduces costs by sharing vehicle operating costs over all passengers, and reducing total VMT as pooling contracts the vehicle distance traveled in completing a tour of multiple trips (considered later). It can also increase costs to passengers by increasing the costs per unit travel time (relative to solo travel), and by adding some detour distance to a passenger's travel. We account for these changes, and the resulting demand response through the elasticity of travel demand with respect to full, generalized cost.
+Pooling, or increased occupancy, reduces costs by sharing vehicle operating costs over all passengers, and reducing total VMT as pooling contracts the distance the vehicle must traveled to completing a tour of multiple trips (considered later). It can also increase costs to passengers by increasing the costs per unit travel time (relative to solo travel), and by adding some detour distance to a passenger's travel. We account for these changes, and the resulting demand response through the elasticity of travel demand with respect to full, generalized cost.
 
-Obviously the response of travelers will be quite heterogenous and situation-dependent, but the aggregate response can be estimated. Other than direct time costs borne by passengers in terms of delays from detours or pickup/dropoff transaction, the disutility of sharing rides, is represented by an adjustment (increase) in the cost per unit travel time.
+Obviously the response of travelers will be heterogenous and situation-dependent, but the aggregate response can be estimated. Other than direct time costs borne by passengers in terms of delays from detours or pickup/dropoff transaction, the disutility of sharing space in pooled rides is represented by an adjustment (increase) in the cost per unit travel time.
 
 
 ```{r extractApplicableElasPKT, echo=echoWorking}
@@ -3189,11 +3205,20 @@ currElasPKT <- scenAggData %>% # for display purposes only
 
 The estimated long-run elasticity of LDV passenger travel demand with respect to cost used here is `r currElasPKT` (for the Demand Scenario `r DemScenWanted`, `r ElasCaseWanted` Demand Elasticity case).
 
+PMT, pass-mi (normalized w.r.t Base scenario, base Occupancy)
+$$K_P(o) = K_V(o=1) \left ( \frac {C_{Mpmt}(o)} {C_{Mpmt}(o_{ref})} \right)^{\epsilon_{K_P,C}}$$
+
+
+VMT (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+
+$$K_V(o) = K_P(o) / o$$
+$$E(o) = E(o_{ref}) \cdot K_V / K_V(o_{ref})$$
+    
 ```{r poolingEffectsOnVMTandPMT, echo=echoWorking}
 # Now compute VMT and PMT, given travel costs per passenger mile, the elasticity of PMT w.r.t. cost, and occupancy.
 # c.f. this approach to costs (vehicle and time)
 # PMTVMT = PMTVMT %>% mutate(
-#   C_t = rho_o *C_T/Pi,            # time cost pre hr, adjusted for occupancy [cents/pass-hr]
+#   C_t = rho_o *C_T/Pi,            # time cost per hr, adjusted for occupancy [cents/pass-hr]
 #   # C_t = ifelse(DemScen!="Base", C_t * ReductCTAutomation, C_t)  # not needed, already in scenario-dep travel time cost
 #   C_T = rho_o *C_T                # time cost per mile, adjusted for occupancy and speed [cents/pass-mi]
 # )
@@ -3217,7 +3242,7 @@ occupancyEffects <- occupancyEffects %>%
     NIE_oref = NIE
   ) %>%
   mutate( # convert from fractional change to multipliers
-    ElasPKT = ElasVKT, # treat as the same
+    ElasPKT = ElasVKT, # treat as the same, since ElasVKT specified for base, non-pooled travel
     Energy_oref = 1 + Energy_oref,
     VMT_oref = 1 + VMT_oref
   )
