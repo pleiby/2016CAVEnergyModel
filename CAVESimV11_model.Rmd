@@ -3611,21 +3611,20 @@ AltVMT %>%
   kable(digits = 4, caption = paste0("Table: Energy Use Relative to Reference (", test_DemScen, "), by Occupancy and Route Length Elasticity"))
 
 
-# Test junk
-occupancyEffects %>% select(DemScen, o, VMT, Energy) %>% 
-  mutate(Icalc = Energy/VMT) %>% 
-  select(-o, -VMT, -Energy) %>% 
-  group_by(DemScen) %>% 
-  table()
-occupancyEffects %>% select(DemScen, o, VMT, PMT, Energy) %>% 
-  mutate(oImpliedOvero = ((PMT/VMT)/o)) %>% 
-  select(-o, -VMT, -PMT, -Energy) %>% 
-  group_by(DemScen) %>% 
-  table() 
-AltVMT <- AltVMT %>%
-  mutate(oImplied = PMT/VMT,
-         oImpliedOvero = (PMT/VMT)/o
-         )
+# # Test junk
+# # Confirm: Energy Intensity is constant for each DemScen
+# occupancyEffects %>% select(DemScen, o, VMT, Energy) %>% 
+#   mutate(Icalc = Energy/VMT) %>% 
+#   select(-o, -VMT, -Energy) %>% 
+#   group_by(DemScen) %>% 
+#   table()
+# # Confirm: PMT/VMT = o
+# occupancyEffects %>% select(DemScen, o, VMT, PMT, Energy) %>% 
+#   mutate(oImpliedOvero = ((PMT/VMT)/o)) %>% 
+#   select(-o, -VMT, -PMT, -Energy) %>% 
+#   group_by(DemScen) %>% 
+#   table() 
+
 ```
 
 ```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
@@ -3637,6 +3636,7 @@ AltVMT <- AltVMT %>%
 # Just make sure a feasible scenario chosen, so program runs
 if (!(test_DemScen %in% occupancyEffects$DemScen)) test_DemScen <- occupancyEffects$DemScen[1]
 
+# get the energy intensity of the scenario, at reference pooling level (o=1)
 baseenergy <- occupancyEffects %>%
   filter(
     DemScen == test_DemScen,
