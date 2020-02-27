@@ -2648,7 +2648,7 @@ aggregateSelectedCaseEffects <- function(case_effects, comb_subset) {
 ```{r aggregateSelectedCaseAssumps, echo = echoWorking}
 # Aggregate Case results across Automation type, Fuel type, and shared Use
 # Create df with row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
-CaseWantedAggAssumps <- aggregateSelectedCaseAssumpsResults(
+AggAssumpsResults <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes) # defines scenarios wanted (DemScen, TechScen, Year, VC)
   )
@@ -2820,7 +2820,7 @@ tableScenarioSetIntVMTEnergy <- function(
 
 ```{r policyAndScenarioCalcs2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 # call the bar plot function for all LDV data
-barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumps,
+barPlotScenarioSetIntVMTEnergy(AggAssumpsResults,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios", 
                                subtitle = "LDV Mix, Shared mobility Excludes Ride-Pooling") 
 ```
@@ -2828,14 +2828,14 @@ barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumps,
 
 ```{r}
 tableScenarioSetIntVMTEnergy(
-  CaseWantedAggAssumps, 
+  AggAssumpsResults, 
   tablecaption = "LDV Mix, Shared mobility Excludes Ride-Pooling")
 ```
 
 The results for Fully-Automated Private Vehicles, Gasoline drivetrain, are more dramatic:
 
 ```{r testCasesForSelectedSegments, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-CaseWantedAggAssumpsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
+AggAssumpsResultsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes),
   auto_set = c("Full"), # must call the aggregation fn to assure rescaled on share of these
@@ -2843,7 +2843,7 @@ CaseWantedAggAssumpsPrivateCAV <- aggregateSelectedCaseAssumpsResults(
   use_set = c("Private")
   )
 
-barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateCAV,
+barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsPrivateCAV,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
                                subtitle = "LDV Private Gaso CAVs")
 
@@ -2852,14 +2852,14 @@ barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateCAV,
 
 ```{r}
 tableScenarioSetIntVMTEnergy(
-  CaseWantedAggAssumpsPrivateCAV, 
+  AggAssumpsResultsPrivateCAV, 
   tablecaption = "LDV Private Gaso CAVs")
 ```
 
 Results for Electrified Vehicles, BEV or PHEV drivetrain:
 
 ```{r testCasesForSelectedSegments2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-CaseWantedAggAssumpsEVs <- aggregateSelectedCaseAssumpsResults(
+AggAssumpsResultsEVs <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes),
   #auto_set = c("Full"),
@@ -2867,7 +2867,7 @@ CaseWantedAggAssumpsEVs <- aggregateSelectedCaseAssumpsResults(
   #use_set = c("Private")
   )
 
-barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsEVs,
+barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsEVs,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
                                subtitle = "LDV BEVs and PHEVs, Excludes Ride-Pooling")
 
@@ -2876,14 +2876,14 @@ barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsEVs,
 
 ```{r}
 tableScenarioSetIntVMTEnergy(
-  CaseWantedAggAssumpsEVs, 
+  AggAssumpsResultsEVs, 
   tablecaption = "LDV BEVs and PHEVs, Excludes Ride-Pooling")
 ```
 
 ```{r tests, echo=echoWorking}
 # This doesn't do anything yet: Was trying to find ways to check
 #  segment sharing-weighting and rescaling by totshare
-CaseWantedAggAssumpsEVs %>%
+AggAssumpsResultsEVs %>%
   # group_by(c(CombScen, DemScen, VC, ElasCase, Year)) 
   group_by(c(CombScen)) 
 
@@ -2894,10 +2894,11 @@ CaseWantedAggAssumpsEVs %>%
 
 ```
 
+
 Results for Shared Vehicles, All control and drivetrains:
 
 ```{r testCasesForSelectedSegments3, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-CaseWantedAggAssumpsShared <- aggregateSelectedCaseAssumpsResults(
+AggAssumpsResultsShared <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes),
   # auto_set = c("No", "Partial", "Full")
@@ -2906,21 +2907,21 @@ CaseWantedAggAssumpsShared <- aggregateSelectedCaseAssumpsResults(
   use_set = c("Shared")
   )
 
-barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsShared,
+barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsShared,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
                                subtitle = "Shared Use, Excludes Ride-Pooling")
 ```
 
 ```{r}
 tableScenarioSetIntVMTEnergy(
-  CaseWantedAggAssumpsShared, 
+  AggAssumpsResultsShared, 
   tablecaption = "Shared Use, Excludes Ride-Pooling")
 ```
 
 Results for Private Non-Automated Vehicles, All drivetrains:
 
 ```{r testCasesForSelectedSegments4, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-CaseWantedAggAssumpsPrivateMV <- aggregateSelectedCaseAssumpsResults(
+AggAssumpsResultsPrivateMV <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes),
   # auto_set = c("No", "Partial", "Full")
@@ -2931,19 +2932,19 @@ CaseWantedAggAssumpsPrivateMV <- aggregateSelectedCaseAssumpsResults(
   use_set = c("Private")
   )
 
-barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateMV,
+barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsPrivateMV,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
                                subtitle = "Private, Non-Automated")
 ```
 
 ```{r}
 tableScenarioSetIntVMTEnergy(
-  CaseWantedAggAssumpsPrivateMV, 
+  AggAssumpsResultsPrivateMV, 
   tablecaption = "Private, Non-Automated Vehicles")
 ```
 
 ```{r testCasesForSelectedSegments5, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-CaseWantedAggAssumpsPrivateGasMV <- aggregateSelectedCaseAssumpsResults(
+AggAssumpsResultsPrivateGasMV <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes),
   # auto_set = c("No", "Partial", "Full")
@@ -2956,14 +2957,14 @@ CaseWantedAggAssumpsPrivateGasMV <- aggregateSelectedCaseAssumpsResults(
   use_set = c("Private")
   )
 
-barPlotScenarioSetIntVMTEnergy(CaseWantedAggAssumpsPrivateGasMV,
+barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsPrivateGasMV,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
                                subtitle = "Private, Gas, Non-Automated")
 ```
 
 ```{r}
 tableScenarioSetIntVMTEnergy(
-  CaseWantedAggAssumpsPrivateGasMV, 
+  AggAssumpsResultsPrivateGasMV, 
   tablecaption = "Private, Gas. Non-Automated Vehicles")
 ```
 
@@ -3046,7 +3047,7 @@ scenDisaggData <- CaseWantedAssumpsResults %>%
   )
 # select(DemScen, TechScen, VehType, CostCat, VTCost_cpm) # extract essential vars
 
-scenAggData <- CaseWantedAggAssumps %>%
+scenAggData <- AggAssumpsResults %>%
   filter(
     DemScen %in% DemScenWanted,
     ElasCase == ElasCaseWanted,
@@ -3092,6 +3093,22 @@ scenAggData <- scenAggData %>%
     # So:  C_tot = C_F + C_H + C_T
     #      C_tot = C_V + C_T
   )
+
+scenDisaggData <- scenDisaggData %>%
+  # construct principal cost components, from cost share to monetary values in c/mi
+  mutate(
+    C_F = C_tot_base * C_Fuel, # fuel costs, c/mi
+    C_T = C_tot_base * C_Time, # time costs [c/mi]
+    # C_K = VehCapCost,
+    C_tot = C_tot_base * C_Total
+  ) %>% # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
+  mutate(
+    C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
+    C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
+    # So:  C_tot = C_F + C_H + C_T
+    #      C_tot = C_V + C_T
+  )
+
 ```
 
 Focus on the principal travel cost components for vehicles in the `r VehTypeWanted` class.
@@ -3372,7 +3389,7 @@ occupancyEffects %>%
     ) %>%
   select(Source, DemScen, VMT, Energy, PMT) %>%
   bind_rows(
-    CaseWantedAggAssumps %>% 
+    AggAssumpsResults %>% 
       mutate(Source = "Scenario") %>%
       filter(
         DemScen %in% DemScenWanted, # "C_High",
