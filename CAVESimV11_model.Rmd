@@ -3179,6 +3179,47 @@ scenDisaggData <- scenDisaggData %>%
 
 ```
 
+```{r}
+AggAssumpsResultsDAVT <- aggregateSelectedCaseAssumpsResults(
+  CaseAssumpsResultsDAVT, 
+  select(CombScen_Combinations_subset, -Notes) # defines scenarios wanted (DemScen, TechScen, Year, VC)
+  )
+
+scenAggDataDAVT <- AggAssumpsResultsDAVT %>%
+  filter(
+    DemScen %in% DemScenWanted,
+    ElasCase == ElasCaseWanted,
+    # VehType == VehTypeWanted
+    VC == VehClassWanted
+  )
+
+scenAggDataDAVT <- scenAggDataDAVT %>%
+  # construct principal cost components, from cost share to monetary values in c/mi
+  mutate(
+    C_F = C_tot_base * C_Fuel, # fuel costs, c/mi
+    C_T = C_tot_base * C_Time, # time costs [c/mi]
+    # C_K = VehCapCost,
+    C_tot = C_tot_base * C_Total
+  ) %>% # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
+  mutate(
+    C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
+    C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
+    # So:  C_tot = C_F + C_H + C_T
+    #      C_tot = C_V + C_T
+  )
+
+scenCostDataDAVT <- scenAggDataDAVT %>%
+  select(DemScen, C_F, C_H, C_T, C_V) %>%
+  # Get the travel cost components for scenarios of interest.
+  filter(DemScen %in% DemScenWanted) # redundant
+
+scenCostDataDAVT %>% kable(
+  caption = "Table: Vehicle travel cost data [c/mi] at Base occupancy, for these test cases of alternative pooling.",
+  digits = 1
+)
+
+```
+
 Focus on the principal travel cost components for vehicles in the `r VehTypeWanted` class.
 
 **Note:** For the current *Demand* Scenarios (DemScen) the only costs/km varying over Alt Scenario for each VehType are: 
@@ -3296,7 +3337,7 @@ occupancyEffects <- occupancyEffects %>%
   )
 ```
 
-Pooling, or increased occupancy, reduces costs by sharing vehicle operating costs over all passengers, and reducing total VMT as pooling contracts the distance the vehicle must traveled to completing a tour of multiple trips (considered later). It can also increase costs to passengers by increasing the costs per unit travel time (relative to solo travel), and by adding some detour distance to a passenger's travel. We account for these changes, and the resulting demand response through the elasticity of travel demand with respect to full, generalized cost.
+Pooling, or increased occupancy, reduces costs by sharing vehicle operating costs over all passengers, and reducing total VMT as pooling contracts the distance the vehicle must travel to completing a tour of multiple trips (considered later). It can also increase costs to passengers by increasing the costs per unit travel time (relative to solo travel), and by adding some detour distance to a passenger's travel. We account for these changes, and the resulting demand response through the elasticity of travel demand with respect to full, generalized cost.
 
 Obviously the response of travelers will be heterogenous and situation-dependent, but the aggregate response can be estimated. Other than direct time costs borne by passengers in terms of delays from detours or pickup/dropoff transaction, the disutility of sharing space in pooled rides is represented by an adjustment (increase) in the cost per unit travel time.
 
@@ -3319,6 +3360,7 @@ $$K_P(o) = K_V(o=1) \left ( \frac {C_{Mpmt}(o)} {C_{Mpmt}(o_{ref})} \right)^{\ep
 VMT (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
 
 $$K_V(o) = K_P(o) / o$$
+
 $$E(o) = E(o_{ref}) \cdot K_V / K_V(o_{ref})$$
     
 ```{r poolingEffectsOnVMTandPMT, echo=echoWorking}
@@ -3461,6 +3503,13 @@ plotOccupancyEffects <- function(occupancy_df,
   #  )
 }
 ```
+Plot the rise in relative PMT and decline in relative VMT (relative to Base) with different levels of pooling (average occupancy of ride-hailing vehicle.)
+
+NOte that for the Base scenario, PMT and E cross at (o=1.0), i.e. E_Base(1) = 1.0 = PMT_Base(1.0).
+As expected, E_Bhigh(1.0) and E_Chigh(1.0) stand relative to E = 1.0 the same way as reported in the prior bar charts of Intensity, VMT, and Energy.
+
+This chart hightlights how changing pooling $o$ can change PMT and VMT, and thus E in proportion, given the vehicle energy intensity associated with each scenario.
+The vehicle energy intensity (MJ/km, or gal/mi) is assumed invariant with the level of pooling.
 
 ```{r plotOccupancyEffects, echo=echoWorking, dpi=300}
 plotOccupancyEffects(occupancyEffects,
@@ -3468,6 +3517,8 @@ plotOccupancyEffects(occupancyEffects,
 # occupancyTravelEffects %>% filter(o == 1.0)
 
 ```
+
+We can confirm that the scenario results match the calculation of occupancy effects for the case of referenced occupancy, $o = 1.0$.
 
 ```{r checkOccupancyEffects, echo=echoWorking, include=echoTests}
 # This check out to match calculations from the chosen scenario (occupancy o=1.0)
@@ -3487,21 +3538,57 @@ occupancyEffects %>%
         ) %>%
       mutate(
         VMT = 1 + fracVMTIncr,
-        Energy = 1 + EnergyUse
+        Energy = 1 + EnergyUse,
+        PMT = VMT  # valid for base occupancy level, o=1.0
       ) %>%
-      select(Source, DemScen, VMT, Energy)
+      select(Source, DemScen, VMT, Energy, PMT)
   )
 ```
 
 ### 6.2. Consider various degrees to which pooling contracts tour length and adds detours to passenger trips
 
-The ability of pooling to reduce VMT is currently summarized in an elasticity of "tour" length (the VMT needed to complete multiple trip) with respect to occupancy *o*:
+The ability of pooling to reduce VMT is currently summarized in an elasticity of "tour" length (the VMT needed to complete a set of trips) with respect to occupancy *o*:
 
 $$L_{vehicle-tour} = L_{tour,r} o^{\epsilon_{v,o}}$$
 
 $$L_{trip-passenger} = L_{trip,r} o^{\epsilon_{p,o}}$$
 
-Considering alternative such elasticities yields different insights about the economic opportunities for reducing VMT through pooling.
+Considering alternative such elasticities represents different logistical possibilities for pooled ride-hailing travel, 
+and yields different insights about the economic opportunities for reducing VMT through pooling.
+
+So far we stated:
+
+$$VMT(o) = PMT / o$$
+and
+
+$$E(o) = VMT(o) \cdot I_{DemScen}$$
+This is essentially an assumption of perfectly efficient routing of pooled ride-hail trips. (???)
+??? Are we at risk of confusing "occupancy" and (target) pooling or ridership level?
+
+If we define _effective_ occupancy in terms of $o = PMT/VMT$:
+
+1. Where PMT is original/shortest distance for the passenger trip.
+2. o = 1 is achieved for sequential invidual rides with zero deadheading (each pickup is colocated with teh last dropoff)
+3. o < 1 occurs for individual rides with some deadheading/repositioning;
+4. We can speak of the elasticity *e* of tour length w.r.t. to _ridership_ *r*, which is the "target" pooling level.
+    - $o(r) = o_1 r^e$
+    - $VMT(PMT, o) = PTM/o$
+    - $PMT/VMT(PMT, o) = o$
+    - $VMT(PMT, r) = PMT/o(r)$
+    - $PMT/VMT(PMT, r) = o(r) = o_1 r^e$
+    
+Now suppose that there is also a tour routing *penalty* (for route circuity/repositioning to pool a rider) that increases with $o$
+
+- $E(o) = VKT(PMT, o) \cdot I$
+- For fixed I, 
+- $E(o)/E(o_1) = VKT(PMT, o) / VKT(PMT, o_1) = o_1 /o(r)$
+
+Consider
+
+- $E(o) = E(o_1) \cdot o^{\epsilon_{Tour, o}}$
+
+for varous values of the elasticity $\epsilon_{Tour, o}$
+
 
 ```{r tableForElasTourLengthEffect, echo=echoWorking}
 
@@ -3522,6 +3609,23 @@ AltVMT %>%
   select(-DemScen, -VMT, -PMT) %>%
   spread(key = ElasTourLengthWithPooling, value = Energy) %>%
   kable(digits = 4, caption = paste0("Table: Energy Use Relative to Reference (", test_DemScen, "), by Occupancy and Route Length Elasticity"))
+
+
+# Test junk
+occupancyEffects %>% select(DemScen, o, VMT, Energy) %>% 
+  mutate(Icalc = Energy/VMT) %>% 
+  select(-o, -VMT, -Energy) %>% 
+  group_by(DemScen) %>% 
+  table()
+occupancyEffects %>% select(DemScen, o, VMT, PMT, Energy) %>% 
+  mutate(oImpliedOvero = ((PMT/VMT)/o)) %>% 
+  select(-o, -VMT, -PMT, -Energy) %>% 
+  group_by(DemScen) %>% 
+  table() 
+AltVMT <- AltVMT %>%
+  mutate(oImplied = PMT/VMT,
+         oImpliedOvero = (PMT/VMT)/o
+         )
 ```
 
 ```{r plotEnergyVsOccupancyForRouteContraction, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
