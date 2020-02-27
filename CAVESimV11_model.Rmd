@@ -1972,7 +1972,7 @@ appendDisaggParams <- function(DemScenData) {
         )
       )
     ),
-    # Fraction of estimated Time Cost Effect gained by Partial or No Automation
+    # Fraction of estimated Time Cost Effect gained by Use (ride-hailing) and Automation interaction
     mCT_UA = ifelse(Automation == "Full", 1.0, # ***UNUSED***
       ifelse(Automation == "Partial", 0.5,
         ifelse(Automation == "No", 0.0,
@@ -1989,25 +1989,10 @@ DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
   appendDisaggParams()
 ```
 
-Create `CaseAssumpsResults` from `CaseAssumptionsResults_Many` for selected `DemScen` in `DetailedDemScens`.
-
-Add vehicle shares by F & A, and by U, to each combination of `VC` and `DemScen` `CaseAssumpsResults`.
-
-```{r postProcessCombScenarioResults1, echo=echoWorking, warning=F}
-
-CaseAssumpsResults <- CaseAssumpsResults_many %>%
-  filter(DemScen %in% DetailedDemScens) %>%
-  # Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
-  #  (replicates rows card(A) x card(F) x card(U) times and appends shares
-  #  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
-  # Note these are adjustments to the base vehicle energy efficiency, time cost, or demand shift,
-  #  for the effect on energy use of electrification, automation, sharing
-  appendDisaggParams()
-```
 
 #### Compute disaggregated Intensity, VMT Demand and Energy Use impact
 
-Then compute disaggregated Intensity, VMT Demand and Energy Use impact
+We want to compute disaggregated Intensity, VMT Demand and Energy Use impact
 for each vehicle category (Automation, Fuel, Use), vehicle class and scenario.
 
 $\Delta I_{jtv} = \mu_{jtv} - 1$ = `NIE` 
@@ -2047,63 +2032,77 @@ to get the total energy effect.
 
 $$\Delta E_{x,FAU} = ((1 + \Delta I_{jtv, FAU}) \cdot (1 + \Delta K_{x,FAU}) - 1) \cdot s_{x,FA} \cdot s_{x,U}$$
 
+Create `CaseAssumpsResults` from `CaseAssumptionsResults_Many` for selected `DemScen` in `DetailedDemScens`.
+
+Add vehicle shares by F & A, and by U, to each combination of `VC` and `DemScen` `CaseAssumpsResults`.
 
 ```{r defFn_disaggCombScenResults, echo=echoWorking, warning=F}
 # Compute Disagg Intensity, Costs, VMT Demand and Energy Use impact by veh type (C, A, F, U) (could do this earlier)
-disaggCombScenResults <- function(dfCAR, disaggVoTT = T) {
-  dfCAR %>% # expect input df with case results aggregated as the level of VC, rather than vehicel-subtype (A, F, U)
-  mutate(
-    # adjust net intensity change for Veh Class, Automation, Fuel tech
-    old_NIE = NIE,
-    NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0, # NIE is now disagg by veh sub-type
+disaggCombScenResults <- function(dfCAR_preDisagg, # df with case assumps/results agg at level of VC, rather than vehicle-subtype (A, F, U)
+                                  desiredDemScens, # char vec of DemScens to keep
+                                  disaggVoTT = T) {
+  dfCAR_preDisagg %>% # expect input df with case results aggregated as the level of VC, rather than vehicel-subtype (A, F, U)
+    filter(DemScen %in% desiredDemScens) %>%
+    # Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
+    #  (replicates rows card(A) x card(F) x card(U) times and appends shares
+    #  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
+    # Note these are adjustments to the base vehicle energy efficiency, time cost, or demand shift,
+    #  for the effect on energy use of electrification, automation, sharing
+    appendDisaggParams() %>%
     
-    # if (TRUE) {
-    # WARNING: Now need to adjust costs (identity is C_Total = C_Fuel + C_VNonF + C_Time)
-    #   - adjust Fuel Cost based on NIE
-    #   Correct old Fuel Cost (and dependent components) for previous calcs, that were for Automated CAV, Gas, vehicle
-    old_C_Fuel = C_Fuel,
-    old_C_VNonF = C_VNonF,
-    old_C_Time = C_Time, # C_Time at this point differentiated only by VC and DemScen - should be differentiated Automation, sharing
-    # old_C_Veh = C_VNonF + C_Fuel, # Not directly tracked in AssumpsResults df: veh costs, excl. Time
-    old_C_Total = C_Total,
-    old_fracVMTIncr = fracVMTIncr, # this included USDmult by scen for CAVs, but no Ride-Hail/pool asjust for ZOVKT
-    # ToDo: do not have ShrECostInt to do next, so count on it being 1.0!
-    # C_Fuel = C_Fuel * (1.0 + NIE * ShrECostInt) / (1.0 + I_deltaCAV * ShrECostInt), # undo/redo this calc with NIE
-    C_Fuel = old_C_Fuel * (1.0 + NIE  * 1.0         ) / (1.0 + I_deltaCAV * 1.0      ), # undo/redo this calc with NIE
-    C_VNonF = old_C_VNonF,    # No change? # non-fuel (and non-time) vehicle financial costs. Includes accident.
-    # Unwind adjustment for Full CAV, and apply time-cost adjustment based level of Automation (optional for testing)
-    vec_disaggVoTT = disaggVoTT, # must define a column of logical conditions or ifelse fails
-    C_Time = ifelse(vec_disaggVoTT, # ifelse condition must be a column
-                    old_C_Time*(1.0 + C_deltaVoTT*mCT_A)/(1.0 + C_deltaVoTT),
-                    old_C_Time),
-
-    # C_Veh = C_Fuel + C_VNonF, # vehicle capital and operating costs, c/mi (excl. time)
-    C_Total = C_Fuel + C_VNonF + C_Time, 
-
-    # fracVMTIncr = (1 + fracVMTIncr) / USDmult - 1, # undo this calc
-    fracVMTIncr = C_Total^ElasVKT - 1.0, # fractional VMT increase base on elastic response to Total cost
-    fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1, 
-    # adjust VMT Demand for vehicle Use case (Shared or Private)
-    # fracVMTIncr so far is dependent on cost elasticity
-    old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # ??? WHY do this? should only apply to Shared travel (LDV)
-    fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1,
-    
-    # #   Not: mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
-    # mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1)
-
-    # then weight VMT demand by vehicle sub-type shares, allowing summation across subcategories
-    # actual energy use (relative to base for this vehicle segment)
-    # ? EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0,
-    old_EnergyUse = ((1 + old_NIE) * (1 + old_fracVMTIncr) - 1),
-    EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1)  # do NOT weight by shares yet
-  ) %>%
-  select(-vec_disaggVoTT) # remove temp var
+    mutate(
+      # adjust net intensity change for Veh Class, Automation, Fuel tech
+      old_NIE = NIE,
+      NIE = (1 + NIE * mI_C * mI_A * mI_FA) - 1.0, # NIE is now disagg by veh sub-type
+      
+      # if (TRUE) {
+      # WARNING: Now need to adjust costs (identity is C_Total = C_Fuel + C_VNonF + C_Time)
+      #   - adjust Fuel Cost based on NIE
+      #   Correct old Fuel Cost (and dependent components) for previous calcs, that were for Automated CAV, Gas, vehicle
+      old_C_Fuel = C_Fuel,
+      old_C_VNonF = C_VNonF,
+      old_C_Time = C_Time, # C_Time at this point differentiated only by VC and DemScen - should be differentiated Automation, sharing
+      # old_C_Veh = C_VNonF + C_Fuel, # Not directly tracked in AssumpsResults df: veh costs, excl. Time
+      old_C_Total = C_Total,
+      old_fracVMTIncr = fracVMTIncr, # this included USDmult by scen for CAVs, but no Ride-Hail/pool asjust for ZOVKT
+      # ToDo: do not have ShrECostInt to do next, so count on it being 1.0!
+      # C_Fuel = C_Fuel * (1.0 + NIE * ShrECostInt) / (1.0 + I_deltaCAV * ShrECostInt), # undo/redo this calc with NIE
+      C_Fuel = old_C_Fuel * (1.0 + NIE  * 1.0         ) / (1.0 + I_deltaCAV * 1.0      ), # undo/redo this calc with NIE
+      C_VNonF = old_C_VNonF,    # No change? # non-fuel (and non-time) vehicle financial costs. Includes accident.
+      # Unwind adjustment for Full CAV, and apply time-cost adjustment based level of Automation (optional for testing)
+      vec_disaggVoTT = disaggVoTT, # must define a column of logical conditions or ifelse fails
+      C_Time = ifelse(vec_disaggVoTT, # ifelse condition must be a column
+                      old_C_Time*(1.0 + C_deltaVoTT*mCT_A)/(1.0 + C_deltaVoTT),
+                      old_C_Time),
   
+      # C_Veh = C_Fuel + C_VNonF, # vehicle capital and operating costs, c/mi (excl. time)
+      C_Total = C_Fuel + C_VNonF + C_Time, 
+  
+      # fracVMTIncr = (1 + fracVMTIncr) / USDmult - 1, # undo this calc
+      fracVMTIncr = C_Total^ElasVKT - 1.0, # fractional VMT increase base on elastic response to Total cost
+      fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1, 
+      # adjust VMT Demand for vehicle Use case (Shared or Private)
+      # fracVMTIncr so far is dependent on cost elasticity
+      old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # ??? WHY do this? should only apply to Shared travel (LDV)
+      fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1,
+      
+      # #   Not: mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
+      # mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1)
+  
+      # then weight VMT demand by vehicle sub-type shares, allowing summation across subcategories
+      # actual energy use (relative to base for this vehicle segment)
+      # ? EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0,
+      old_EnergyUse = ((1 + old_NIE) * (1 + old_fracVMTIncr) - 1),
+      EnergyUse = ((1 + NIE) * (1 + fracVMTIncr) - 1)  # do NOT weight by shares yet
+    ) %>%
+    select(-vec_disaggVoTT) # remove temp var
 }
 ```
 
 ```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
-CaseAssumpsResults <- disaggCombScenResults(CaseAssumpsResults, disaggVoTT = F)
+CaseAssumpsResults <- disaggCombScenResults(CaseAssumpsResults_many, DetailedDemScens, disaggVoTT = F)
+
+CaseAssumpsResultsDAVT <- disaggCombScenResults(CaseAssumpsResults_many, DetailedDemScens, disaggVoTT = T) # diaggregated time case
 ```
 
 #### Diagnosis/Testing: tables of revised intensities, `NIE` over original (`deltaCAV`)
@@ -3183,9 +3182,31 @@ Consider a range of average occupancy levels for ride-hailing vehicles, $o$, fro
 Ride-hailing vehicles incur some zero-occupancy travel from "deadheading" and repositioning between rides,
 so average occupancy levels can be below 1.0 in cases of low/no ride pooling. 
 
+Variable vehicle travel cost per pass-mi [c/pass-mi]
+$C_{Vpmt}(o) = C_V / o$ 
+    
+Time-cost multiplier due to disutility of pooling [unitless]
+$\rho(o) = o^{\epsilon_{VoTT,o}}$
+
+Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi]
+$C_{Tpmt}(o) = C_T \rho(o)$
+
+Assumed pace, (constant over o) [hr/veh-mi]
+$\pi = 1 /S_{ref}$
+
+Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+$C_{Tdph} = C_T / (100 * \pi)$
+
+Total cost per passenger mile traveled  [c/pass-mi]
+$C_{Mpmt} = C_{Vpmt} + C_{Tpmt}$
+
+Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
+$\pi = \pi \cdot ReductPaceAutomation, \pi)$
+
+
 ```{r calcOccupancyEffects, echo=echoWorking}
 # dplyr fn for full-join with no common vars (all combinations)
-# this gives a df with observations for all levels of occupancy o for each value of DemScen
+# this gives a df with observations for all levels of occupancy o for each row in scenAggData (each value of DemScen).
 #  Cost component values are replicated for all occupancy levels, which is correct for costs/veh-mi
 occupancyEffects <- scenAggData %>%
   select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT) %>%
