@@ -3284,6 +3284,7 @@ occupancyTravelEffects %>%
 
 ```{r defFn_plotOccupancyEffects, echo=echoWorking}
 plotOccupancyEffects <- function(occupancy_df,
+                                 curr_title = "Effect of Pooling on PMT and Energy (VMT) - For Ride Hailing",
                                  curr_subtitle = "Case X") {
   occupancy_df %>%
     select(DemScen, o, PMT, Energy) %>%
@@ -3295,7 +3296,7 @@ plotOccupancyEffects <- function(occupancy_df,
     #ggplot(aes(x = o, y = value, color = DemScen, linetype = Effect)) +
     ggplot(aes(x = o, y = value, color = Effect, linetype = DemScen)) +
     geom_line(size = 1.0) +
-    ggtitle("Effect of Pooling on PMT and Energy (VMT) - For Shared Vehicles",
+    ggtitle(curr_title,
             subtitle = curr_subtitle) +
     xlab("Pooling Level (base=1.0)") +
     ylab("VMT, PMT, Energy Relative to Base") + 
@@ -3304,7 +3305,20 @@ plotOccupancyEffects <- function(occupancy_df,
     # geom_hline(yintercept = 1.0, color="black") + # , linetype, size)
     geom_vline(xintercept = 1.0, color="black") + # , linetype, size)
     annotate(geom="text", x=1.01, y=1.75, label="Base (No) Pooling", hjust = 0.0,
-                color="blue") 
+                color="blue", size=3) + 
+    theme(
+      plot.title = element_text(size=12, face="bold"),
+      axis.text=element_text(size=10,face="bold")
+      # plot.title = element_text(color="red", size=14, face="bold.italic"),
+      # axis.title.x = element_text(color="blue", size=14, face="bold"),
+      # axis.title.y = element_text(color="#993333", size=14, face="bold"),
+      # legend.position = c(0.8, 0.8),
+      # axis.text = element_text(size = 14),
+      # axis.title = element_text(size = 16, face = "bold"),
+      # legend.title = element_text(size = 14),
+      # legend.text = element_text(size = 12)
+    )
+
   # geom_text(label="Hello")
   #  theme(
   #    legend.position = c(0.8, 0.8),
@@ -3539,7 +3553,8 @@ occupancyEffects1 <- occupancyEffects1 %>%
 
 ```{r plotOccupancyEffects1, echo=echoWorking, dpi=300}
 plotOccupancyEffects(occupancyEffects1,
-                     curr_subtitle = "Partial routing efficiency, small sharing disutility, no road charge. Demand rebound to cost.")
+                     curr_title = "Effect of Pooling on PMT and Energy (VMT) - For Ride Hailing",
+                     curr_subtitle = "Partial routing efficiency, small pooling disutility, no road charge. Demand rebound to cost.")
 ```
 
 
@@ -3559,9 +3574,11 @@ get_legend <- function(myggplot){
 
 library("gridExtra")
 plt1 = plotOccupancyEffects(occupancyEffects,
-                     curr_subtitle = "Ideal routing efficiency, no disutility to sharing space. Demand rebound to cost.")
+                     curr_title = "Effect of Pooling on PMT and Energy",
+                     curr_subtitle = "Ideal routing efficiency, no disutility to space-sharing.")
 plt2 = plotOccupancyEffects(occupancyEffects1,
-                     curr_subtitle = "Partial routing efficiency, small sharing disutility. Demand rebound to cost.")
+                     curr_title = "Effect of Pooling on PMT and Energy",
+                     curr_subtitle = "Partial routing efficiency, small disutility to space-sharing.")
 
 #grid.arrange(plt1 + theme(legend.position="none"), plt2, # + rremove("x.text"), 
 #grid.arrange(plt1, plt2, # + rremove("x.text"), ncol = 2, nrow = 1)
@@ -3574,8 +3591,40 @@ grid.arrange(plt1 + theme(legend.position="none"),
              legend, # + rremove("x.text"), 
              ncol = 3, nrow = 1, 
              widths=c(3.2, 3.2, 0.8))
-```
 
+```
+In these figures, PKT demand responds to (full effective) cost of pooled ride-hailing
+
+Numerical results for a range of Occupancy, Road Charge ($/VMT) and Route-length Elasticity
+
+Time-cost is multiplied by a factor reflecting the disutility of pooling [unitless]:
+
+$$m_{CT,o} = o^{\epsilon_{VoTT, o}}$$
+
+- $m_{CT,o}$ = `TimeCostInflation`
+- $\epsilon_{VoTT, o}$ = `Elas_VoTT_wrt_Pooling`
+
+Ride-hail vehicle tour length (VKT) contracts with the extent of pooling. 
+The assumption of monotonic contraction with $o$ is consistent with the idea that pooling will only occur to the degree that it reduced VKT.
+
+$$m_{KV,o} = o^{\epsilon_{KV, o}}$$
+where
+
+- $m_{KV,o}$ = `TourContraction`
+- $\epsilon_{KV, o}$ = `Elas_TourLength_wrt_Pooling`
+
+Similarly, pooling of ride-hail vehicle trips leads to some expansion
+of passenger trip length (measured in time or distance, assuming no change
+in average vehicle speed with pooling, apart from pickup and drop-off
+transaction times).
+
+$$m_{KP,o} = o^{\epsilon_{KP, o}}$$
+
+where
+
+- $m_{KP,o}$ = `RideDetourExpansion`
+- $\epsilon_{KP, o}$ = `Elas_RiderDetour_wrt_Pooling`
+    
 ```{r tableForCroadEffect, echo=echoWorking}
 
 # Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes, to allow testing of various cases
