@@ -3752,6 +3752,67 @@ Explore implications of road charge $C_{road}$ at scenario aggregate level.
 
 Warning: this treatment at the aggregate vehicle class level essentially implies all demand is for shared, or ride-hailed mobility.
 
+    Sec. 6.3 Logical Sequence is:
+    
+    scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
+    occupancyEffects1 %>% {set C_road} call calcPoolingEnergyCases()
+
+    scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
+    occupancyEffects1 %>% select variables from occupancyEffects (dropping TechScen, VC, F, A, U) add `C_road` (single val or poss multiple values, crossing with cases) %>% AltVMT1
+    AltVMT1 %>% calcPoolingEnergyCases() for specifed Elas_xxx_wrt_Pooling %>% AltVMT1
+    AltVMT1 %>% select single scenario %>% ggplot("Energy Decrease with Pooling and Road Charge")
+
+    calcPoolingEnergyCases():
+      calc C_Vpmt, C_Tpmt, C_Mpmt, Pi for various `o` given Elax_xxx_wrt_Pooling}} 
+      group_by(DemScen) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
+
+```{r defFn_calcPoolingEnergyCases, echo=echoWorking}
+calcPoolingEnergyCases <- function(dfVMT, # this case df must be a set of scenarios with also: C_road, o
+                                   curr_Elas_VoTT_wrt_Pooling,
+                                   curr_Elas_TourLength_wrt_Pooling,
+                                   curr_Elas_RiderDetour_wrt_Pooling
+                                   ) {
+  # calculates VKT, and Energy outcomes for a range of cases in dfVMT, on case per row
+  # requires external parameters: TravTimeCostBasePars
+  dfVMT <- dfVMT %>%
+    mutate(
+      # time cost adjustment omits time reduction for ride-hail ($\rho_{VMT,shared}$)
+      #  because this approach considers relative cost for ride-hail travel
+      PoolTimeCostInflation = o^curr_Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
+      PoolTourContraction = o^curr_Elas_TourLength_wrt_Pooling,
+      RideDetourExpansion = o^curr_Elas_RiderDetour_wrt_Pooling,
+      # C_road must be specified   # hypothesized road charge, [c/veh-mi]
+      # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
+      C_Vpmt = (C_V + C_road) * PoolTourContraction, 
+      C_Tpmt = C_T * PoolTimeCostInflation * RideDetourExpansion, 
+      # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
+      #   passenger time cost per mile rises with detour time (RideDetourExpansion)
+      C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
+      # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
+      Pi = 1 / TravTimeCostBasePars["LDV.average", "speed"], # assumed pace, (constant over o) [hr/veh-mi]
+      Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi),
+      # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+    ) %>%
+    # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
+    group_by(DemScen) %>%
+    mutate( # calc PMT, VMT, and Energy multipliers (ratios)
+      # Costs include Sharing disutility through Elas_VoTT_wrt_Pooling
+      # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
+      C_Mratio = (C_Mpmt / C_Mpmt[o == 1.0 & C_road == 0.0]), # this is the grouped operation, getting the ratio of cost to base
+      PMT = VMT_oref * (C_Mratio)^ElasPKT, #  pass-mi (normalized w.r.t Base scenario, base Occupancy)
+      # PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
+      VMT = PMT * PoolTourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+      # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
+      Energy = Energy_oref * VMT / VMT_oref, # relative VMT indicates relative Energy
+      # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
+      # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
+      # VMT_norebound = PMT[o == 1.0 & C_road == 0.0] / o #   veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+    ) %>% # but does include the effect of the Alt case on cost and PMT
+    ungroup()
+    # returns transformed df
+} # end fn calcPoolingEnergyCases
+```
+
 ```{r reassessOccupancyEffectsVsOAndCost}
 occupancyEffects1 <- scenAggData %>%
   select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT) %>%
@@ -3774,42 +3835,13 @@ occupancyEffects1 <- occupancyEffects1 %>%
 
 occupancyEffects1 <- occupancyEffects1 %>%
   mutate(
-    # time cost adjustment omits time reduction for ride-hail ($\rho_{VMT,shared}$)
-    #  because this approach considers relative cost for ride-hail travel
-    PoolTimeCostInflation = o^Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
-    PoolTourContraction = o^Elas_TourLength_wrt_Pooling,
-    RideDetourExpansion = o^Elas_RiderDetour_wrt_Pooling,
     C_road = 0.0,     # hypothesized road charge, [c/veh-mi]
-    # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
-    C_Vpmt = (C_V + C_road) * PoolTourContraction, 
-    C_Tpmt = C_T * PoolTimeCostInflation * RideDetourExpansion, 
-    # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
-    #   passenger time cost per mile rises with detour time (RideDetourExpansion)
-    C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
-    # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
-    Pi = 1 / TravTimeCostBasePars["LDV.average", "speed"], # assumed pace, (constant over o) [hr/veh-mi]
-    Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi),
-    # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+  ) %>%
+  calcPoolingEnergyCases(# this case df must be a set of scenarios with also: C_road, o
+    curr_Elas_VoTT_wrt_Pooling = Elas_VoTT_wrt_Pooling,
+    curr_Elas_TourLength_wrt_Pooling = TourLength_wrt_Pooling,
+    curr_Elas_RiderDetour_wrt_Pooling = Elas_RiderDetour_wrt_Pooling
   )
-```
-
-```{r reassessOccupancyEffects2, echo=echoWorking}
-occupancyEffects1 <- occupancyEffects1 %>%
-  # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
-  group_by(DemScen) %>%
-  mutate(
-    # Costs include Sharing disutility through Elas_VoTT_wrt_Pooling
-    # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
-    PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    VMT = PMT * PoolTourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
-    # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
-    Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
-    # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
-
-    # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
-    VMT_norebound = PMT[o == 1.0] / o #   veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
-  ) %>% # but does include the effect of the Alt case on cost and PMT
-  ungroup()
 
 ```
 
@@ -3887,47 +3919,7 @@ where
 - $m_{KP,o}$ = `RideDetourExpansion`
 - $\epsilon_{KP, o}$ = `Elas_RiderDetour_wrt_Pooling`
 
-```{r defFn_calcPoolingEnergyCases, echo=echoWorking}
-calcPoolingEnergyCases <- function(dfVMT,
-                                   curr_Elas_VoTT_wrt_Pooling,
-                                   curr_Elas_TourLength_wrt_Pooling,
-                                   curr_Elas_RiderDetour_wrt_Pooling) {
-  # calculates VKT, and Energy outcomes for a range of cases in dfVMT, on case per row
-  # requires external parameters: TravTimeCostBasePars
-  dfVMT <- dfVMT %>%
-    mutate(
-      PoolTimeCostInflation = o^curr_Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
-      PoolTourContraction = o^curr_Elas_TourLength_wrt_Pooling,
-      RideDetourExpansion = o^curr_Elas_RiderDetour_wrt_Pooling,
-      # C_road = 0.0,     # hypothesized road charge, [c/veh-mi]
-      # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
-      C_Vpmt = (C_V + C_road) * PoolTourContraction, 
-      C_Tpmt = C_T * PoolTimeCostInflation * RideDetourExpansion, 
-      # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
-      #   passenger time cost per mile rises with detour time (RideDetourExpansion)
-      C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
-      # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
-      Pi = 1 / TravTimeCostBasePars["LDV.average", "speed"], # assumed pace, (constant over o) [hr/veh-mi]
-      Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi),
-      # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
-    ) %>%
-    # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
-    group_by(DemScen) %>%
-    mutate(
-      # ToDo: Need Sharing disutility here
-      # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
-      C_Mratio = (C_Mpmt / C_Mpmt[o == 1.0 & C_road == 0.0]),
-      PMT = VMT_oref * (C_Mratio)^ElasPKT, #  pass-mi (normalized w.r.t Base scenario, base Occupancy)
-      # PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
-      VMT = PMT * PoolTourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
-      # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
-      Energy = Energy_oref * VMT / VMT_oref, # relative VMT indicates relative Energy
-      
-    ) %>% # but does include the effect of the Alt case on cost and PMT
-    ungroup()
-    # returns transformed df
-} # end fn calcPoolingEnergyCases
-```
+
 
 ```{r tableForCroadEffect, echo=echoWorking}
 # Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes, to allow testing of various cases
