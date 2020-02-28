@@ -3839,7 +3839,7 @@ occupancyEffects1 <- occupancyEffects1 %>%
   ) %>%
   calcPoolingEnergyCases(# this case df must be a set of scenarios with also: C_road, o
     curr_Elas_VoTT_wrt_Pooling = Elas_VoTT_wrt_Pooling,
-    curr_Elas_TourLength_wrt_Pooling = TourLength_wrt_Pooling,
+    curr_Elas_TourLength_wrt_Pooling = Elas_TourLength_wrt_Pooling,
     curr_Elas_RiderDetour_wrt_Pooling = Elas_RiderDetour_wrt_Pooling
   )
 
