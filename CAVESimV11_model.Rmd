@@ -3752,6 +3752,19 @@ Explore implications of road charge $C_{road}$ at scenario aggregate level.
 
 Warning: this treatment at the aggregate vehicle class level essentially implies all demand is for shared, or ride-hailed mobility.
 
+### Review of Data Transformations
+
+    Sec. 6.0 Logical Sequence is:
+
+    AggAssumpsResults %>% {DemScenWanted,ElasCaseWanted, VehClassWanted} %>% scenAggData
+    AggAssumpsResultsDAVT %>% {DemScenWanted,ElasCaseWanted, VehClassWanted} %>% scenAggDataDAVT
+    C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
+    scenAggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggData
+    scenDisaggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggData
+    scenAggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggDataDAVT
+    scenDisaggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggDataDAVT
+
+
     Sec. 6.3 Logical Sequence is:
     
     scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
