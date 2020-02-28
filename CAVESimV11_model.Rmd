@@ -3549,21 +3549,21 @@ occupancyEffects %>%
 
 The ability of pooling to reduce VMT is currently summarized in an elasticity of "tour" length (the VMT needed to complete a set of trips) with respect to occupancy *o*:
 
-$$L_{vehicle-tour} = L_{tour,r} o^{\epsilon_{v,o}}$$
+$$L_{vehicle-tour} = L_{tour,r} o^{\epsilon_{K_V,o}}$$
 
-$$L_{trip-passenger} = L_{trip,r} o^{\epsilon_{p,o}}$$
+$$L_{trip-passenger} = L_{trip,r} o^{\epsilon_{K_P,o}}$$
 
-Considering alternative such elasticities represents different logistical possibilities for pooled ride-hailing travel, 
-and yields different insights about the economic opportunities for reducing VMT through pooling.
+These elasticities represent different logistical possibilities for pooled ride-hailing travel. 
+The summarize the economic opportunities for reducing VMT through pooling.
 
 So far we stated:
 
-$$VMT(o) = PMT / o$$
+$$VMT(o) \equiv PMT / o$$
 and
 
 $$E(o) = VMT(o) \cdot I_{DemScen}$$
 This is essentially an assumption of perfectly efficient routing of pooled ride-hail trips. (???)
-??? Are we at risk of confusing "occupancy" and (target) pooling or ridership level?
+??? Are we at risk of confusing "occupancy" $o$ and (target) pooling or ridership level $r$?
 
 If we define _effective_ occupancy in terms of $o = PMT/VMT$:
 
@@ -3583,11 +3583,14 @@ Now suppose that there is also a tour routing *penalty* (for route circuity/repo
 - For fixed I, 
 - $E(o)/E(o_1) = VKT(PMT, o) / VKT(PMT, o_1) = o_1 /o(r)$
 
-Consider
+Consider:
 
-- $E(o) = E(o_1) \cdot o^{\epsilon_{Tour, o}}$
+- $VMT = PMT/o$
+- $E_b = VMT \cdot I$
 
-for varous values of the elasticity $\epsilon_{Tour, o}$
+- $E(o) = E_b \cdot o^{\epsilon_{K_V, o}}$
+
+for varous values of the elasticity $\epsilon_{K_V, o}$ for Tour distance $K_V$
 
 
 ```{r tableForElasTourLengthEffect, echo=echoWorking}
@@ -3673,28 +3676,40 @@ prepAltVMT %>%
 
 ## 6.3. Estimate Scenario effects
 
-This aggregate economic approach approach allows exploration of variant cases around established detailed mobility scenarios. The variant cases can account account for, e.g. different levels of ride pooling, and the traveler response to economic conditions and incentives including the added delay and potential disutility associated with ride pooling, as well as changes in travel cost on a per vehicle or per passenger mile basis. An incremental cost per VMT on all vehicles, would discourage all road travel (or TNC travel if only on TNCs), but also encourage substitution between non-pooled ("single passenger") travel and pooled rides. Alternatively, a subsidy of pooled riding would have a different effects on the mix and level of travel. The framework allows exploration of VMT, PMT and energy effects, although further data and research is needed to benchmark the direct and substitution responsiveness (elasticities).
+This aggregate economic approach allows exploration of variant cases around established detailed mobility scenarios. The variant cases can account account for, e.g. different levels of ride pooling, and the traveler response to economic conditions and incentives including the added delay and potential disutility associated with ride pooling, as well as changes in travel cost on a per vehicle or per passenger mile basis. 
 
-### Estimate Scenario effects, with economic responses to ride pooling
+An incremental cost per VMT on all vehicles would discourage all road travel (or TNC travel if only on TNCs), but also encourage substitution between non-pooled ("single passenger") travel and pooled rides. [Not modeling this substitution at present.] Alternatively, a subsidy of pooled riding would have a different effects on the mix and level of travel. The framework allows exploration of VMT, PMT and energy effects, although further data and research is needed to benchmark the direct and substitution responsiveness (elasticities).
+
+### 6.3.1 Estimate Scenario effects, with economic responses to ride pooling
 
 The travelers response to the opportunity for pooled rides will of course be heterogenous, but overall can be estimated as a response to the cost and convenience of that option compared to non-pooled shared vehicle use.
 
 #### Passenger cost per Passenger Mile Traveled (PMT)
 Total cost per passenger mile traveled $C_{M,pmt}$ [c/pass-mi] is the sum of the passenger's share of vehicle operating costs $C_V$ and the passengers time cost $C_T$, all per passenger mile traveled.
+
 $$C_{M,pmt} = C_{V,pmt} + C_{T,pmt}$$ 
-Passenger time cost when pooling is affected by two factors: the increased trip travel time caused by any detours or delays in picking up or dropping off other passengers; and the disutility cost associated with sharing ride space. We capture both of these through elasticities with respect to pooling level $o$. Note that passenger Cost of Travel Time in a ride service vehicle ("shared" use mode) with single occupancy is likely to be well below the base cost of travel time when driving $C_{T,ref}$. But increased occupancy from pooling can erode this cost advantage.
+
+Passenger time cost when pooling is affected by two factors: the increased trip travel time caused by any detours or delays in picking up or dropping off other passengers; and the disutility cost associated with sharing ride space. We capture both of these through elasticities with respect to pooling level $o$. Note that passenger Cost of Travel Time in a ride service vehicle ("shared" use mode) with single occupancy is likely to be well below the base cost of travel time when driving $C_{T,ref}$. This time cost reduction from ride-hailing rather than driving a private vehicle is $ \rho_{VoTT, shared}$. But increased occupancy from pooling can erode this cost advantage. Combining the effects of pooling on ride-hailing trip VoTT and duration
 
 $$C_{T,pmt} = C_{T,ref} \cdot \left ( \rho_{VoTT, shared} \cdot o^{\epsilon_{C_T,o}} \right ) \cdot o^{\epsilon_{L_P,o}}$$ 
-Passenger's share of the vehicle operating cost $C_V$ changes with pooling also in two ways: pooling decreases the TNC vehicle's tour length (VMT) needed to complete a set of passenger trips, thus the ratio of PMT to VMT is improved relative a non-pooling service; and the costs of VMT are shared over a larger number ($o$) of riders. We define the (aggregate, time and region-dependent) elasticity of TNC vehicle tour length $L_V$ with respect to pooling level as $epsilon_{L_V,o}$.
+Passenger's share of the vehicle operating cost $C_V$ changes with pooling also in two ways: pooling decreases the TNC vehicle's tour length (VMT) needed to complete a set of passenger trips, thus the ratio of PMT to VMT is improved relative a non-pooling service; and the costs of VMT are shared over a larger number ($o$) of riders. 
+
+We denote the (aggregate, time and region-dependent) elasticity of TNC vehicle tour length $L_V$ with respect to pooling level as $\epsilon_{L_V,o}$.
+Alt notation: $\epsilon_{K_V,o}$
 
 #### Pooling effect on VMT per PMT
+
+**Note**: Still working on best formuation. This is a redef of $\epsilon_{L_V,o}$ from above, which was $VMT(o) = (PMT/o) \cdot o^{\epsilon_{L_V,o}}$, in that $VMT_{o=1}$ below seems to include deadheading from individually served trips and $\epsilon_{L_V,o}$ below includes the $1/o$ factor, i.e. starts from -1 rather than 0.
+
 $$VMT(o) = VMT_{o=1} \cdot o^{\epsilon_{L_V,o}}$$
-where at best the passenger trips are coincident ($\epsilon_{L_V,o} = -1.0$, no detours, side-connections or repositioning needed for pooling), and at worst there is no savings in tour length (otherwise pooling has no merit.)
+where at best the passenger trips are coincident ($\epsilon_{L_V,o} = -1.0$, no detours, side-connections or repositioning needed for pooling). At worst there is no savings in tour length (otherwise pooling has no merit.)
 $$-1.0 < \epsilon_{L_V,o} < 0.0$$
-By scenario assumption, in the non-pooling Shared Use case there is some degree of TNC passengerless travel (travelling to service region, repositioning, deadheading), leading to an expansion  $\rho_{VMT,shared}$ of VMT over delivered PMT. I.e. for the reference level of pooling, $o=1.o=0$:^[Note that the scenario reference case may not involve zero pooling, but it is not explicity. We define this reference as the $o=1$ case, since the effect of any pooling on VMT is including in the scenario reference VMT multipliers for Shared use.]
+By scenario assumption, in the non-pooled Shared (ride-hailing) Use case there is some degree of TNC passengerless travel (travelling to service region, repositioning, deadheading), leading to an expansion  $\rho_{VMT,shared}$ of VMT over delivered PMT. I.e. for the reference level of pooling, $o=1$:^[Note that the ride-hailing VMT expansion expansion  $\rho_{VMT,shared}$ in the SMART Mobility scenario reference case may not involve zero pooling, but it is not explicitly indicated. We define this reference as the $o=1$ case, since the effect of any pooling on VMT is including in the scenario reference VMT multipliers for ride-hailing Shared use.]
 
 $$VMT(o=1) = PMT(o=1) \cdot \rho_{VMT,shared} $$
-with a range of estimate of $\rho_{VMT,shared}$ for current TNCs range near $1.1 < \rho_{VMT,shared} < 1.3$ for comparatively efficient operations, and much higher estimated values in some service areas [see Lit.] For this study, alternative values are taken for the Shared Use added VMT for the DOE SMART FY19 Scenarios, ranging from a low of 1.0 (Scenario 1 "Sharing is Caring") a mid-value of 1.3 (Baseline, and C_Low) to 1.6 (Scenario C_High, "All About Me"). We take these Scenario Shared Use VMT multiples as the starting points for the impact of pooling on VMT and PMT.
+Here $\rho_{VMT,shared}$ represents the multiplier for deadhead and repositioning travel for non-pooled ride-hailing, with a range of estimates of $\rho_{VMT,shared}$ for current TNCs range near $1.1 < \rho_{VMT,shared} < 1.3$ for comparatively efficient operations, and much higher estimated values in some service areas [see Lit.] 
+
+For this study, alternative values are taken for the Shared Use added VMT from the DOE SMART FY19 Scenarios, ranging from a low of 1.0 (Scenario 1 "Sharing is Caring") a mid-value of 1.3 (Baseline, and C_Low) to 1.6 (Scenario C_High, "All About Me"). We take these scenario Shared Use VMT multipliers as the starting points for the impact of pooling on VMT and PMT.
 
 Combining these last two relationships
 
@@ -3703,16 +3718,22 @@ This allows us to both estimate changes in each passenger's portion of vehicle o
 
 We also consider an incremental cost $C_{road}$ for road use added per vehicle mile, and explore its affect on PMT and VMT.
 
-$$C_{V,pmt} = C_{V,ref} \cdot \frac {VMT(o)}{VMT(o=1)}  = (C_{V,ref} +C_{road}) \cdot \frac {PMT(o) o^{\epsilon_{L_V,o}}}{PMT(o=1)} =  (C_{V,ref} +C_{road})  \cdot o^{\epsilon_{L_V,o}}$$ 
-The vehicle cost per passenger mile scales with pooling *o* along with VMT:
+$$C_{V,pmt} = (C_{V,ref} +C_{road}) \cdot \frac {VMT(o)}{VMT(o=1)}  = (C_{V,ref} +C_{road}) \cdot \frac {PMT(o) o^{\epsilon_{L_V,o}}}{PMT(o=1)} =  (C_{V,ref} +C_{road})  \cdot o^{\epsilon_{L_V,o}}$$ 
+(what happened to $\rho_{VMT,shared}$? Does it cancel in this ratio, which is for ride-hail travel?)
+
+The vehicle cost per (ride-hailing?) passenger mile scales with pooling *o* along with VMT:
+
 $$\frac {C_{V,pmt}(o)}{C_{V,pmt}(o=1)} =  (1 + \frac {C_{road}}{C_{V,ref}}) o^{\epsilon_{L_V,o}}$$ 
+Consider now the total costs per (ride-hail?) passenger travel mile, which is composed of both vehicle operation cost and passenger time cost. (We subsume time-related vehicle operation costs, such as the driver for non-automated ride-hailing, in vehicle operation costs $C_V$ for now.) The passenger time cost varies with pooling level differently than vehicle operating cost, i.e. according to $o^{\epsilon_{C_T,o}} \cdot o^{\epsilon_{L_P,o}}$ rather than $o^{\epsilon_{L_V,o}}$.
+
 $$
 \begin{align}
 C_{M,pmt} &= C_{V,pmt} + C_{T,pmt}\\
 &= (C_{V,ref}+ C_{road})  \cdot o^{\epsilon_{L_V,o}} + C_{T,ref} \cdot \left ( \rho_{VoTT, shared} \cdot o^{\epsilon_{C_T,o}} \right ) \cdot o^{\epsilon_{L_P,o}}
 \end{align}
 $$ 
-PMT demand responds to the changing costs associated with travel.
+
+PMT demand for ride-hailing travel responds to the changing costs associated with that travel.
 $$
 PMT(o, C_{road}) ~=~ PMT_{ref}(o=1) \cdot \left ( \frac {(C_{V,ref}+ C_{road})  \cdot o^{\epsilon_{L_V,o}} + C_{T,ref} \cdot \left ( \rho_{VoTT, shared} \cdot o^{\epsilon_{C_T,o}} \right ) \cdot o^{\epsilon_{L_P,o}}} {C_{V,ref} + C_{T,ref} \cdot \rho_{VoTT, shared}} \right )^{\epsilon_{PMT,C}}
 $$
@@ -3727,6 +3748,9 @@ Elas_RiderDetour_wrt_Pooling <- 0.1 # elasticity of Passenger trip length w.r.t.
 PacePi <- 1 / 39.98 # base or default pace, hr/mi
 ReductPaceAutomation <- 1 #  PaceReduct_A, reduction factor for the pace (hr/km), or quantity of travel time
 ```
+Explore implications of road charge $C_{road}$ at scenario aggregate level.
+
+Warning: this treatment at the aggregate vehicle class level essentially implies all demand is for shared, or ride-hailed mobility.
 
 ```{r reassessOccupancyEffectsVsOAndCost}
 occupancyEffects1 <- scenAggData %>%
@@ -3742,7 +3766,7 @@ occupancyEffects1 <- occupancyEffects1 %>%
     NIE_oref = NIE
   ) %>%
   mutate( # convert from fractional change to multipliers
-    ElasPKT = 0.8 * ElasVKT, # treat lower, for shared mobility
+    ElasPKT = 0.8 * ElasVKT, # treat lower, for shared mobility? Need to think about this.
     Energy_oref = 1 + Energy_oref,
     VMT_oref = 1 + VMT_oref
   )
@@ -3750,13 +3774,15 @@ occupancyEffects1 <- occupancyEffects1 %>%
 
 occupancyEffects1 <- occupancyEffects1 %>%
   mutate(
-    TimeCostInflation = o^Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
-    TourContraction = o^Elas_TourLength_wrt_Pooling,
+    # time cost adjustment omits time reduction for ride-hail ($\rho_{VMT,shared}$)
+    #  because this approach considers relative cost for ride-hail travel
+    PoolTimeCostInflation = o^Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
+    PoolTourContraction = o^Elas_TourLength_wrt_Pooling,
     RideDetourExpansion = o^Elas_RiderDetour_wrt_Pooling,
     C_road = 0.0,     # hypothesized road charge, [c/veh-mi]
     # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
-    C_Vpmt = (C_V + C_road) * TourContraction, 
-    C_Tpmt = C_T * TimeCostInflation * RideDetourExpansion, 
+    C_Vpmt = (C_V + C_road) * PoolTourContraction, 
+    C_Tpmt = C_T * PoolTimeCostInflation * RideDetourExpansion, 
     # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
     #   passenger time cost per mile rises with detour time (RideDetourExpansion)
     C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
@@ -3772,10 +3798,10 @@ occupancyEffects1 <- occupancyEffects1 %>%
   # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
   group_by(DemScen) %>%
   mutate(
-    # ToDo: Need Sharing disutility here
+    # Costs include Sharing disutility through Elas_VoTT_wrt_Pooling
     # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
     PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    VMT = PMT * TourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+    VMT = PMT * PoolTourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
     # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
     Energy = Energy_oref * VMT / VMT_oref, # relative fuel cost/km indicates relative fuel intensity
     # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
@@ -3831,13 +3857,13 @@ grid.arrange(plt1 + theme(legend.position="none"),
 ```
 In these figures, PKT demand responds to (full effective) cost of pooled ride-hailing
 
-Numerical results for a range of Occupancy, Road Charge ($/VMT) and Route-length Elasticity
+### 6.3.2 Numerical results for a range of Occupancy, Road Charge ($/VMT) and Route-length Elasticity
 
 Time-cost is multiplied by a factor reflecting the disutility of pooling [unitless]:
 
 $$m_{CT,o} = o^{\epsilon_{VoTT, o}}$$
 
-- $m_{CT,o}$ = `TimeCostInflation`
+- $m_{CT,o}$ = `PoolTimeCostInflation`
 - $\epsilon_{VoTT, o}$ = `Elas_VoTT_wrt_Pooling`
 
 Ride-hail vehicle tour length (VKT) contracts with the extent of pooling. 
@@ -3846,7 +3872,7 @@ The assumption of monotonic contraction with $o$ is consistent with the idea tha
 $$m_{KV,o} = o^{\epsilon_{KV, o}}$$
 where
 
-- $m_{KV,o}$ = `TourContraction`
+- $m_{KV,o}$ = `PoolTourContraction`
 - $\epsilon_{KV, o}$ = `Elas_TourLength_wrt_Pooling`
 
 Similarly, pooling of ride-hail vehicle trips leads to some expansion
@@ -3860,46 +3886,61 @@ where
 
 - $m_{KP,o}$ = `RideDetourExpansion`
 - $\epsilon_{KP, o}$ = `Elas_RiderDetour_wrt_Pooling`
-    
-```{r tableForCroadEffect, echo=echoWorking}
 
+```{r defFn_calcPoolingEnergyCases, echo=echoWorking}
+calcPoolingEnergyCases <- function(dfVMT,
+                                   curr_Elas_VoTT_wrt_Pooling,
+                                   curr_Elas_TourLength_wrt_Pooling,
+                                   curr_Elas_RiderDetour_wrt_Pooling) {
+  # calculates VKT, and Energy outcomes for a range of cases in dfVMT, on case per row
+  # requires external parameters: TravTimeCostBasePars
+  dfVMT <- dfVMT %>%
+    mutate(
+      PoolTimeCostInflation = o^curr_Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
+      PoolTourContraction = o^curr_Elas_TourLength_wrt_Pooling,
+      RideDetourExpansion = o^curr_Elas_RiderDetour_wrt_Pooling,
+      # C_road = 0.0,     # hypothesized road charge, [c/veh-mi]
+      # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
+      C_Vpmt = (C_V + C_road) * PoolTourContraction, 
+      C_Tpmt = C_T * PoolTimeCostInflation * RideDetourExpansion, 
+      # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
+      #   passenger time cost per mile rises with detour time (RideDetourExpansion)
+      C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
+      # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
+      Pi = 1 / TravTimeCostBasePars["LDV.average", "speed"], # assumed pace, (constant over o) [hr/veh-mi]
+      Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi),
+      # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+    ) %>%
+    # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
+    group_by(DemScen) %>%
+    mutate(
+      # ToDo: Need Sharing disutility here
+      # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
+      C_Mratio = (C_Mpmt / C_Mpmt[o == 1.0 & C_road == 0.0]),
+      PMT = VMT_oref * (C_Mratio)^ElasPKT, #  pass-mi (normalized w.r.t Base scenario, base Occupancy)
+      # PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
+      VMT = PMT * PoolTourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+      # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
+      Energy = Energy_oref * VMT / VMT_oref, # relative VMT indicates relative Energy
+      
+    ) %>% # but does include the effect of the Alt case on cost and PMT
+    ungroup()
+    # returns transformed df
+} # end fn calcPoolingEnergyCases
+```
+
+```{r tableForCroadEffect, echo=echoWorking}
 # Use tidyr::crossing(df1, df2) to do a cross-join (cross-product) of 2 dataframes, to allow testing of various cases
 AltVMT1 <- occupancyEffects1 %>%
   select(DemScen, o, C_V, C_T, VMT_oref, Energy_oref, ElasPKT, VMT, PMT, Energy) %>%
   # establish values of ElasTourLengthWithPooling to be evaluated
   crossing(data.frame("C_road" = seq(from = -10.0, to = 20.0, by = 5.0))) # Look at different road charges
 
-AltVMT1 <- AltVMT1 %>%
-  mutate(
-    TimeCostInflation = o^Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
-    TourContraction = o^Elas_TourLength_wrt_Pooling,
-    RideDetourExpansion = o^Elas_RiderDetour_wrt_Pooling,
-    # C_road = 0.0,     # hypothesized road charge, [c/veh-mi]
-    # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
-    C_Vpmt = (C_V + C_road) * TourContraction, 
-    C_Tpmt = C_T * TimeCostInflation * RideDetourExpansion, 
-    # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
-    #   passenger time cost per mile rises with detour time (RideDetourExpansion)
-    C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
-    # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
-    Pi = 1 / TravTimeCostBasePars["LDV.average", "speed"], # assumed pace, (constant over o) [hr/veh-mi]
-    Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi),
-    # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
-  ) %>%
-  # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
-  group_by(DemScen) %>%
-  mutate(
-    # ToDo: Need Sharing disutility here
-    # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
-    C_Mratio = (C_Mpmt / C_Mpmt[o == 1.0 & C_road == 0.0]),
-    PMT = VMT_oref * (C_Mratio)^ElasPKT, #  pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    # PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
-    VMT = PMT * TourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
-    # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
-    Energy = Energy_oref * VMT / VMT_oref, # relative VMT indicates relative Energy
-    
-  ) %>% # but does include the effect of the Alt case on cost and PMT
-  ungroup()
+
+AltVMT1 <- calcPoolingEnergyCases(AltVMT1,
+                       Elas_VoTT_wrt_Pooling,
+                       Elas_TourLength_wrt_Pooling,
+                       Elas_RiderDetour_wrt_Pooling)
 
 # select a particular demand scenario
 test_DemScen <- "C_High"
@@ -3908,7 +3949,7 @@ test_DemScen <- "C_High"
 AltVMT1 %>%
   filter(DemScen == test_DemScen) %>%
   select(o, C_road, Energy) %>%
-  # select(-DemScen, -VMT, -PMT, -VMT_oref, -Energy_oref, -TimeCostInflation, -TourContraction, -RideDetourExpansion) %>%
+  # select(-DemScen, -VMT, -PMT, -VMT_oref, -Energy_oref, -PoolTimeCostInflation, -PoolTourContraction, -RideDetourExpansion) %>%
   # select(-C_V, -C_T, -C_Vpmt, -C_Tpmt, -C_Mpmt, -Pi, -ElasPKT, -C_Mratio) %>%
   spread(key = C_road, value = Energy) %>%
   kable(digits = 4, caption = paste0("Energy Use Relative to Reference (", test_DemScen, "), by Occupancy, Road Charge and Route Length Elasticity"))
@@ -3961,6 +4002,8 @@ prepAltVMT1 %>%
   )
 ```
 
+Plot Energy vs Road Charge, for various Pooling levels
+
 ```{r plotEnergyVsRoadChargeForPoolingLevel, , echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 AltVMT1 %>%
   filter(DemScen == test_DemScen) %>%
@@ -3978,7 +4021,7 @@ prepAltVMT2 %>%
   ggplot(aes(x = C_road, y = Energy)) +
   geom_line(aes(color = Pooling), size = 1) +
   scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
-  ggtitle("Energy Decrease with Pooling and Road Charge") +
+  ggtitle("Energy (For Ride-Hailing Travel) Decrease with Pooling and Road Charge") +
   xlab("Incremental road charge (c/veh-mile) (0 = base)") +
   ylab("Relative Total Energy Use (1.0 = base)") +
   # annotate("text", x = 1.0, y = 25, label = "Some text") +
