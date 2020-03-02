@@ -102,3 +102,18 @@ testRandVals$vectorcond_sampX2 = ifelse(testRandVals$vec_Condition, testRandVals
 testRandVals$oldsamp = testRandVals$samp # confirm that samp is unchanged
 
 summary(testRandVals)
+
+
+# Adding lines or points to an existing barplot
+# January 15, 2011 By danganothererror
+# https://www.r-bloggers.com/adding-lines-or-points-to-an-existing-barplot/
+
+par(mfrow = c(1,2))
+df <- data.frame(stolpec1 = 10 * runif(10), stolpec2 = 30 * runif(10))
+barplot(df$stolpec1)
+lines(df$stolpec2/10) #implicitno x = 1:10
+points(df$stolpec2/10)
+
+df.bar <- barplot(df$stolpec1)
+lines(x = df.bar, y = df$stolpec2/10)
+points(x = df.bar, y = df$stolpec2/10)
