@@ -2113,11 +2113,13 @@ disaggCombScenResults <- function(dfCAR_preDisagg, # df with case assumps/result
   dfCAR_preDisagg %>% # expect input df with case results aggregated as the level of VC, rather than vehicel-subtype (A, F, U)
     filter(DemScen %in% desiredDemScens) %>%
     # Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
-    #  (replicates rows card(A) x card(F) x card(U) times and appends shares
-    #  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
-    # Note these are adjustments to the base vehicle energy efficiency, time cost, or demand shift,
-    #  for the effect on energy use of electrification, automation, sharing
-    appendDisaggParams() %>%
+    #  (replicates rows card(A) x card(F) x card(U) times.
+    # Appends shares of each vehicle category (Fuel, Automation, Use) for 
+    #  matching VC and DemScen (F_A_Shares, U_Shares)
+    # Applies adjustments (factors mXX_S) to the base vehicle energy efficiency, time cost, or demand shift,
+    #  for the effect of vehicle Fuel (electrification), Automation, and Use (sharing).
+    # Does _not_ weight disaggregated segments by share
+    appendDisaggParams() %>% # For each vehicle demand segment/subcat: shares and adj factors for NIE, VoTT, VMT
     
     mutate(
       # adjust net intensity change for Veh Class, Automation, Fuel tech
@@ -3148,36 +3150,33 @@ and apply the cost adjustment ratios from the  **aggregate** (???) scenario data
 C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
 ```
 
-```{r addVehTravelCostsComponsFromShares, echo=echoWorking}
-scenAggData <- scenAggData %>%
-  # construct principal cost components, from cost share to monetary values in c/mi
-  mutate(
-    C_F = C_tot_base * C_Fuel, # fuel costs, c/mi
-    C_T = C_tot_base * C_Time, # time costs [c/mi]
-    # C_K = VehCapCost,
-    C_tot = C_tot_base * C_Total
-  ) %>% # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
-  mutate(
-    C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
-    C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
-    # So:  C_tot = C_F + C_H + C_T
-    #      C_tot = C_V + C_T
-  )
+```{r defFn_addMainCostsPerVehMi, echo=echoWorking}
+addMainCostsPerVehMi <- function(df_costshr, curr_C_tot_base) {
+  # for df with relative component costs of vehicle travel, use Total Cost/VMT to calc main components in c/mi (cpm)
+  # return the df with principal cost components, from cost share to monetary values in c/mi
+  df_costshr %>% 
+    mutate(
+      C_F = curr_C_tot_base * C_Fuel, # fuel costs, c/mi
+      C_T = curr_C_tot_base * C_Time, # time costs [c/mi]
+      # C_K = VehCapCost,
+      C_tot = curr_C_tot_base * C_Total
+    ) %>% # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
+    mutate(
+      C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
+      C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
+      # So:  C_tot = C_F + C_H + C_T
+      #      C_tot = C_V + C_T
+    )
+}
+```
 
-scenDisaggData <- scenDisaggData %>%
-  # construct principal cost components, from cost share to monetary values in c/mi
-  mutate(
-    C_F = C_tot_base * C_Fuel, # fuel costs, c/mi
-    C_T = C_tot_base * C_Time, # time costs [c/mi]
-    # C_K = VehCapCost,
-    C_tot = C_tot_base * C_Total
-  ) %>% # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
-  mutate(
-    C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
-    C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
-    # So:  C_tot = C_F + C_H + C_T
-    #      C_tot = C_V + C_T
-  )
+```{r addVehTravelCostsComponsFromShares, echo=echoWorking}
+
+# construct principal cost components, from cost share to monetary values in c/mi
+scenAggData <- addMainCostsPerVehMi(scenAggData, C_tot_base)
+
+# construct principal cost components, from cost share to monetary values in c/mi
+scenDisaggData <- addMainCostsPerVehMi(scenDisaggData, C_tot_base)
 
 ```
 
@@ -3195,20 +3194,8 @@ scenAggDataDAVT <- AggAssumpsResultsDAVT %>%
     VC == VehClassWanted
   )
 
-scenAggDataDAVT <- scenAggDataDAVT %>%
-  # construct principal cost components, from cost share to monetary values in c/mi
-  mutate(
-    C_F = C_tot_base * C_Fuel, # fuel costs, c/mi
-    C_T = C_tot_base * C_Time, # time costs [c/mi]
-    # C_K = VehCapCost,
-    C_tot = C_tot_base * C_Total
-  ) %>% # total costs [c/mi] (c/veh-mi at base occupancy, so = c/pass-mi)
-  mutate(
-    C_H = C_tot - C_F - C_T, # non-fuel (and non-time) vehicle financial costs. Includes accident
-    C_V = C_F + C_H # vehicle costs, c/mi, excluding passengers time
-    # So:  C_tot = C_F + C_H + C_T
-    #      C_tot = C_V + C_T
-  )
+# construct principal cost components, from cost share to monetary values in c/mi
+scenAggDataDAVT <- addMainCostsPerVehMi(scenAggDataDAVT, C_tot_base)
 
 scenCostDataDAVT <- scenAggDataDAVT %>%
   select(DemScen, C_F, C_H, C_T, C_V) %>%
@@ -3754,58 +3741,6 @@ Explore implications of road charge $C_{road}$ at scenario aggregate level.
 
 Warning: this treatment at the aggregate vehicle class level essentially implies all demand is for shared, or ride-hailed mobility.
 
-### Review of Data Transformations
-
-    Sec. 5.0 Logical Sequence
-    
-    # create df of all case combos, assumptions and results aggregated (at VC level)
-    for (CurrTechScen in techScensWanted) {rbind  
-      CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear, DetailedDemScens))} -> CaseAssumpsResults_many
-      3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108
-    
-    Sec. 6.0 Logical Sequence is:
-
-    # disaggregate the comb scenarios to the vehicle subcat (FAU) level
-    CaseAssumpsResults_many %>% disaggCombScenResults(DetailedDemScens, disaggVoTT = F) %>% CaseAssumpsResults
-      (3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108)*(3 A * 3 F * 2 U) = 1944 subcat result rows
-    CaseAssumpsResults %>% right_join(CombScen_Combinations_subset,xxx) %>% WantedCaseAssumpsResults
-      (3 DemScen-TechScen * 2 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 108 disagg result rows
-    CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
-      (3 DemScen-TechScen * 2 VC * 1 ElasCase) = 6 agg result rows
-    AggAssumpsResults %>% (filter DemScenWanted,ElasCaseWanted, VehClassWanted) %>% scenAggData
-      (3 DemScen * 1 VC * 1 ElasCase) = 3 agg result rows
-      
-    WantedCaseAssumpsResults %>% filter(DemScenWanted, ElasCaseWanted, VehClassWanted) %>% scenDisaggData
-      (3 DemScen * 1 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 54 disagg result rows
-    
-    # same thing with Disagg VoTT
-    CaseAssumpsResults_many %>% disaggCombScenResults(DetailedDemScens, disaggVoTT = T) %>% CaseAssumpsResultsDAVT 
-    CaseAssumpsResultsDAVT %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResultsDAVT
-    AggAssumpsResultsDAVT %>% {filter DemScenWanted,ElasCaseWanted, VehClassWanted} %>% scenAggDataDAVT
-
-    C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
-    
-    scenAggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggData
-    scenDisaggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggData
-    
-    scenAggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggDataDAVT
-    scenDisaggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggDataDAVT
-
-
-    Sec. 6.3 Logical Sequence is:
-    
-    scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
-      # could to for disagg results, but note occupancy only has impact for Use = Shared
-    occupancyEffects1 %>% {set C_road} call calcPoolingEnergyCases()
-
-    scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
-    occupancyEffects1 %>% select variables from occupancyEffects (dropping TechScen, VC, F, A, U) add `C_road` (single val or poss multiple values, crossing with cases) %>% AltVMT1
-    AltVMT1 %>% calcPoolingEnergyCases() for specifed Elas_xxx_wrt_Pooling %>% AltVMT1
-    AltVMT1 %>% select single scenario %>% ggplot("Energy Decrease with Pooling and Road Charge")
-
-    calcPoolingEnergyCases():
-      calc C_Vpmt, C_Tpmt, C_Mpmt, Pi for various `o` given Elax_xxx_wrt_Pooling}} 
-      group_by(DemScen) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
 
 ```{r defFn_calcPoolingEnergyCases, echo=echoWorking}
 calcPoolingEnergyCases <- function(dfVMT, # this case df must be a set of scenarios with also: C_road, o
@@ -3813,7 +3748,9 @@ calcPoolingEnergyCases <- function(dfVMT, # this case df must be a set of scenar
                                    curr_Elas_TourLength_wrt_Pooling,
                                    curr_Elas_RiderDetour_wrt_Pooling
                                    ) {
-  # calculates VKT, and Energy outcomes for a range of cases in dfVMT, on case per row
+  # Calculates PMT, VMT, and Energy relative outcomes (multipliers) based on occupancy o and C_road,
+  #   for a range of cases in dfVMT, one case per row.
+  # First calculates costs (Vehicle, Time, Total) per passenger mile traveled C_Vpmt, C_Tpmt, C_Mpmt
   # requires external parameters: TravTimeCostBasePars
   dfVMT <- dfVMT %>%
     mutate(
@@ -3831,11 +3768,11 @@ calcPoolingEnergyCases <- function(dfVMT, # this case df must be a set of scenar
       C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
       # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
       Pi = 1 / TravTimeCostBasePars["LDV.average", "speed"], # assumed pace, (constant over o) [hr/veh-mi]
-      Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi),
+      Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi), # current applies to ALL vehicle travel segments
       # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
     ) %>%
     # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
-    group_by(DemScen) %>%
+    group_by(DemScen) %>% # should group by CombScen
     mutate( # calc PMT, VMT, and Energy multipliers (ratios)
       # Costs include Sharing disutility through Elas_VoTT_wrt_Pooling
       # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
@@ -3852,6 +3789,55 @@ calcPoolingEnergyCases <- function(dfVMT, # this case df must be a set of scenar
     ungroup()
     # returns transformed df
 } # end fn calcPoolingEnergyCases
+```
+
+```{r defFn_calcPoolingEnergyFAUCases, echo=echoWorking}
+calcPoolingEnergyFAUCases <- function(dfVMT, # this case df must be a set of scenarios with also: C_road, o
+                                   curr_Elas_VoTT_wrt_Pooling,
+                                   curr_Elas_TourLength_wrt_Pooling,
+                                   curr_Elas_RiderDetour_wrt_Pooling
+                                   ) {
+  # Calculates PMT, VMT, and Energy relative outcomes (multipliers) based on occupancy o and C_road,
+  #   for a range of cases in dfVMT, one case per row.
+  # First calculates costs (Vehicle, Time, Total) per passenger mile traveled C_Vpmt, C_Tpmt, C_Mpmt
+  # requires external parameters: TravTimeCostBasePars
+  dfVMT <- dfVMT %>%
+    mutate(
+      # time cost adjustment omits time reduction for ride-hail ($\rho_{VMT,shared}$)
+      #  because this approach considers relative cost for ride-hail travel
+      PoolTimeCostInflation = o^curr_Elas_VoTT_wrt_Pooling, # Time-cost multiplier due to disutility of pooling [unitless]
+      PoolTourContraction = o^curr_Elas_TourLength_wrt_Pooling,
+      RideDetourExpansion = o^curr_Elas_RiderDetour_wrt_Pooling,
+      # C_road must be specified   # hypothesized road charge, [c/veh-mi]
+      # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
+      C_Vpmt = (C_V + C_road) * PoolTourContraction, 
+      C_Tpmt = C_T * PoolTimeCostInflation * RideDetourExpansion, 
+      # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
+      #   passenger time cost per mile rises with detour time (RideDetourExpansion)
+      C_Mpmt = C_Vpmt + C_Tpmt, # Total cost per passenger mile traveled  [c/pass-mi]
+      # Adjust pace (travel time per mile) for automated travel cases, if ReductPaceAutomation factor != 1.0
+      Pi = 1 / TravTimeCostBasePars["LDV.average", "speed"], # assumed pace, (constant over o) [hr/veh-mi]
+      Pi = ifelse(DemScen != "Base", Pi * ReductPaceAutomation, Pi), # current applies to ALL vehicle travel segments
+      # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
+    ) %>%
+    # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
+    group_by(DemScen, VC, ElasCase, Fuel, Automation, Use) %>% # should group by CombScen
+    mutate( # calc PMT, VMT, and Energy multipliers (ratios)
+      # Costs include Sharing disutility through Elas_VoTT_wrt_Pooling
+      # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
+      C_Mratio = (C_Mpmt / C_Mpmt[o == 1.0 & C_road == 0.0]), # this is the grouped operation, getting the ratio of cost to base
+      PMT = VMT_oref * (C_Mratio)^ElasPKT, #  pass-mi (normalized w.r.t Base scenario, base Occupancy)
+      # PMT = VMT_oref * (C_Mpmt / C_Mpmt[o == 1.0])^ElasPKT, #   pass-mi (normalized w.r.t Base scenario, base Occupancy)
+      VMT = PMT * PoolTourContraction, #  veh-mi (normalized) (defining relation for Occupancy "o", but only true for o=PoolingLevel if perfect routing efficiency)
+      # These experiments with occupancy do not alter vehicle energy intensity (which should be Energy_oref/VMT_oref)
+      Energy = Energy_oref * VMT / VMT_oref, # relative VMT indicates relative Energy
+      # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
+      # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
+      # VMT_norebound = PMT[o == 1.0 & C_road == 0.0] / o #   veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+    ) %>% # but does include the effect of the Alt case on cost and PMT
+    ungroup()
+    # returns transformed df
+} # end fn calcPoolingEnergyFAUCases
 ```
 
 ```{r reassessOccupancyEffectsVsOAndCost}
@@ -4069,6 +4055,149 @@ prepAltVMT2 %>%
     legend.text = element_text(size = 12)
   )
 ```
+### 6.4 Repeat Analysis with Scenarios Disaggregated by Vehicle Subtypes
+
+### Review of Data Transformations
+
+    Sec. 5.0 Logical Sequence
+    
+    # create df of all case combos, assumptions and results, aggregated (at VC level)
+    for (CurrTechScen in techScensWanted) {rbind  CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear, DetailedDemScens))} -> CaseAssumpsResults_many
+      3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108
+    
+    Sec. 6.0 Logical Sequence is:
+
+    # disaggregate the comb scenarios to the vehicle subcat (FAU) level
+    CaseAssumpsResults_many %>% disaggCombScenResults(DetailedDemScens, disaggVoTT = F) %>% CaseAssumpsResults
+      (3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108)*(3 A * 3 F * 2 U) = 1944 subcat result rows
+    CaseAssumpsResults %>% right_join(CombScen_Combinations_subset,xxx) %>% WantedCaseAssumpsResults
+      (3 DemScen-TechScen * 2 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 108 disagg result rows
+    CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
+      (3 DemScen-TechScen * 2 VC * 1 ElasCase) = 6 agg result rows
+    AggAssumpsResults %>% (filter DemScenWanted,ElasCaseWanted, VehClassWanted) %>% scenAggData
+      (3 DemScen * 1 VC * 1 ElasCase) = 3 agg result rows
+      
+    WantedCaseAssumpsResults %>% filter(DemScenWanted, ElasCaseWanted, VehClassWanted) %>% scenDisaggData
+      (3 DemScen * 1 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 54 disagg result rows
+    
+    # same thing with Disagg VoTT
+    CaseAssumpsResults_many %>% disaggCombScenResults(DetailedDemScens, disaggVoTT = T) %>% CaseAssumpsResultsDAVT 
+    CaseAssumpsResultsDAVT %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResultsDAVT
+    AggAssumpsResultsDAVT %>% {filter DemScenWanted,ElasCaseWanted, VehClassWanted} %>% scenAggDataDAVT
+
+    C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
+    
+    scenAggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggData
+    scenDisaggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggData
+    
+    scenAggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggDataDAVT
+    scenDisaggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggDataDAVT
+
+
+    Sec. 6.3 Logical Sequence is:
+    
+    scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
+      # could to for disagg results, but note occupancy only has impact for Use = Shared
+    occupancyEffects1 %>% {set C_road} call calcPoolingEnergyCases()
+
+    scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
+    occupancyEffects1 %>% select variables from occupancyEffects (dropping TechScen, VC, F, A, U) add `C_road` (single val or poss multiple values, crossing with cases) %>% AltVMT1
+    AltVMT1 %>% calcPoolingEnergyCases() for specifed Elas_xxx_wrt_Pooling %>% AltVMT1
+    AltVMT1 %>% select single scenario %>% ggplot("Energy Decrease with Pooling and Road Charge")
+
+    calcPoolingEnergyCases():
+      calc C_Vpmt, C_Tpmt, C_Mpmt, Pi for various `o` given Elax_xxx_wrt_Pooling}} 
+      group_by(DemScen) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
+
+
+```{r calcDisaggResultsByIncentiveElasAndOccupancy, echo=echoWorking}
+  C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
+
+  # disaggregate the comb scenarios to the vehicle subcat (FAU) level
+  CaseAssumpsResults_many %>% 
+  disaggCombScenResults(DetailedDemScens, disaggVoTT = F) %>% 
+  # return() -> DisaggAssumpsResults #(3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108)*(3 A * 3 F * 2 U) = 1944 subcat result rows
+  # keep all rows in CaseAssumps that match row in CombScen_Combinations
+  right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) %>%
+  # return() -> WantedDisaggAssumpsResults #  (3 DemScen-TechScen * 2 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 108 disagg result rows
+  filter( # further restrict cases of interest
+    DemScen %in% DemScenWanted,
+    ElasCase == ElasCaseWanted,
+    # Fuel == "Gas", # multiple vehicles and techs possible
+    # VehType == VehTypeWanted
+    VC == VehClassWanted
+  ) %>%
+  # return() -> scenDisaggData # (3 DemScen * 1 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 54 disagg result rows
+  addMainCostsPerVehMi(C_tot_base) %>% # create/mutate C_F, C_T, C_tot, C_H, C_V
+  return() -> scenDisaggData
+
+    # select DemScen and a few other vars, crossing with values of occupancy `o`
+  scenDisaggData %>%
+    select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT, everything()) %>%
+    crossing(data.frame("o" = seq(from = 0.8, to = 1.5, by = 0.05))) %>% #  occupancy, unitless (pass/veh, normalized)
+    # card(DetailedDemScens) * card(ElasCaseWanted) * card(VehClassWanted) = (3 DemScen-TechScen) * 18 segments FAU * (15 o levels)
+    return() -> occupancyEffects2
+  
+    # define ElasPKT, NIE_oref, VMT_oref, Energy_oref
+  # set up reference and pooled outcome variables
+  occupancyEffects2 <- occupancyEffects2 %>%
+    ungroup() %>%
+    rename(
+      Energy_oref = EnergyUse, # computed value from case at reference o=1.0
+      VMT_oref = fracVMTIncr, # computed value from case at reference o=1.0
+      NIE_oref = NIE
+    ) %>%
+    mutate( # convert from fractional change to multipliers
+      ElasPKT = 0.8 * ElasVKT, # treat lower, for shared mobility? Need to think about this.
+      Energy_oref = 1 + Energy_oref,
+      VMT_oref = 1 + VMT_oref
+    ) %>%
+    mutate(
+      o = ifelse(Use != "Shared", 1.0, o)
+    )
+  # TravTimeCostBasePars["LDV.average", "speed"]
+
+occupancyEffects2 <- occupancyEffects2 %>%
+  mutate(
+    C_road = 0.0,     # hypothesized road charge, [c/veh-mi]
+  ) %>%
+  # Calculates PMT, VMT, and Energy relative outcomes (multipliers) based on occupancy o and C_road for each case
+  calcPoolingEnergyFAUCases(# this case df must be a set of scenarios with also: C_road, o
+    curr_Elas_VoTT_wrt_Pooling = Elas_VoTT_wrt_Pooling,
+    curr_Elas_TourLength_wrt_Pooling = Elas_TourLength_wrt_Pooling,
+    curr_Elas_RiderDetour_wrt_Pooling = Elas_RiderDetour_wrt_Pooling
+  )
+
+# XXX
+#   CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
+#   # (3 DemScen-TechScen * 2 VC * 1 ElasCase) = 6 agg result rows
+# 
+#   occupancyEffects2 %>% # select variables (dropping TechScen, VC, F, A, U) add `C_road` (single val or poss multiple values, crossing with cases)
+#     select(DemScen, o, C_V, C_T, VMT_oref, Energy_oref, ElasPKT, VMT, PMT, Energy) %>%
+#     # establish values of ElasTourLengthWithPooling to be evaluated
+#     crossing(data.frame("C_road" = seq(from = -10.0, to = 20.0, by = 5.0))) %>% # Look at different road charges
+#   return() -> AltVMT2
+#   
+#   calcPoolingEnergyFAUCases(AltVMT2,
+#                          Elas_VoTT_wrt_Pooling,
+#                          Elas_TourLength_wrt_Pooling,
+#                          Elas_RiderDetour_wrt_Pooling) %>%
+#   return() -> AltVMT2
+#   
+#   # select a particular demand scenario
+#   test_DemScen <- "C_High"
+#   # test_DemScen <- DemScenWanted[[2]]
+# 
+#   
+#   AltVMT1 %>% select single scenario %>% ggplot("Energy Decrease with Pooling and Road Charge")
+
+#  calcPoolingEnergyCases():
+#    calc C_Vpmt, C_Tpmt, C_Mpmt, Pi for various `o` given Elax_xxx_wrt_Pooling}} 
+#    group_by(DemScen, VC, ElasCase) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
+
+```
+
+
 # Appendices
 
 # A1. Constants
