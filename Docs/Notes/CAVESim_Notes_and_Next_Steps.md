@@ -381,4 +381,9 @@ and each associated Technology and Demand scenario.
         - read to `ScenAssumps_Sharing` which provides Private and TNC vehicle share, as well as mode share
         - this is mapped to `Shares_by_U` df
   
-    
+#### 20200302
+- [x] ToDo: make occcupancy o = 1 if Use != "Shared"
+- [ ] ToDo: make ElasPKT depend on Use?
+- [ ] ToDo: Make C_time depend on A and U
+- [ ] ToDo: make C_V depend on A and F?
+- [ ] ToDo: group by CombScen rather than DemScen?
