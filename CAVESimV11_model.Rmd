@@ -2582,13 +2582,13 @@ CombScen_Combinations_subset <- CombScen_Combinations %>%
   filter(DemScen %in% unique(CaseAssumpsResults$DemScen))
 # right_join requires all rows of right df to be in left, in order to keep extra columns of right dd
 
-CaseWantedAssumpsResults <- CaseAssumpsResults %>%
+WantedCaseAssumpsResults <- CaseAssumpsResults %>%
   # filter(DemScen %in% unique(CaseAssumpsResults$DemScen)) %>%
   # keep all rows in CaseAssumps that match row in CombScen_Combinations
   right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen"))
 ```
 
-Tabulate assumptions and results for selected Combined Scenarios in `CaseWantedAssumpsResults`.
+Tabulate assumptions and results for selected Combined Scenarios in `WantedCaseAssumpsResults`.
 
 ### 5.2.2 Develop Functions to Re-aggregate Over Vehicle Sub-types (Demand Segments)
 
@@ -3105,7 +3105,7 @@ ElasCaseWanted <- "Low"
 ```{r poolingScenData, echo=echoWorking}
 # Gather assumptions for base and alternative case
 # extract essential cost vars, and combine base and alt scenario cases
-scenDisaggData <- CaseWantedAssumpsResults %>%
+scenDisaggData <- WantedCaseAssumpsResults %>%
   filter(
     DemScen %in% DemScenWanted,
     ElasCase == ElasCaseWanted,
@@ -3143,10 +3143,12 @@ Start with Base cost assumptions for the total travel cost per mile
 for a conventional (gasoline, manually-driven, privately operated) vehicle, 
 and apply the cost adjustment ratios from the  **aggregate** (???) scenario data.
 
-```{r addVehTravelCostsComponsFromShares, echo=echoWorking}
+```{r getCurrTotVehTravelCost, echo=echoWorking}
 # Need base total vehicle cost, which is the reference point for all relative cost estimations
 C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
+```
 
+```{r addVehTravelCostsComponsFromShares, echo=echoWorking}
 scenAggData <- scenAggData %>%
   # construct principal cost components, from cost share to monetary values in c/mi
   mutate(
@@ -3754,13 +3756,38 @@ Warning: this treatment at the aggregate vehicle class level essentially implies
 
 ### Review of Data Transformations
 
+    Sec. 5.0 Logical Sequence
+    
+    # create df of all case combos, assumptions and results aggregated (at VC level)
+    for (CurrTechScen in techScensWanted) {rbind  
+      CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear, DetailedDemScens))} -> CaseAssumpsResults_many
+      3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108
+    
     Sec. 6.0 Logical Sequence is:
 
-    AggAssumpsResults %>% {DemScenWanted,ElasCaseWanted, VehClassWanted} %>% scenAggData
-    AggAssumpsResultsDAVT %>% {DemScenWanted,ElasCaseWanted, VehClassWanted} %>% scenAggDataDAVT
+    # disaggregate the comb scenarios to the vehicle subcat (FAU) level
+    CaseAssumpsResults_many %>% disaggCombScenResults(DetailedDemScens, disaggVoTT = F) %>% CaseAssumpsResults
+      (3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108)*(3 A * 3 F * 2 U) = 1944 subcat result rows
+    CaseAssumpsResults %>% right_join(CombScen_Combinations_subset,xxx) %>% WantedCaseAssumpsResults
+      (3 DemScen-TechScen * 2 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 108 disagg result rows
+    CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
+      (3 DemScen-TechScen * 2 VC * 1 ElasCase) = 6 agg result rows
+    AggAssumpsResults %>% (filter DemScenWanted,ElasCaseWanted, VehClassWanted) %>% scenAggData
+      (3 DemScen * 1 VC * 1 ElasCase) = 3 agg result rows
+      
+    WantedCaseAssumpsResults %>% filter(DemScenWanted, ElasCaseWanted, VehClassWanted) %>% scenDisaggData
+      (3 DemScen * 1 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 54 disagg result rows
+    
+    # same thing with Disagg VoTT
+    CaseAssumpsResults_many %>% disaggCombScenResults(DetailedDemScens, disaggVoTT = T) %>% CaseAssumpsResultsDAVT 
+    CaseAssumpsResultsDAVT %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResultsDAVT
+    AggAssumpsResultsDAVT %>% {filter DemScenWanted,ElasCaseWanted, VehClassWanted} %>% scenAggDataDAVT
+
     C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
+    
     scenAggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggData
     scenDisaggData %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggData
+    
     scenAggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenAggDataDAVT
     scenDisaggDataDAVT %>% {create/mutate C_F, C_T, C_tot, C_H, C_V} %>% scenDisaggDataDAVT
 
@@ -3768,6 +3795,7 @@ Warning: this treatment at the aggregate vehicle class level essentially implies
     Sec. 6.3 Logical Sequence is:
     
     scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
+      # could to for disagg results, but note occupancy only has impact for Use = Shared
     occupancyEffects1 %>% {set C_road} call calcPoolingEnergyCases()
 
     scenAggData %>% select DemScen and a few other vars, crossing with values of `o` define ElasPKT, NIE_oref, VMT_oref, Energy_oref} %>% occupancyEffects1
