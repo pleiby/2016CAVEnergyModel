@@ -3374,15 +3374,11 @@ $$E(o) = E(o_{ref}) \cdot K_V / K_V(o_{ref})$$
 # set up reference and pooled outcome variables
 occupancyEffects <- occupancyEffects %>%
   ungroup() %>%
-  rename(
-    Energy_oref = EnergyUse, # computed value from case at reference o=1.0
-    VMT_oref = fracVMTIncr, # computed value from case at reference o=1.0
-    NIE_oref = NIE
-  ) %>%
   mutate( # convert from fractional change to multipliers
     ElasPKT = ElasVKT, # treat as the same, since ElasVKT specified for base, non-pooled travel
-    Energy_oref = 1 + Energy_oref,
-    VMT_oref = 1 + VMT_oref
+    NIE_oref = NIE, # *** UNUSED ***
+    Energy_oref = 1 + EnergyUse, # computed value from case at reference o=1.0
+    VMT_oref = 1 + fracVMTIncr # computed value from case at reference o=1.0
   )
 
 # compute cost-related PMT response, VMT reduction (with perfect routing efficiency)
@@ -3785,6 +3781,10 @@ calcPoolingEnergyCases <- function(dfVMT, # this case df must be a set of scenar
       # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
       # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
       # VMT_norebound = PMT[o == 1.0 & C_road == 0.0] / o #   veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+      # Update key variables reported and used in aggregation to VC level results
+      # NIE unchanged by pooling
+      fracVMTIncr = VMT - 1.0,
+      EnergyUse = Energy - 1.0
     ) %>% # but does include the effect of the Alt case on cost and PMT
     ungroup()
     # returns transformed df
@@ -3792,6 +3792,7 @@ calcPoolingEnergyCases <- function(dfVMT, # this case df must be a set of scenar
 ```
 
 ```{r defFn_calcPoolingEnergyFAUCases, echo=echoWorking}
+# same as calcPoolingEnergyCases() except grouping calc also by F,A,U (Fuel, Automation, Use)
 calcPoolingEnergyFAUCases <- function(dfVMT, # this case df must be a set of scenarios with also: C_road, o
                                    curr_Elas_VoTT_wrt_Pooling,
                                    curr_Elas_TourLength_wrt_Pooling,
@@ -3834,6 +3835,10 @@ calcPoolingEnergyFAUCases <- function(dfVMT, # this case df must be a set of sce
       # Energy1 = VMT * C_F / C_F[DemScen == "Base" & o == 1.0] # ERROR: relative fuel cost/km indicates relative fuel intensity
       # This is a direct effect of pooling on VMT with no demand response to pooling costs (time and financial)
       # VMT_norebound = PMT[o == 1.0 & C_road == 0.0] / o #   veh-mi (normalized) "direct" effect of occupancy, w/o cost responses
+      # Update key variables reported and used in aggregation to VC level results
+      # NIE unchanged by pooling
+      fracVMTIncr = VMT - 1.0,
+      EnergyUse = Energy - 1.0
     ) %>% # but does include the effect of the Alt case on cost and PMT
     ungroup()
     # returns transformed df
@@ -3848,15 +3853,11 @@ occupancyEffects1 <- scenAggData %>%
 # set up reference and pooled outcome variables
 occupancyEffects1 <- occupancyEffects1 %>%
   ungroup() %>%
-  rename(
-    Energy_oref = EnergyUse, # computed value from case at reference o=1.0
-    VMT_oref = fracVMTIncr, # computed value from case at reference o=1.0
-    NIE_oref = NIE
-  ) %>%
   mutate( # convert from fractional change to multipliers
-    ElasPKT = 0.8 * ElasVKT, # treat lower, for shared mobility? Need to think about this.
-    Energy_oref = 1 + Energy_oref,
-    VMT_oref = 1 + VMT_oref
+    ElasPKT = ElasVKT, # treat as the same, since ElasVKT specified for base, non-pooled travel
+    NIE_oref = NIE, # *** UNUSED ***
+    Energy_oref = 1 + EnergyUse, # computed value from case at reference o=1.0
+    VMT_oref = 1 + fracVMTIncr # computed value from case at reference o=1.0
   )
 # TravTimeCostBasePars["LDV.average", "speed"]
 
@@ -4055,7 +4056,8 @@ prepAltVMT2 %>%
     legend.text = element_text(size = 12)
   )
 ```
-### 6.4 Repeat Analysis with Scenarios Disaggregated by Vehicle Subtypes
+
+## 6.4 Repeat Analysis with Scenarios Disaggregated by Vehicle Subtypes
 
 ### Review of Data Transformations
 
@@ -4109,6 +4111,64 @@ prepAltVMT2 %>%
       calc C_Vpmt, C_Tpmt, C_Mpmt, Pi for various `o` given Elax_xxx_wrt_Pooling}} 
       group_by(DemScen) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
 
+```{r defFn_aggregateSelectedCaseAssumpsResultsByOAndCroad, echo = echoWorking}
+# same as aggregateSelectedCaseAssumpsResults() except final weighted ave also grouped by `o` and `C_road`
+aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results, # df with precalc assumps & results
+                                                comb_subset, # df case subset to be aggregated (CombScen, Year, ElasCase, VC, TechScen, DemScen)
+                                                # optionally can call for particular vehicle sub-cat
+                                                use_set = c("Private", "Shared"),
+                                                fuel_set = c("Gas", "PHEV", "BEV"),
+                                                auto_set = c("No", "Partial", "Full")
+                                                ) {
+  # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
+  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
+  case_assumps_results %>%
+    # filter(Year==CurrYear) %>%
+    right_join(comb_subset, # join assumps_results cols for cases matching rows in comb_subset
+      by = c("Year", "ElasCase", "VC", "TechScen", "DemScen") # case selectors
+    ) %>%
+    mutate(
+      Joint_FAU_Share = F_A_Shares * U_Shares,
+      totshare = Joint_FAU_Share, # will be needed if aggregating sub-segments
+    ) %>%
+    mutate_at( # convert all result vars to versions weighted by joint FAU share
+      vars( # divide each of these variables
+        fracVMTIncr, NIE, EnergyUse,
+        C_Fuel, C_Time, C_VNonF, C_Total,
+        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
+      ),
+      funs(. * Joint_FAU_Share)
+    ) %>%
+    # Allow aggregation of sub segments of the market
+    filter(Automation %in% auto_set) %>%
+    filter(Fuel %in% fuel_set) %>%
+    filter(Use %in% use_set) %>%
+    group_by(DemScen, TechScen, ElasCase, VC, Year, o, C_road) %>%
+    summarise_at(
+      # construct vehicle share-weighted average of these vars for each "scenario"
+      vars(
+        fracVMTIncr, NIE, EnergyUse,
+        totshare, F_A_Shares, U_Shares,
+        C_Fuel, C_Time, C_VNonF, C_Total,
+        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
+      ),
+      .funs = sum
+    ) %>% # this is an unweighted mean
+    ungroup() %>%
+    # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
+    mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>% # replace zero by EPS to avoid divide by zero
+    mutate_at(
+      vars(
+        fracVMTIncr, NIE, EnergyUse, F_A_Shares, U_Shares, 
+        C_Fuel, C_Time, C_VNonF, C_Total,
+        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
+      ),
+      funs(. / totshare)
+    ) %>%
+    mutate(totshare = ifelse(totshare == 1E-8, 0, totshare)) # restore zeros to zero from EPS
+}
+```
+
 
 ```{r calcDisaggResultsByIncentiveElasAndOccupancy, echo=echoWorking}
   C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
@@ -4142,15 +4202,11 @@ prepAltVMT2 %>%
   # set up reference and pooled outcome variables
   occupancyEffects2 <- occupancyEffects2 %>%
     ungroup() %>%
-    rename(
-      Energy_oref = EnergyUse, # computed value from case at reference o=1.0
-      VMT_oref = fracVMTIncr, # computed value from case at reference o=1.0
-      NIE_oref = NIE
-    ) %>%
     mutate( # convert from fractional change to multipliers
-      ElasPKT = 0.8 * ElasVKT, # treat lower, for shared mobility? Need to think about this.
-      Energy_oref = 1 + Energy_oref,
-      VMT_oref = 1 + VMT_oref
+      ElasPKT = ElasVKT, # treat as the same, since ElasVKT specified for base, non-pooled travel
+      NIE_oref = NIE, # *** UNUSED ***
+      Energy_oref = 1 + EnergyUse, # computed value from case at reference o=1.0
+      VMT_oref = 1 + fracVMTIncr # computed value from case at reference o=1.0
     ) %>%
     mutate(
       o = ifelse(Use != "Shared", 1.0, o)
@@ -4168,9 +4224,25 @@ occupancyEffects2 <- occupancyEffects2 %>%
     curr_Elas_RiderDetour_wrt_Pooling = Elas_RiderDetour_wrt_Pooling
   )
 
+  # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
+  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
+  #   CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
+  #   # (3 DemScen-TechScen * 2 VC * 1 ElasCase) = 6 agg result rows
+occupancyEffects2 %>% 
+  aggregateSelectedCaseAssumpsResultsByOAndCroad(
+    select(CombScen_Combinations_subset, -Notes),
+    auto_set = c("No", "Partial", "Full"),
+    # auto_set = c("No"),
+    fuel_set = c("Gas", "PHEV", "BEV"),
+    # fuel_set = c("PHEV", "BEV"),
+    # fuel_set = c("Gas"),
+    use_set = c("Private", "Shared")
+    # use_set = c("Shared")
+    # use_set = c("Private")
+  ) -> AggAssumpsResultsAll2
+
 # XXX
-#   CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
-#   # (3 DemScen-TechScen * 2 VC * 1 ElasCase) = 6 agg result rows
+
 # 
 #   occupancyEffects2 %>% # select variables (dropping TechScen, VC, F, A, U) add `C_road` (single val or poss multiple values, crossing with cases)
 #     select(DemScen, o, C_V, C_T, VMT_oref, Energy_oref, ElasPKT, VMT, PMT, Energy) %>%
