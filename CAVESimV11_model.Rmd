@@ -4241,6 +4241,18 @@ occupancyEffects2 %>%
     # use_set = c("Private")
   ) -> AggAssumpsResultsAll2
 
+# select a particular demand scenario
+# test_DemScen <- "C_High"
+# test_DemScen <- DemScenWanted[[2]]
+
+AggAssumpsResultsAll2 %>%
+  # filter(DemScen == test_DemScen) %>%
+  select(o, DemScen, EnergyUse) %>% # C_road
+  # select(-DemScen, -VMT, -PMT, -VMT_oref, -Energy_oref, -PoolTimeCostInflation, -PoolTourContraction, -RideDetourExpansion) %>%
+  # select(-C_V, -C_T, -C_Vpmt, -C_Tpmt, -C_Mpmt, -Pi, -ElasPKT, -C_Mratio) %>%
+  spread(key = DemScen, value = EnergyUse) %>%
+  kable(digits = 4, caption = paste0("Energy Change Relative to Reference, by Occupancy and Scenario"))
+
 # XXX
 
 # 
