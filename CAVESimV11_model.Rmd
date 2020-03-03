@@ -4251,7 +4251,7 @@ AggAssumpsResultsAll2 %>%
   # select(-DemScen, -VMT, -PMT, -VMT_oref, -Energy_oref, -PoolTimeCostInflation, -PoolTourContraction, -RideDetourExpansion) %>%
   # select(-C_V, -C_T, -C_Vpmt, -C_Tpmt, -C_Mpmt, -Pi, -ElasPKT, -C_Mratio) %>%
   spread(key = DemScen, value = EnergyUse) %>%
-  kable(digits = 4, caption = paste0("Energy Change Relative to Reference, by Occupancy and Scenario"))
+  kable(digits = 4, caption = paste0("Aggregated Energy Change Relative to Reference, by Occupancy and Scenario"))
 
 # XXX
 
