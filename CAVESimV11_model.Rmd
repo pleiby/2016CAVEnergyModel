@@ -4284,7 +4284,7 @@ AggAssumpsResultsAll2 %>%
 
 ```
 ```{r}
-AggAssumpsResultsPrivateGasCAV2 %>%
+AggAssumpsResultsAll2 %>%
   mutate(CombScen = DemScen) %>%
   tableScenarioSetIntVMTEnergy(tablecaption = "LDV Mix, Shared mobility Excludes Ride-Pooling")
 ```
