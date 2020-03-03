@@ -4059,7 +4059,10 @@ prepAltVMT2 %>%
 
 ## 6.4 Repeat Analysis with Scenarios Disaggregated by Vehicle Subtypes
 
-### Review of Data Transformations
+### 6.4.1 Development of Functions for Analysis Disagg by Vehicle Subtypes with Occupancy and Incentives
+
+
+#### Review of Prior Data Transformations
 
     Sec. 5.0 Logical Sequence
     
@@ -4110,6 +4113,7 @@ prepAltVMT2 %>%
     calcPoolingEnergyCases():
       calc C_Vpmt, C_Tpmt, C_Mpmt, Pi for various `o` given Elax_xxx_wrt_Pooling}} 
       group_by(DemScen) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
+
 
 ```{r defFn_aggregateSelectedCaseAssumpsResultsByOAndCroad, echo = echoWorking}
 # same as aggregateSelectedCaseAssumpsResults() except final weighted ave also grouped by `o` and `C_road`
@@ -4223,7 +4227,11 @@ occupancyEffects2 <- occupancyEffects2 %>%
     curr_Elas_TourLength_wrt_Pooling = Elas_TourLength_wrt_Pooling,
     curr_Elas_RiderDetour_wrt_Pooling = Elas_RiderDetour_wrt_Pooling
   )
+```
 
+### 6.4.2 Consider a Variety of Vehicle Travel Segments and Calculate Energy Intensity, VMT, PMT, and Energy Impacts
+
+```{r testCasesForSelectedSegments0A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
   # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
   # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
   #   CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
@@ -4232,13 +4240,8 @@ occupancyEffects2 %>%
   aggregateSelectedCaseAssumpsResultsByOAndCroad(
     select(CombScen_Combinations_subset, -Notes),
     auto_set = c("No", "Partial", "Full"),
-    # auto_set = c("No"),
     fuel_set = c("Gas", "PHEV", "BEV"),
-    # fuel_set = c("PHEV", "BEV"),
-    # fuel_set = c("Gas"),
     use_set = c("Private", "Shared")
-    # use_set = c("Shared")
-    # use_set = c("Private")
   ) -> AggAssumpsResultsAll2
 
 # select a particular demand scenario
@@ -4279,6 +4282,162 @@ AggAssumpsResultsAll2 %>%
 #    calc C_Vpmt, C_Tpmt, C_Mpmt, Pi for various `o` given Elax_xxx_wrt_Pooling}} 
 #    group_by(DemScen, VC, ElasCase) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
 
+```
+```{r}
+AggAssumpsResultsPrivateGasCAV2 %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergy(tablecaption = "LDV Mix, Shared mobility Excludes Ride-Pooling")
+```
+
+```{r}
+occupancyEffects2 %>% 
+  aggregateSelectedCaseAssumpsResultsByOAndCroad(
+    select(CombScen_Combinations_subset, -Notes),
+    # auto_set = c("No", "Partial", "Full"),
+    auto_set = c("Full"),
+    # fuel_set = c("Gas", "PHEV", "BEV"),
+    fuel_set = c("Gas"),
+    # use_set = c("Private", "Shared")
+    use_set = c("Private")
+  ) %>% 
+  return() -> AggAssumpsResultsPrivateGasCAV2
+
+AggAssumpsResultsPrivateGasCAV2 %>%
+  # filter(DemScen == test_DemScen) %>%
+  select(o, DemScen, EnergyUse) %>% # C_road
+  # select(-DemScen, -VMT, -PMT, -VMT_oref, -Energy_oref, -PoolTimeCostInflation, -PoolTourContraction, -RideDetourExpansion) %>%
+  # select(-C_V, -C_T, -C_Vpmt, -C_Tpmt, -C_Mpmt, -Pi, -ElasPKT, -C_Mratio) %>%
+  spread(key = DemScen, value = EnergyUse) %>%
+  kable(digits = 4, caption = paste0("Private Gas CAV: Aggregated Energy Change Relative to Ref, by Occupancy and Scenario"))
+
+```
+
+```{r}
+AggAssumpsResultsPrivateGasCAV2 %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergy(tablecaption = "Private Gas CAV, Shared mobility Excludes Ride-Pooling")
+```
+
+The results for Fully-Automated Private Vehicles, Gasoline drivetrain, are more dramatic:
+
+```{r testCasesForSelectedSegments1A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+AggAssumpsResultsPrivateCAV2 <- aggregateSelectedCaseAssumpsResultsByOAndCroad(
+  occupancyEffects2, 
+  select(CombScen_Combinations_subset, -Notes),
+  auto_set = c("Full"), # must call the aggregation fn to assure rescaled on share of these
+  fuel_set = c("Gas"),
+  use_set = c("Private")
+  )
+
+# barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsPrivateCAV,
+#                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+#                                subtitle = "LDV Private Gaso CAVs")
+```
+
+```{r}
+AggAssumpsResultsPrivateCAV2 %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergy(tablecaption = "LDV Private Gaso CAVs")
+```
+
+Results for Electrified Vehicles, BEV or PHEV drivetrain:
+
+```{r testCasesForSelectedSegments2A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+  select(CombScen_Combinations_subset, -Notes),
+  #auto_set = c("Full"),
+  fuel_set = c("PHEV", "BEV"),
+  #use_set = c("Private")
+  ) %>%
+  return() -> AggAssumpsResultsEVs2 
+
+# barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsEVs,
+#                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+#                                subtitle = "LDV BEVs and PHEVs, Excludes Ride-Pooling")
+```
+
+
+```{r}
+AggAssumpsResultsEVs2 %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergy(tablecaption = "LDV BEVs and PHEVs, Excludes Ride-Pooling")
+```
+
+Results for Shared Vehicles, All control and drivetrains:
+
+```{r testCasesForSelectedSegments3A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+  select(CombScen_Combinations_subset, -Notes),
+  # auto_set = c("No", "Partial", "Full")
+  # fuel_set = c("Gas", "PHEV", "BEV"),
+  # use_set = c("Private", "Shared"),
+  use_set = c("Shared")
+  ) %>%
+  return() -> AggAssumpsResultsShared2
+
+# barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsShared,
+#                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+#                                subtitle = "Shared Use, Excludes Ride-Pooling")
+```
+
+
+```{r}
+AggAssumpsResultsShared2 %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergy(tablecaption = "Shared Use, Excludes Ride-Pooling")
+```
+
+Results for Private Non-Automated Vehicles, All drivetrains:
+
+```{r testCasesForSelectedSegments4A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+  select(CombScen_Combinations_subset, -Notes),
+  # auto_set = c("No", "Partial", "Full")
+  auto_set = c("No"),
+  # fuel_set = c("Gas", "PHEV", "BEV"),
+  # use_set = c("Private", "Shared"),
+  # use_set = c("Shared")
+  use_set = c("Private")
+  ) %>%
+  return() -> AggAssumpsResultsPrivateMV
+
+# barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsPrivateMV,
+#                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+#                                subtitle = "Private, Non-Automated")
+```
+
+
+```{r}
+AggAssumpsResultsPrivateMV %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergy(tablecaption = "Private, Non-Automated Vehicles")
+```
+
+```{r testCasesForSelectedSegments5A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+  select(CombScen_Combinations_subset, -Notes),
+  # auto_set = c("No", "Partial", "Full")
+  auto_set = c("No"),
+  # fuel_set = c("Gas", "PHEV", "BEV"),
+  # fuel_set = c("PHEV", "BEV"),
+  fuel_set = c("Gas"),
+  # use_set = c("Private", "Shared"),
+  # use_set = c("Shared")
+  use_set = c("Private")
+  ) %>%
+  return() -> AggAssumpsResultsPrivateGasMV
+
+# barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsPrivateGasMV,
+#                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+#                                subtitle = "Private, Gas, Non-Automated")
+```
+
+
+
+```{r}
+AggAssumpsResultsPrivateGasMV %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergy(tablecaption = "Private, Gas. Non-Automated Vehicles")
 ```
 
 
