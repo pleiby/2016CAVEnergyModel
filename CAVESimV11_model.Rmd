@@ -5,7 +5,7 @@ author:
   name: Paul N. Leiby
   affiliation: Oak Ridge National Laboratory
   email: leibypn@ornl.gov
-date: Rev. 2020-02-15, Printed `r Sys.Date()`
+date: Rev. 2020-03-03, Printed `r Sys.Date()`
 output:
   html_document:
     df_print: paged
@@ -2888,6 +2888,22 @@ tableScenarioSetIntVMTEnergy <- function(
 
 ```
 
+```{r defFn_tableScenarioSetIntVMTEnergyVsO, echo=echoWorking}
+tableScenarioSetIntVMTEnergyVsO <- function(
+  # same as tableScenarioSetIntVMTEnergy() except report Pooled_o
+  CWAggAssumps,
+  # title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
+  tablecaption = "Private, Non-Automated Vehicles") {
+  CWAggAssumps %>% 
+    mutate(
+      tstEnergyUse = (1+fracVMTIncr)*(1+NIE)-1 # calc approximate Energy Use effect for check
+    ) %>% # report cases, key results, total share
+    select(CombScen, VC, Pooled_o, fracVMTIncr, NIE, EnergyUse, tstEnergyUse, totshare) %>%
+    kable(caption = tablecaption, digits = 4)
+}
+
+```
+
 ```{r policyAndScenarioCalcs2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 # call the bar plot function for all LDV data
 barPlotScenarioSetIntVMTEnergy(AggAssumpsResults,
@@ -3276,7 +3292,8 @@ $$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (1+\Delta I_{r})(1+\Delta I_{c})(1+\Delta 
 $$I_{y,r,c,a,f,u}  = I_{y,base} \cdot (m^I_{r})(m^I_{c})(m^I_{a})(m^I_{fa})(m^I_{u})$$
 The intensity adjustment factors $m^I_{.}$ also depend to some degree on the vehicle/driving categories.
 
-Consider a range of average occupancy levels for ride-hailing vehicles, $o$, from
+Consider a range of average occupancy levels for ride-hailing
+vehicles,^[These occupancy-base changes to costs, VMT, and PMT only apply to the ride-hailing, or "shared" vehicle Use segment.] $o$, from
 `r min(occupancyEffects$o)`} to `r max((occupancyEffects$o))`. 
 Ride-hailing vehicles incur some zero-occupancy travel from "deadheading" and repositioning between rides,
 so average occupancy levels can be below 1.0 in cases of low/no ride pooling. 
@@ -3403,7 +3420,7 @@ occupancyEffects <- occupancyEffects %>%
 #     VMT_test = VMT - VMT_oref,
 #     Energy_test = Energy - Energy_oref
 #   ) %>%
-#   select(o, VMT, VMT_oref, VMT_test, Energy, Energy1, Energy_oref, Energy_test)
+#   select(Pooled_o, VMT, VMT_oref, VMT_test, Energy, Energy1, Energy_oref, Energy_test)
 
 # occupancyEffects %>%
 #   ungroup() %>%
@@ -4122,10 +4139,13 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
                                                 # optionally can call for particular vehicle sub-cat
                                                 use_set = c("Private", "Shared"),
                                                 fuel_set = c("Gas", "PHEV", "BEV"),
-                                                auto_set = c("No", "Partial", "Full")
+                                                auto_set = c("No", "Partial", "Full"),
+                                                grouping_var_list = # list of variables that identify individual cases/scenarios
+                                                  list("DemScen", "TechScen", "ElasCase", "VC", "Year", "Pooled_o", "C_road")
                                                 ) {
   # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
   # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
+  
   case_assumps_results %>%
     # filter(Year==CurrYear) %>%
     right_join(comb_subset, # join assumps_results cols for cases matching rows in comb_subset
@@ -4147,7 +4167,8 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
     filter(Automation %in% auto_set) %>%
     filter(Fuel %in% fuel_set) %>%
     filter(Use %in% use_set) %>%
-    group_by(DemScen, TechScen, ElasCase, VC, Year, o, C_road) %>%
+    # group_by list of variables that are associated with invidual cases/scenarios (may vary)
+    group_by_(.dots = grouping_var_list) %>% # see https://datascience.blog.wzb.eu/2016/09/27/dynamic-columnvariable-names-with-dplyr-using-standard-evaluation-functions/
     summarise_at(
       # construct vehicle share-weighted average of these vars for each "scenario"
       vars(
@@ -4198,7 +4219,7 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
     # select DemScen and a few other vars, crossing with values of occupancy `o`
   scenDisaggData %>%
     select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT, everything()) %>%
-    crossing(data.frame("o" = seq(from = 0.8, to = 1.5, by = 0.05))) %>% #  occupancy, unitless (pass/veh, normalized)
+    crossing(data.frame("Pooled_o" = seq(from = 0.8, to = 1.5, by = 0.05))) %>% #  occupancy, unitless (pass/veh, normalized)
     # card(DetailedDemScens) * card(ElasCaseWanted) * card(VehClassWanted) = (3 DemScen-TechScen) * 18 segments FAU * (15 o levels)
     return() -> occupancyEffects2
   
@@ -4212,8 +4233,8 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
       Energy_oref = 1 + EnergyUse, # computed value from case at reference o=1.0
       VMT_oref = 1 + fracVMTIncr # computed value from case at reference o=1.0
     ) %>%
-    mutate(
-      o = ifelse(Use != "Shared", 1.0, o)
+    mutate( # actual occupancy o by vehicle type only varies for Shared/Ride-hailed travel
+      o = ifelse(Use != "Shared", 1.0, Pooled_o)
     )
   # TravTimeCostBasePars["LDV.average", "speed"]
 
@@ -4230,6 +4251,47 @@ occupancyEffects2 <- occupancyEffects2 %>%
 ```
 
 ### 6.4.2 Consider a Variety of Vehicle Travel Segments and Calculate Energy Intensity, VMT, PMT, and Energy Impacts
+
+```{r defFn_plotEnergyVsPoolingForScenario, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+# cols <- brewer.pal(3, "BuGn")
+# those three colors make up initial palette.
+# Then pass them to colorRampPalette() to create interpolating function.
+# pal <- colorRampPalette(cols)
+
+# Just make sure a feasible scenario chosen, so program runs
+
+# baseenergy <- occupancyEffects2 %>%
+#   filter(
+#     DemScen == test_DemScen,
+#     o == 1.0
+#   ) %>% 
+#   pull
+plotEnergyVsPoolingForScenario <- function(aggAR) {
+  aggAR %>%
+    # arrange(o, DemScen) %>%
+    # filter(C_road %in% c(-10, 0, 10, 20)) %>%
+    group_by(DemScen) %>%
+    ggplot(aes(x = Pooled_o, y = EnergyUse)) +
+    geom_line(aes(color = DemScen), size = 1) +
+    # scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
+    ggtitle("Energy Decrease with Pooling by Scenario (No Road Charge)") +
+    xlab("Ride-hailing Occupancy/Pooling Level (1 = base)") +
+    ylab("Relative Total Energy Use (1.0 = base)") +
+    ylim(-0.5, 0.5) +
+    # annotate("text", x = 1.0, y = 25, label = "Some text") +
+    # annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
+    # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
+    # ggtitle("") +
+    theme(
+      legend.position = c(0.8, 0.8),
+      axis.text = element_text(size = 14),
+      axis.title = element_text(size = 16, face = "bold"),
+      legend.title = element_text(size = 14),
+      legend.text = element_text(size = 12)
+    )
+}
+```
+
 
 ```{r testCasesForSelectedSegments0A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
   # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
@@ -4250,11 +4312,12 @@ occupancyEffects2 %>%
 
 AggAssumpsResultsAll2 %>%
   # filter(DemScen == test_DemScen) %>%
-  select(o, DemScen, EnergyUse) %>% # C_road
+  select(Pooled_o, DemScen, EnergyUse) %>% # C_road
   # select(-DemScen, -VMT, -PMT, -VMT_oref, -Energy_oref, -PoolTimeCostInflation, -PoolTourContraction, -RideDetourExpansion) %>%
   # select(-C_V, -C_T, -C_Vpmt, -C_Tpmt, -C_Mpmt, -Pi, -ElasPKT, -C_Mratio) %>%
   spread(key = DemScen, value = EnergyUse) %>%
   kable(digits = 4, caption = paste0("Aggregated Energy Change Relative to Reference, by Occupancy and Scenario"))
+
 
 # XXX
 
@@ -4283,10 +4346,11 @@ AggAssumpsResultsAll2 %>%
 #    group_by(DemScen, VC, ElasCase) {calc PMT, VMT, Energy multipliers for various levels of `o`} ungroup
 
 ```
+    
 ```{r}
 AggAssumpsResultsAll2 %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergy(tablecaption = "LDV Mix, Shared mobility Excludes Ride-Pooling")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "LDV Mix, Shared mobility Includes Ride-Pooling")
 ```
 
 ```{r}
@@ -4304,7 +4368,7 @@ occupancyEffects2 %>%
 
 AggAssumpsResultsPrivateGasCAV2 %>%
   # filter(DemScen == test_DemScen) %>%
-  select(o, DemScen, EnergyUse) %>% # C_road
+  select(Pooled_o, DemScen, EnergyUse) %>% # C_road
   # select(-DemScen, -VMT, -PMT, -VMT_oref, -Energy_oref, -PoolTimeCostInflation, -PoolTourContraction, -RideDetourExpansion) %>%
   # select(-C_V, -C_T, -C_Vpmt, -C_Tpmt, -C_Mpmt, -Pi, -ElasPKT, -C_Mratio) %>%
   spread(key = DemScen, value = EnergyUse) %>%
@@ -4315,7 +4379,11 @@ AggAssumpsResultsPrivateGasCAV2 %>%
 ```{r}
 AggAssumpsResultsPrivateGasCAV2 %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergy(tablecaption = "Private Gas CAV, Shared mobility Excludes Ride-Pooling")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "Private Gas CAV, Shared mobility Includes Ride-Pooling")
+```
+
+```{r}
+plotEnergyVsPoolingForScenario(AggAssumpsResultsAll2)
 ```
 
 The results for Fully-Automated Private Vehicles, Gasoline drivetrain, are more dramatic:
@@ -4337,7 +4405,11 @@ AggAssumpsResultsPrivateCAV2 <- aggregateSelectedCaseAssumpsResultsByOAndCroad(
 ```{r}
 AggAssumpsResultsPrivateCAV2 %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergy(tablecaption = "LDV Private Gaso CAVs")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "LDV Private Gaso CAVs, Includes Pooled Ride-hailing")
+```
+
+```{r}
+plotEnergyVsPoolingForScenario(AggAssumpsResultsPrivateCAV2)
 ```
 
 Results for Electrified Vehicles, BEV or PHEV drivetrain:
@@ -4360,7 +4432,7 @@ occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
 ```{r}
 AggAssumpsResultsEVs2 %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergy(tablecaption = "LDV BEVs and PHEVs, Excludes Ride-Pooling")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "LDV BEVs and PHEVs, Includes Pooled Ride-hailing")
 ```
 
 Results for Shared Vehicles, All control and drivetrains:
@@ -4384,7 +4456,7 @@ occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
 ```{r}
 AggAssumpsResultsShared2 %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergy(tablecaption = "Shared Use, Excludes Ride-Pooling")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "Shared Use, Includes Pooled Ride-hailing")
 ```
 
 Results for Private Non-Automated Vehicles, All drivetrains:
@@ -4410,7 +4482,7 @@ occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
 ```{r}
 AggAssumpsResultsPrivateMV %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergy(tablecaption = "Private, Non-Automated Vehicles")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "Private, Non-Automated Vehicles, Includes Pooled Ride-hailing")
 ```
 
 ```{r testCasesForSelectedSegments5A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
@@ -4437,7 +4509,7 @@ occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
 ```{r}
 AggAssumpsResultsPrivateGasMV %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergy(tablecaption = "Private, Gas. Non-Automated Vehicles")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "Private, Gas. Non-Automated Vehicles, Includes Pooled Ride-hailing")
 ```
 
 
