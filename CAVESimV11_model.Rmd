@@ -2238,7 +2238,7 @@ net change in vehicle energy intensity, across
 table(temp$NIE, temp$TechScen)
 ```
 
-We can see the effect of dissaggregation by vehicle
+We can see the effect of disaggregation by vehicle
 sub-type by looking at the ratio `NIEratio` of adjusted to unadjusted
 `NIE` (ratio of disaggregated to `VC`-aggregate `NIE`).
 These `NIEratio` are the disaggregation adjustment factors to original
@@ -2942,7 +2942,7 @@ tableScenarioSetIntVMTEnergy(
   tablecaption = "LDV Private Gaso CAVs")
 ```
 
-Results for Electrified Vehicles, BEV or PHEV drivetrain:
+#### Results for Electrified Vehicles, BEV or PHEV drivetrain:
 
 ```{r testCasesForSelectedSegments2, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 AggAssumpsResultsEVs <- aggregateSelectedCaseAssumpsResults(
@@ -2981,7 +2981,7 @@ AggAssumpsResultsEVs %>%
 ```
 
 
-Results for Shared Vehicles, All control and drivetrains:
+#### Results for Shared Vehicles, All control and drivetrains:
 
 ```{r testCasesForSelectedSegments3, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 AggAssumpsResultsShared <- aggregateSelectedCaseAssumpsResults(
@@ -3004,7 +3004,7 @@ tableScenarioSetIntVMTEnergy(
   tablecaption = "Shared Use, Excludes Ride-Pooling")
 ```
 
-Results for Private Non-Automated Vehicles, All drivetrains:
+#### Results for Private Non-Automated Vehicles, All drivetrains:
 
 ```{r testCasesForSelectedSegments4, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 AggAssumpsResultsPrivateMV <- aggregateSelectedCaseAssumpsResults(
@@ -3828,7 +3828,7 @@ calcPoolingEnergyFAUCases <- function(dfVMT, # this case df must be a set of sce
       RideDetourExpansion = o^curr_Elas_RiderDetour_wrt_Pooling,
       # C_road must be specified   # hypothesized road charge, [c/veh-mi]
       # Variable vehicle travel cost per pass-mi [c/pass-mi] - but need to augment by empty VMT costs?
-      C_Vpmt = (C_V + C_road) * PoolTourContraction, 
+      C_Vpmt = (C_V + C_road) * PoolTourContraction, # C_road applies to all road travel segments (shares still exog)
       C_Tpmt = C_T * PoolTimeCostInflation * RideDetourExpansion, 
       # Time-cost per passenger mile adjusted by the disutility of occupancy [c/pass-mi] and 
       #   passenger time cost per mile rises with detour time (RideDetourExpansion)
@@ -3839,7 +3839,7 @@ calcPoolingEnergyFAUCases <- function(dfVMT, # this case df must be a set of sce
       # C_Tdph = C_T / (100 * Pi) # Hourly Time-cost per passenger-hour (for info only) [$/pass-hr]
     ) %>%
     # relative PMT and VMT (unitless, ref = 1.0 for Base scen, occupancy=1)
-    group_by(DemScen, VC, ElasCase, Fuel, Automation, Use) %>% # should group by CombScen
+    group_by(DemScen, VC, ElasCase, Fuel, Automation, Use) %>% # should group by CombScen combining DemScen, VC, ElasCase
     mutate( # calc PMT, VMT, and Energy multipliers (ratios)
       # Costs include Sharing disutility through Elas_VoTT_wrt_Pooling
       # ToDO: Account for deadheading/respositioning miles in ref (No Pooling) case
@@ -4144,7 +4144,8 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
                                                   list("DemScen", "TechScen", "ElasCase", "VC", "Year", "Pooled_o", "C_road")
                                                 ) {
   # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
-  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
+  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars.
+  #   Can be used to determine aggregates for specified subsets of A, F, U.
   
   case_assumps_results %>%
     # filter(Year==CurrYear) %>%
@@ -4156,7 +4157,7 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
       totshare = Joint_FAU_Share, # will be needed if aggregating sub-segments
     ) %>%
     mutate_at( # convert all result vars to versions weighted by joint FAU share
-      vars( # divide each of these variables
+      vars( # mult each of these variables by joint share
         fracVMTIncr, NIE, EnergyUse,
         C_Fuel, C_Time, C_VNonF, C_Total,
         ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
@@ -4177,8 +4178,8 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
         C_Fuel, C_Time, C_VNonF, C_Total,
         ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
       ),
-      .funs = sum
-    ) %>% # this is an unweighted mean
+      .funs = sum # sum of share-weighted variables
+    ) %>%
     ungroup() %>%
     # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
     mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>% # replace zero by EPS to avoid divide by zero
@@ -4196,13 +4197,13 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
 
 
 ```{r calcDisaggResultsByIncentiveElasAndOccupancy, echo=echoWorking}
-  C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi
+  C_tot_base <- extractVehTotalTravelCost(VTCostBase, VehTypeWanted, "Total" ) # total base travel cost, c/mi (scalar)
 
   # disaggregate the comb scenarios to the vehicle subcat (FAU) level
   CaseAssumpsResults_many %>% 
   disaggCombScenResults(DetailedDemScens, disaggVoTT = F) %>% 
   # return() -> DisaggAssumpsResults #(3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108)*(3 A * 3 F * 2 U) = 1944 subcat result rows
-  # keep all rows in CaseAssumps that match row in CombScen_Combinations
+  # keep all rows in CaseAssumps that match row in CombScen_Combinations_subset (select desired subset)
   right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) %>%
   # return() -> WantedDisaggAssumpsResults #  (3 DemScen-TechScen * 2 VC * 1 ElasCase) * (3 A * 3 F * 2 U) = 108 disagg result rows
   filter( # further restrict cases of interest
@@ -4218,14 +4219,11 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
 
     # select DemScen and a few other vars, crossing with values of occupancy `o`
   scenDisaggData %>%
-    select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT, everything()) %>%
+    select(DemScen, C_F, C_H, C_T, C_V, fracVMTIncr, NIE, EnergyUse, ElasVKT, everything()) %>% # reorder vars
     crossing(data.frame("Pooled_o" = seq(from = 0.8, to = 1.5, by = 0.05))) %>% #  occupancy, unitless (pass/veh, normalized)
     # card(DetailedDemScens) * card(ElasCaseWanted) * card(VehClassWanted) = (3 DemScen-TechScen) * 18 segments FAU * (15 o levels)
-    return() -> occupancyEffects2
-  
     # define ElasPKT, NIE_oref, VMT_oref, Energy_oref
-  # set up reference and pooled outcome variables
-  occupancyEffects2 <- occupancyEffects2 %>%
+    # set up reference and pooled outcome variables
     ungroup() %>%
     mutate( # convert from fractional change to multipliers
       ElasPKT = ElasVKT, # treat as the same, since ElasVKT specified for base, non-pooled travel
@@ -4233,20 +4231,28 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
       Energy_oref = 1 + EnergyUse, # computed value from case at reference o=1.0
       VMT_oref = 1 + fracVMTIncr # computed value from case at reference o=1.0
     ) %>%
-    mutate( # actual occupancy o by vehicle type only varies for Shared/Ride-hailed travel
+    mutate( # for case Pooled_o, actual occupancy o by vehicle type only varies for Shared/Ride-hailed travel
       o = ifelse(Use != "Shared", 1.0, Pooled_o)
-    )
+    ) %>%
+    return() -> occupancyEffectsDisagg
   # TravTimeCostBasePars["LDV.average", "speed"]
 
-occupancyEffects2 <- occupancyEffects2 %>%
-  mutate(
-    C_road = 0.0,     # hypothesized road charge, [c/veh-mi]
-  ) %>%
+occupancyEffectsDisagg_XCroad <- occupancyEffectsDisagg %>% # examine combinations of o and C_road
+#  mutate(
+#    C_road = 0.0,     # hypothesized road charge, [c/veh-mi]. Here we could also cross by multiple C_road values
+#  ) %>%
+  # Could also establish values of ElasTourLengthWithPooling to be evaluated
+  crossing(data.frame("C_road" = seq(from = -10.0, to = 20.0, by = 5.0))) %>% # Look at different road charges
   # Calculates PMT, VMT, and Energy relative outcomes (multipliers) based on occupancy o and C_road for each case
   calcPoolingEnergyFAUCases(# this case df must be a set of scenarios with also: C_road, o
     curr_Elas_VoTT_wrt_Pooling = Elas_VoTT_wrt_Pooling,
     curr_Elas_TourLength_wrt_Pooling = Elas_TourLength_wrt_Pooling,
     curr_Elas_RiderDetour_wrt_Pooling = Elas_RiderDetour_wrt_Pooling
+  )
+
+occupancyEffectsDisagg_0Croad <- occupancyEffectsDisagg_XCroad %>%
+  filter(
+    C_road == 0.0,     # hypothesized road charge, [c/veh-mi]. Here we could also cross by multiple C_road values
   )
 ```
 
@@ -4260,12 +4266,6 @@ occupancyEffects2 <- occupancyEffects2 %>%
 
 # Just make sure a feasible scenario chosen, so program runs
 
-# baseenergy <- occupancyEffects2 %>%
-#   filter(
-#     DemScen == test_DemScen,
-#     o == 1.0
-#   ) %>% 
-#   pull
 plotEnergyVsPoolingForScenario <- function(aggAR) {
   aggAR %>%
     # arrange(o, DemScen) %>%
@@ -4298,7 +4298,7 @@ plotEnergyVsPoolingForScenario <- function(aggAR) {
   # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
   #   CaseAssumpsResults %>% aggregateSelectedCaseAssumpsResults(CombScen_xxx) %>% AggAssumpsResults
   #   # (3 DemScen-TechScen * 2 VC * 1 ElasCase) = 6 agg result rows
-occupancyEffects2 %>% 
+occupancyEffectsDisagg_0Croad %>% 
   aggregateSelectedCaseAssumpsResultsByOAndCroad(
     select(CombScen_Combinations_subset, -Notes),
     auto_set = c("No", "Partial", "Full"),
@@ -4356,11 +4356,10 @@ LDV Mix, Shared mobility Includes Ride-Pooling
 plotEnergyVsPoolingForScenario(AggAssumpsResultsAll2)
 ```
 
-The results for Fully-Automated Private Vehicles, Gasoline drivetrain, are more dramatic:
-
+#### Results for Fully-Automated Private Vehicles, Gasoline drivetrain:
 
 ```{r testCasesForSelectedSegments1A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-occupancyEffects2 %>% 
+occupancyEffectsDisagg_0Croad %>% 
   aggregateSelectedCaseAssumpsResultsByOAndCroad(
     select(CombScen_Combinations_subset, -Notes),
     # auto_set = c("No", "Partial", "Full"),
@@ -4391,10 +4390,10 @@ Private Gas CAV, Ride-hailing Includes Ride-Pooling
 plotEnergyVsPoolingForScenario(AggAssumpsResultsPrivateGasCAV2)
 ```
 
-Results for Electrified Vehicles, BEV or PHEV drivetrain:
+#### Results for Electrified Vehicles, BEV or PHEV drivetrain:
 
 ```{r testCasesForSelectedSegments2A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+occupancyEffectsDisagg_0Croad %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
   select(CombScen_Combinations_subset, -Notes),
   #auto_set = c("Full"),
   fuel_set = c("PHEV", "BEV"),
@@ -4414,10 +4413,10 @@ LDV BEVs and PHEVs, Includes Pooled Ride-hailing
 plotEnergyVsPoolingForScenario(AggAssumpsResultsEVs2)
 ```
 
-Results for Shared Vehicles, All control and drivetrains:
+#### Results for Shared Vehicles, All control and drivetrains:
 
 ```{r testCasesForSelectedSegments3A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+occupancyEffectsDisagg_0Croad %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
   select(CombScen_Combinations_subset, -Notes),
   # auto_set = c("No", "Partial", "Full")
   # fuel_set = c("Gas", "PHEV", "BEV"),
@@ -4438,10 +4437,35 @@ Shared Use, Includes Pooled Ride-hailing
 plotEnergyVsPoolingForScenario(AggAssumpsResultsShared2)
 ```
 
-Results for Private Non-Automated Vehicles, All drivetrains:
+#### Results for Private Use, (All Automation levels, All drivetrains):
+
+```{r testCasesForSelectedSegments3B, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
+occupancyEffectsDisagg_0Croad %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+  select(CombScen_Combinations_subset, -Notes),
+  # auto_set = c("No", "Partial", "Full")
+  # fuel_set = c("Gas", "PHEV", "BEV"),
+  # use_set = c("Private", "Shared"),
+  use_set = c("Private")
+  ) %>%
+  return() -> AggAssumpsResultsPrivateAll2
+```
+
+```{r}
+AggAssumpsResultsPrivateAll2 %>%
+  mutate(CombScen = DemScen) %>%
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "Private Use, Includes Pooled Ride-hailing")
+```
+
+Private Use, (Includes Pooled Ride-hailing but Not Applicable)
+
+```{r}
+plotEnergyVsPoolingForScenario(AggAssumpsResultsPrivateAll2)
+```
+
+#### Results for Private Non-Automated Vehicles, All drivetrains:
 
 ```{r testCasesForSelectedSegments4A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+occupancyEffectsDisagg_0Croad %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
   select(CombScen_Combinations_subset, -Notes),
   # auto_set = c("No", "Partial", "Full")
   auto_set = c("No"),
@@ -4467,7 +4491,7 @@ plotEnergyVsPoolingForScenario(AggAssumpsResultsPrivateMV2)
 
 
 ```{r testCasesForSelectedSegments5A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
-occupancyEffects2 %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
+occupancyEffectsDisagg_0Croad %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
   select(CombScen_Combinations_subset, -Notes),
   # auto_set = c("No", "Partial", "Full")
   auto_set = c("No"),
