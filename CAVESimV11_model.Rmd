@@ -181,6 +181,7 @@ library(readr)
 library(ggplot2)
 library(stringr)
 library(janitor)
+library(patchwork)  # for composing compound graphs
 ```
 
 
@@ -4017,8 +4018,6 @@ prepAltVMT1 %>%
   ylab("Relative Total Energy Use (1.0 = base)") +
   # annotate("text", x = 1.0, y = 25, label = "Some text") +
   annotate("pointrange", x = 1.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
-  # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
-  # ggtitle("") +
   theme(
     legend.position = c(0.8, 0.8),
     axis.text = element_text(size = 14),
@@ -4029,6 +4028,105 @@ prepAltVMT1 %>%
 ```
 
 Plot Energy vs Road Charge, for various Pooling levels
+
+```{r defFN_plotRelEnergyvsC_road, echo=echoWorking}
+plotRelEnergyvsC_road <- function(
+    df,
+    curr_title = "Energy Use with Pooling and Road Charge",
+    curr_subtitle = "",
+    curr_ylimmin = NA, # leave as NA to compute from data, or override
+    curr_ylimmax = 1.1
+  ) {
+  baseenergy <- df %>%
+  filter(
+    Pooling == 1.0,
+    C_road == 0.0
+  ) %>% 
+  pull(Energy)
+  
+  my_colors = RColorBrewer::brewer.pal(n = 3, name = "Spectral")
+
+  df %>%
+    ggplot(aes(x = C_road, y = Energy)) +
+    geom_line(aes(color = Pooling), size = 1) +
+    scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
+    ggtitle(curr_title,
+            subtitle = curr_subtitle) +
+    xlab("Incremental road charge (c/veh-mi)") +
+    ylab("Relative Energy Use (1.0 = base)") +
+    ylim(curr_ylimmin, curr_ylimmax) +  
+    # annotate("text", x = 1.0, y = 25, label = "Some text") +
+    geom_rect(xmin = -0.5, xmax = 0.5, ymin = 0.0, ymax = baseenergy, color = "black", fill = my_colors[3], alpha = 0.5) +
+    # annotate("pointrange", x = 0.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
+    theme(
+      legend.position = c(0.80, 0.75),
+      axis.text = element_text(size = 14),
+      axis.title = element_text(size = 14, face = "bold"),
+      legend.title = element_text(size = 14),
+      legend.text = element_text(size = 12)
+    )
+}
+
+
+# geom_rect Parameters
+# xmin - (required) left edge of rectangle
+# xmax - (required) right edge of rectangle
+# ymin - (required) bottom edge of rectangle
+# ymax - (required) top edge of rectangle
+# size - (default: 0.5) line width of the rectangle's outline
+# linetype - (default: 1=solid) line type of the rectangle's outline
+# color - (default: NA=no outline) color of the rectangle's outline
+# fill - (default: "grey20") fill color of the rectangle
+# alpha - (default: 1=opaque) transparency of the rectangle's fill
+
+```
+
+
+```{r defFN_plotfracEnergyChangevsC_road, echo=echoWorking}
+plotfracEnergyChangevsC_road <- function(
+    df,
+    curr_title = "Energy Change with Pooling & Road Charge",
+    curr_subtitle = "",
+    curr_ylimmin = NA, # leave as NA to compute from data, or override
+    curr_ylimmax = 0.1
+  ) {
+  baseenergy <- df %>%
+  filter(
+    Pooling == 1.0,
+    C_road == 0.0
+  ) %>% 
+  pull(Energy)
+  
+  baseEnergyChange = baseenergy - 1.0
+  
+  my_colors = RColorBrewer::brewer.pal(n = 3, name = "Spectral")
+
+  df %>%
+    mutate(Energy = Energy - 1.0) %>% #  change form relative energy use to fractional change in energy from Base
+    ggplot(aes(x = C_road, y = Energy)) +
+    geom_line(aes(color = Pooling), size = 1) +
+    scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
+    ggtitle(curr_title,
+            subtitle = curr_subtitle) +
+    xlab("Incremental road charge (c/veh-mi)") +
+    ylab("Change in Energy Use (0.0 = base)") +
+    ylim(curr_ylimmin, curr_ylimmax) +  
+    # annotate("text", x = 1.0, y = 25, label = "Some text") +
+    geom_rect(xmin = -0.5, xmax = 0.5, 
+              ymin = min(0.0, baseEnergyChange), ymax = max(0.0, baseEnergyChange),
+              color = "black", fill = my_colors[3], alpha = 0.5) +
+    geom_hline(yintercept = 0.0, color = "black") +
+    # annotate("pointrange", x = 0.0, y = baseEnergyChange, ymin = baseEnergyChange, ymax = baseEnergyChange, colour = "black", size = .50) +
+    theme(
+      legend.position = c(0.80, 0.75),
+      axis.text = element_text(size = 14),
+      axis.title = element_text(size = 14, face = "bold"),
+      legend.title = element_text(size = 14),
+      legend.text = element_text(size = 12)
+    )
+}
+
+```
 
 ```{r plotEnergyVsRoadChargeForPoolingLevel, , echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 AltVMT1 %>%
@@ -4043,30 +4141,14 @@ AltVMT1 %>%
 # group_by(ElasTourLengthWithPooling) %>%
 # could we fill the following with geom_ribbon?
 
-plotRelVMTvsC_road <- function(df) {
-  df %>%
-    ggplot(aes(x = C_road, y = Energy)) +
-    geom_line(aes(color = Pooling), size = 1) +
-    scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
-    ggtitle("Energy (For Ride-Hailing Travel) Decrease with Pooling and Road Charge") +
-    xlab("Incremental road charge (c/veh-mile) (0 = base)") +
-    ylab("Relative Total Energy Use (1.0 = base)") +
-    # annotate("text", x = 1.0, y = 25, label = "Some text") +
-    annotate("pointrange", x = 0.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
-    # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
-    # ggtitle("") +
-    theme(
-      legend.position = c(0.8, 0.8),
-      axis.text = element_text(size = 14),
-      axis.title = element_text(size = 16, face = "bold"),
-      legend.title = element_text(size = 14),
-      legend.text = element_text(size = 12)
-    )
-}
-
 prepAltVMT2 %>% 
-  plotRelVMTvsC_road()
+  plotRelEnergyvsC_road(curr_subtitle = "Scenario C-High, Ride-Hailing Vehicles")
 # -> print()
+```
+
+```{r}
+prepAltVMT2 %>% 
+  plotfracEnergyChangevsC_road(curr_subtitle = "Scenario C-High, Ride-Hailing Vehicles")
 ```
 
 ## 6.4 Repeat Analysis with Scenarios Disaggregated by Vehicle Subtypes
@@ -4538,6 +4620,8 @@ occupancyEffectsDisagg_1o_0Croad %>%
 
 
 ```{r}
+test_DemScen = "C_High"
+
 occupancyEffectsDisagg_XCroad %>% 
   aggregateSelectedCaseAssumpsResultsByOAndCroad(
     select(CombScen_Combinations_subset, -Notes),
@@ -4553,10 +4637,70 @@ occupancyEffectsDisagg_XCroad %>%
   # mutate(C_road = as.factor(C_road)) ->
   mutate(Pooling = as.factor(Pooling)) %>%
   mutate(Energy = 1+EnergyUse) %>%
-  # prepAltVMT2 # %>%
+  return() -> df_EvRc_C
 
-  plotRelVMTvsC_road()
+  plt_rE_C <- df_EvRc_C %>%
+    plotRelEnergyvsC_road(curr_subtitle = paste0("Scenario ", test_DemScen, ", Mix of All LDV Vehicles"),
+                          curr_ylimmin = 0.7, curr_ylimmax = 1.1)
+  plt_fE_C <- df_EvRc_C %>%
+    plotfracEnergyChangevsC_road(curr_subtitle = paste0("Scenario ", test_DemScen, ", Mix of All LDV Vehicles"),
+                          curr_ylimmin = -0.3, curr_ylimmax = 0.1)
+ 
+```
 
+
+```{r}
+test_DemScen = "B_High"
+
+occupancyEffectsDisagg_XCroad %>% 
+  aggregateSelectedCaseAssumpsResultsByOAndCroad(
+    select(CombScen_Combinations_subset, -Notes),
+    auto_set = c("No", "Partial", "Full"),
+    fuel_set = c("Gas", "PHEV", "BEV"),
+    use_set = c("Private", "Shared")
+  ) %>% # -> AggAssumpsResultsAll  
+  filter(DemScen == test_DemScen) %>%
+  rename(Pooling = Pooled_o) %>%
+  arrange(C_road, Pooling) %>%
+  # filter(C_road %in% c(-10, 0, 10, 20)) %>%
+  filter(Pooling %in% c(0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5)) %>%
+  # mutate(C_road = as.factor(C_road)) ->
+  mutate(Pooling = as.factor(Pooling)) %>%
+  mutate(Energy = 1+EnergyUse) %>%
+  return() -> df_EvRc_B
+
+  plt_rE_B <- df_EvRc_B %>%
+    plotRelEnergyvsC_road(curr_subtitle = paste0("Scenario ", test_DemScen, ", Mix of All LDV Vehicles"),
+                          curr_ylimmin = 0.7, curr_ylimmax = 1.1)
+  plt_fE_B <- df_EvRc_B %>%
+    plotfracEnergyChangevsC_road(curr_subtitle = paste0("Scenario ", test_DemScen, ", Mix of All LDV Vehicles"),
+                          curr_ylimmin = -0.3, curr_ylimmax = 0.1)
+
+    # prepAltVMT2 # %>%
+
+  plt_fE_B 
+```
+
+
+```{r plotRelEnergyDual, echo=echoWorking, dpi=300, fig.width=7, fig.height=5}
+# https://wilkelab.org/cowplot/articles/aligning_plots.html
+# see https://github.com/thomasp85/patchwork
+(plt_rE_B + plt_rE_C) +
+  plot_annotation(
+    title = 'Relative Energy Use',
+    subtitle = 'These 2 plots will reveal yet-untold secrets about our beloved data-set',
+    caption = 'Disclaimer: None of these plots are insightful'
+  )
+```
+
+
+```{r plotfracEnergyChangesDual, echo=echoWorking, dpi=300, fig.width=8, fig.height=5}
+(plt_fE_B + plt_fE_C) +
+  plot_annotation(
+    title = 'Fractional Change in Energy Use',
+    subtitle = 'These 2 plots will reveal yet-untold secrets about our beloved data-set',
+    caption = 'Disclaimer: None of these plots are insightful'
+  )
 ```
 
 
