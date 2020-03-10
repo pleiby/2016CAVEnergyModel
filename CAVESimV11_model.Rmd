@@ -4489,6 +4489,7 @@ Private, Non-Automated Vehicles, Includes Pooled Ride-hailing
 plotEnergyVsPoolingForScenario(AggAssumpsResultsPrivateMV2)
 ```
 
+#### Results for Private, Gas. Non-Automated Vehicles:
 
 ```{r testCasesForSelectedSegments5A, echo=echoWorking, dpi=300, fig.width=7, fig.height=7}
 occupancyEffectsDisagg_0Croad %>% aggregateSelectedCaseAssumpsResultsByOAndCroad(
@@ -4513,6 +4514,38 @@ Private, Gas. Non-Automated Vehicles, Includes Pooled Ride-hailing
 ```{r}
 plotEnergyVsPoolingForScenario(AggAssumpsResultsPrivateGasMV2)
 ```
+
+
+```{r examineNoPoolingNoRoadChargeCases}
+occupancyEffectsDisagg_0Croad %>% 
+  right_join(select(CombScen_Combinations_subset, -Notes)) %>%
+  filter(
+    Pooled_o == 1.0,
+    C_road == 0.0
+  # auto_set = c("No", "Partial", "Full")
+  # fuel_set = c("Gas", "PHEV", "BEV"),
+  # use_set = c("Private", "Shared"),
+  ) %>%
+  return() -> occupancyEffectsDisagg_1o_0Croad
+
+occupancyEffectsDisagg_1o_0Croad %>%
+  mutate(Share = F_A_Shares*U_Shares) %>%
+  select(CombScen, VC, Pooled_o, Automation, Fuel, Use, fracVMTIncr, NIE, EnergyUse, Share) %>%
+  arrange(CombScen, VC, Automation, Fuel, Use)
+
+# %>%
+#   group_by(CombScen) %>%
+#   summarize(TotShare = sum(Share)) # checksum confirms that shares sum to 1.0
+# names(occupancyEffectsDisagg_1o_0Croad)
+```
+
+
+
+    Notes: on occupancyEffectsDisagg_1o_0Croad
+    # for CS_Base   See fracVMTIncr = 0.3, all Use==Shared case (0.0 for Use==Private)
+    # for CS_B_High See fracVMTIncr Private = Shared, and > 0 for all cases (0.25 to 0.408)
+    # for CS_C_High See fracVMTIncr Private << Shared, and > 0 for all cases. > 1.0 for all Shared cases
+
 
 # Appendices
 
