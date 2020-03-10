@@ -587,7 +587,7 @@ I_deltaCAV       : Fuel energy cost reduction (from effic, fraction, computed fr
 
 DemRespParams <- read.delim(textConnection("
 case                  Zero    Low     Med     High
-LDV.ElasVKT           0.0     -1      -1      -1
+LDV.ElasVKT           0.0     -1.0    -1.1    -1.2
 LDV.ExclVehCapCost    0.0     0       0       0
 LDV.C_deltaMaint      0.0     0       0       0
 LDV.C_deltaInsurX     0.0     -0.40   -0.60   -0.80
@@ -2157,9 +2157,6 @@ disaggCombScenResults <- function(dfCAR_preDisagg, # df with case assumps/result
       old_fracVMTIncr = (1 + old_fracVMTIncr) * mD_U - 1, # ??? WHY do this? should only apply to Shared travel (LDV)
       fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1,
       
-      # #   Not: mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
-      # mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1)
-  
       # then weight VMT demand by vehicle sub-type shares, allowing summation across subcategories
       # actual energy use (relative to base for this vehicle segment)
       # ? EnergyUse = (1 + NIE) * (1 + fracVMTIncr) - 1.0,
@@ -3053,14 +3050,6 @@ tableScenarioSetIntVMTEnergy(
   AggAssumpsResultsPrivateGasMV, 
   tablecaption = "Private, Gas. Non-Automated Vehicles")
 ```
-
-CombScen	VC	fracVMTIncr	NIE	EnergyUse	tstEnergyUse	totshare
-CS_B_High	HDV	0.1360	0	0.1360	0.1360	0.0400
-CS_B_High	LDV	0.2560	0	0.2560	0.2560	0.1132
-CS_Base	HDV	0.0000	0	0.0000	0.0000	0.0000
-CS_Base	LDV	0.0000	0	0.0000	0.0000	0.0019
-CS_C_High	HDV	0.2339	0	0.2339	0.2339	0.0400
-CS_C_High	LDV	0.3853	0	0.3853	0.3853	0.1374
 
 ```{r}
 CaseAssumpsResults %>%
@@ -4054,24 +4043,30 @@ AltVMT1 %>%
 # group_by(ElasTourLengthWithPooling) %>%
 # could we fill the following with geom_ribbon?
 
-prepAltVMT2 %>%
-  ggplot(aes(x = C_road, y = Energy)) +
-  geom_line(aes(color = Pooling), size = 1) +
-  scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
-  ggtitle("Energy (For Ride-Hailing Travel) Decrease with Pooling and Road Charge") +
-  xlab("Incremental road charge (c/veh-mile) (0 = base)") +
-  ylab("Relative Total Energy Use (1.0 = base)") +
-  # annotate("text", x = 1.0, y = 25, label = "Some text") +
-  annotate("pointrange", x = 0.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
-  # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
-  # ggtitle("") +
-  theme(
-    legend.position = c(0.8, 0.8),
-    axis.text = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12)
-  )
+plotRelVMTvsC_road <- function(df) {
+  df %>%
+    ggplot(aes(x = C_road, y = Energy)) +
+    geom_line(aes(color = Pooling), size = 1) +
+    scale_color_brewer(type = "seq", palette = "Blues") + # setting color of lines?
+    ggtitle("Energy (For Ride-Hailing Travel) Decrease with Pooling and Road Charge") +
+    xlab("Incremental road charge (c/veh-mile) (0 = base)") +
+    ylab("Relative Total Energy Use (1.0 = base)") +
+    # annotate("text", x = 1.0, y = 25, label = "Some text") +
+    annotate("pointrange", x = 0.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
+    # annotate("text", x = 1.2, y = baseenergy, label = "This point determined by") +
+    # ggtitle("") +
+    theme(
+      legend.position = c(0.8, 0.8),
+      axis.text = element_text(size = 14),
+      axis.title = element_text(size = 16, face = "bold"),
+      legend.title = element_text(size = 14),
+      legend.text = element_text(size = 12)
+    )
+}
+
+prepAltVMT2 %>% 
+  plotRelVMTvsC_road()
+# -> print()
 ```
 
 ## 6.4 Repeat Analysis with Scenarios Disaggregated by Vehicle Subtypes
@@ -4539,12 +4534,30 @@ occupancyEffectsDisagg_1o_0Croad %>%
 # names(occupancyEffectsDisagg_1o_0Croad)
 ```
 
+## 6.5 Plot Energy Use Change vs. Road Charge, for Different Pooling Levels
 
 
-    Notes: on occupancyEffectsDisagg_1o_0Croad
-    # for CS_Base   See fracVMTIncr = 0.3, all Use==Shared case (0.0 for Use==Private)
-    # for CS_B_High See fracVMTIncr Private = Shared, and > 0 for all cases (0.25 to 0.408)
-    # for CS_C_High See fracVMTIncr Private << Shared, and > 0 for all cases. > 1.0 for all Shared cases
+```{r}
+occupancyEffectsDisagg_XCroad %>% 
+  aggregateSelectedCaseAssumpsResultsByOAndCroad(
+    select(CombScen_Combinations_subset, -Notes),
+    auto_set = c("No", "Partial", "Full"),
+    fuel_set = c("Gas", "PHEV", "BEV"),
+    use_set = c("Private", "Shared")
+  ) %>% # -> AggAssumpsResultsAll  
+  filter(DemScen == test_DemScen) %>%
+  rename(Pooling = Pooled_o) %>%
+  arrange(C_road, Pooling) %>%
+  # filter(C_road %in% c(-10, 0, 10, 20)) %>%
+  filter(Pooling %in% c(0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5)) %>%
+  # mutate(C_road = as.factor(C_road)) ->
+  mutate(Pooling = as.factor(Pooling)) %>%
+  mutate(Energy = 1+EnergyUse) %>%
+  # prepAltVMT2 # %>%
+
+  plotRelVMTvsC_road()
+
+```
 
 
 # Appendices
