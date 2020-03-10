@@ -389,3 +389,27 @@ and each associated Technology and Demand scenario.
 - [ ] ToDo: group by CombScen rather than DemScen?
 - [ ] ToDo: consider making occupancy levels vary endog with C_road 
 - [ ] ToDo: consider making travel segment shares vary with C_road (C_road applies to all road travel segments, shares still exog)
+
+## Debug Notes 20200310
+- Notes: on occupancyEffectsDisagg_1o_0Croad
+  - for the disaggVoTT == F case:
+
+    # for CS_Base   See fracVMTIncr = 0.3, all Use==Shared case (0.0 for Use==Private)
+    # for CS_B_High See fracVMTIncr Private = Shared, and > 0 for all cases (0.25 to 0.408)
+    # for CS_C_High See fracVMTIncr Private << Shared, and > 0 for all cases. > 1.0 for all Shared cases
+    # CS_B_High for all Shared Use EnergyUse -0.0727 exactly equals CS_B_High ALL (LDV Mix) - same fracVMTIncr, NIE, and EnergyUse
+
+
+
+Older (in Sec 4.5)
+  mutate(fracVMTIncr = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
+  
+Newer (in Sec 5.1 disaggCombScenResults())
+  fracVMTIncr = C_Total^ElasVKT - 1.0, # fractional VMT increase base on elastic response to Total cost
+  fracVMTIncr = (1 + fracVMTIncr) * USDmult - 1, 
+  # adjust VMT Demand for vehicle Use case (Shared or Private)
+  # fracVMTIncr so far is dependent on cost elasticity
+  fracVMTIncr = (1 + fracVMTIncr) * mD_U - 1,
+  
+  -.1296  -.0357
+  0.2879  -.1191  0.4651	-.0185
