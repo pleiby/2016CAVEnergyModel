@@ -384,6 +384,8 @@ and each associated Technology and Demand scenario.
 #### 20200302
 - [x] ToDo: make occcupancy o = 1 if Use != "Shared"
 - [ ] ToDo: make ElasPKT depend on Use?
-- [ ] ToDo: Make C_time depend on A and U
+- [ ] ToDo: Make C_time depend on A and U (can be done in `disaggCombScenResults()` if `disaggVoTT` =T)
 - [ ] ToDo: make C_V depend on A and F?
 - [ ] ToDo: group by CombScen rather than DemScen?
+- [ ] ToDo: consider making occupancy levels vary endog with C_road 
+- [ ] ToDo: consider making travel segment shares vary with C_road (C_road applies to all road travel segments, shares still exog)
