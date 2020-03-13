@@ -4056,7 +4056,7 @@ plotRelEnergyvsC_road <- function(
     ylab("Relative Energy Use (1.0 = base)") +
     ylim(curr_ylimmin, curr_ylimmax) +  
     # annotate("text", x = 1.0, y = 25, label = "Some text") +
-    geom_rect(xmin = -0.5, xmax = 0.5, ymin = 0.0, ymax = baseenergy, color = "black", fill = my_colors[3], alpha = 0.5) +
+    geom_rect(xmin = -1.0, xmax = 1.0, ymin = 0.0, ymax = baseenergy, color = "black", fill = my_colors[3], alpha = 0.5) +
     # annotate("pointrange", x = 0.0, y = baseenergy, ymin = baseenergy, ymax = baseenergy, colour = "black", size = .50) +
     theme(
       legend.position = c(0.80, 0.75),
@@ -4688,8 +4688,8 @@ occupancyEffectsDisagg_XCroad %>%
 (plt_rE_B + plt_rE_C) +
   plot_annotation(
     title = 'Relative Energy Use',
-    subtitle = 'These 2 plots will reveal yet-untold secrets about our beloved data-set',
-    caption = 'Disclaimer: None of these plots are insightful'
+    subtitle = 'Two scenarios with different levels of Ride-hailing',
+    caption = 'Exploratory results'
   )
 ```
 
@@ -4698,8 +4698,8 @@ occupancyEffectsDisagg_XCroad %>%
 (plt_fE_B + plt_fE_C) +
   plot_annotation(
     title = 'Fractional Change in Energy Use',
-    subtitle = 'These 2 plots will reveal yet-untold secrets about our beloved data-set',
-    caption = 'Disclaimer: None of these plots are insightful'
+    subtitle = 'Two scenarios with different levels of Ride-hailing',
+    caption = 'Exploratory results'
   )
 ```
 
