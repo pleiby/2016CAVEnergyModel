@@ -507,7 +507,7 @@ IEffects %>%
 ### 3.4 Establish Cases for Exogenous Demand Effects
 
 ```{r buildIEffectsTemp, echo=echoWorking, dpi=300, fig.width=7}
-DEffectsTemp <- read.delim(textConnection("
+DEffectsExog <- read.delim(textConnection("
 VC  : Year  : Mech                        : Opt : Mid : Pess  : Zero
 LDV : 2035  : D_Underserved_travelers     : 0   : 6   : 10    : 0
 LDV : 2035  : D_Ride_Hailing_Empty_Miles  : -20 : 30  : 50    : 0
@@ -517,14 +517,14 @@ LDV : 2050  : D_Ride_Hailing_Empty_Miles  : -20 : 30  : 50    : 0
 LDV : 2050  : D_Induced_VMT_Demand        : 15  : 25  : 67    : 0
 "), header = TRUE, sep = ":", strip.white = TRUE) # ;
 
-DEffectsTemp <- DEffectsTemp %>%
+DEffectsExog <- DEffectsExog %>%
   mutate(
     VC = as.character(VC),
     Mech = as.character(Mech)
   )
 # Difficulty controlling order of bars in bar chart:
 #Effects$Mech = with(IEffects, factor(Mech, levels = rev(levels(Mech)))) # does not work
-# DEffectsTemp %>%
+# DEffectsExog %>%
 #  mechsBarChart()
 
 ```
@@ -541,7 +541,7 @@ IEffects %>%
     Mech = str_replace(Mech, "Ride_Hailing_Empty_Miles", "Ride_Hailing_Empty_Miles"),
     Mech = str_replace(Mech, "De_emphasized_performance", "De-emphasized_performance")
   ) %>%
-bind_rows(DEffectsTemp) -> CombIDEffects
+bind_rows(DEffectsExog) -> CombIDEffects
 
 CombIDEffects %>%
   mechsBarChart()
@@ -1676,13 +1676,17 @@ HDV     :C_High  :0       :Zero        : Cost-base response (with ElasVKT) only
 #   Then they are applied to the calculated demand change 
 #   VMTIncrease$fracVMTIncr
 
-# Initially, restrict to only Shared, Full Automation cases
-temp_refRideHailingPoolingAdj <- refRideHailingPoolingAdj %>%
+# Pivot for Zero to High RidePoolAdj case adjustments for all Use, Automation
+RideHailingPoolingAdj <- refRideHailingPoolingAdj %>%
+  gather(key = "RidePoolAdj", value = RidePoolAdjFrac, -c(Use, Automation)) 
+
+# Initially, restrict focus to only Shared, Full Automation cases
+temp_refRideHailingPoolingAdj <- RideHailingPoolingAdj %>%
   filter(Use == "Shared", Automation == "Full") %>%
-  select(-c(Use, Automation)) %>%
-  gather(key = "RidePoolAdj", value = RidePoolAdjFrac)
+  select(-c(Use, Automation))
 
 DemScenAdjustments <- DemScenAdjustments %>%
+  # ToDo: make these VMT adjustments on the disaggregated basis of vehicle Use and Automation level
   mutate_at(.vars = c("VC", "DemScen", "RidePoolAdj"), .funs = as.character) %>%
   # Use ride Hailing/Pooling multiplicative adjustment factor for all Demand Scenarios based on RidePoolAdj case
   left_join(temp_refRideHailingPoolingAdj, by = c("RidePoolAdj")) # match VMT adjustment fractions for ride hailing/poolin to case
@@ -1717,11 +1721,15 @@ Energy intensity changes (net, accounting for the influence of all identified me
 have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `EnergyIntensityChanges`:
 
 $$\Delta I_{tjv} = 1 - \mu_{jtv}$$
-The _cost-elastic_ travel demand or VMT fractional changes have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `VMTIncrease`.
+The _cost-elastic_ travel demand or VMT fractional changes have been calculated by year *t*, vehicle class *v*, and technology scenario scenario *j* in `VMTIncrease`.^[Note that this first pass analysis aggregates all vehicle types at the Vehicle Class level, describing a single or average Fuel (drivetrain), Automation level, and Use type.]
 
 $$m_{vtdj}(c_{rel,vtdj}) ~=~ (c_{rel,vtdj})^{ElasVKT_{cv}}-1$$
 
 Note: this calculation applies the VKT elasticity, estimated and appropriate for cost response at the reference level (near zero) pooling.
+
+- $\Delta I_{tjv}$ = `I_deltaCAV` = `NIE`
+- $c_{rel,vtdj}$ = `VTCShrAlt`
+- $m_{vtdj}$ = `fracVMTIncr`
 
 VMT demand is further adjusted based on exogenous demand shifts associated with new use categories and the effect of ride-hailing/ride-pooling on VMT.
 
@@ -1779,7 +1787,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
     spread(key = CostCat, value = VCRel) %>%
     filter(DemScen %in% demScensWanted)
 
-  # Select energy intensity changes for the Current Technology Scenario and Year, for both vehicle classes
+  # Select energy intensity changes for the Current Technology Scenario and Year, for both main vehicle classes
   #   leaves a small df with net intensity changes for each vehicle class
   nie <- nieForScenYear(EnergyIntensityCompons, CurrTS, CurrYr)
 
@@ -1792,7 +1800,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
 
   # Get desired Demand Response Parameters (ElasVKT, C_deltaCapCst, ExclVehCapCost, and  I_deltaCAV), for desired cases
   y <- DemRespParams %>%
-    select(-c(Zero, Med)) %>%
+    select(-c(Zero, Med)) %>% # drop these unused cases
     gather(key = Case, value = value, Low:High) %>% # for two cases (Low and High)
     spread(key = Parameter, value = value) %>%
     right_join(nie, by="VC") %>%
@@ -1804,7 +1812,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   # append correct Dem Scen multipliers for other vars (VoTT and Insurance)
   VTCShrAlt <- left_join(VTCShrAlt, select(DemScenCostChange, -c("C_deltaCapCostX", "Description")),
                          by = c("DemScen")) # currently _not_ Sensitivity Case-dependent, and not disagg by vehicle Automation level or Use case (sharing)
-  # ??? do this disaggregation by shares here vs later?
+  # Do disaggregation by F,A,U shares later in 2nd pass
   # left_join(shares_by_F_A, b = c("VC", "DemScen")) %>% # add Fuel and Automation shares
   # left_join(shares_by_U, by = c("VC", "DemScen")) # add Use (Sharing, Hailing/Pooling) shares
 
@@ -1818,11 +1826,11 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
     Fuel = Fuel * (1.0 + I_deltaCAV * ShrECostInt),
     # Fuel energy intensity reduction (from energy efficiency) * Share of energy efficiency costs internalized by traveler
     Maintenance = Maintenance * (1.0 + C_deltaMaint),
-    AccAndIns = AccAndIns * (1.0 + C_deltaInsur), # (1+InsChange[DemScen])
-    VehCapCost = VehCapCost * (1.0 + C_deltaCapCost), # (1+CapitalCostChange)
-    TollsFees = TollsFees * (1.0 + C_deltaTolls),
-    Parking = Parking * (1.0 + C_deltaPrkng),
-    Time = Time * (1.0 + C_deltaVoTT), # This multiplier, from DemScenCostChange, Applies only to Private, Full CAV
+    AccAndIns   = AccAndIns   * (1.0 + C_deltaInsur),
+    VehCapCost  = VehCapCost  * (1.0 + C_deltaCapCost),
+    TollsFees   = TollsFees   * (1.0 + C_deltaTolls),
+    Parking     = Parking     * (1.0 + C_deltaPrkng),
+    Time        = Time        * (1.0 + C_deltaVoTT), # This multiplier, from DemScenCostChange, Applies only to Private, Full CAV
     Registration = Registration * (1.0 + C_deltaRegis)
     # Total = CostMult weighted by base CostFraction
   )
