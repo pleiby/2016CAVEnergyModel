@@ -121,7 +121,7 @@ ToDo Next 20190927
 - Results
     - [x] Produce Bar charts of AV cost components and shares
     - [x] Produce Bar charts of energy intensity, VMT and energy
-    - [ ] Produce Graphs of energy, VMT, PMT vs occupancy, for 
+    - [x] Produce Graphs of energy, VMT, PMT vs occupancy, for 
     - [ ] Produce Graphs of energy use vs cost (by mile and gallon)
     - [ ] Plot of VMT, PMT vs incentive, accounting for fraction of travel that is shared (and potentially pooled)
         - account for overall demand reduction with VMT (from efficient tax computation)
@@ -130,20 +130,20 @@ ToDo Next 20190927
 
 20191002 Version CAVESIMver10
 --------------------------------
-- modify Sec. 6.3 Est Scenario effects:
-    - Scenario with economic response to occupance and road charge
-    - For shared mobility, differentiate between
+- modified Sec. 6.3 Est Scenario effects:
+    - Scenario with economic response to occupancy and road charge
+    - For shared mobility, differentiated between
         - PMT cost VMT cost
         - PMT demand and VMT demand
-- make assumptions re Pooling impact on VMT through params in chunk setDemandAndPoolingParams
+- made assumptions re Pooling impact on VMT through params in chunk setDemandAndPoolingParams
     - elas_VoTT_wrt_Pooling
     - Elas_TourLength_wrt_Pooling
     - Elas_RiderDetour_wrt_Pooling
     - PacePi
     - ReductPaceAutomation
-- make Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use (Shared vs. Private)
+- made Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use (Shared vs. Private)
     - for Use == "Shared", adjust mD_U = (1 + RidePoolAdjFrac)
-- Added Dem/Tech scen cost charts for selects SMART scenarios (Base, B_Low/B_High, C_Low/C_High)
+- Added Dem/Tech scen cost charts for selected SMART scenarios (Base, B_Low/B_High, C_Low/C_High)
   - Note: have to choose TechScen cases to match with these DemScen cases
 - Modify output for Capstone contribution
   - fine-tune graph titles, resolution
@@ -177,7 +177,7 @@ Next Steps for Benchmarking and Refining
 ToDos for Refining
 -------------------
 - Next steps for functions CombScenResultsForOneTechScen() and GatherScenInputsForOneTechScen()
-    - use _local_ vars to make iteratively make calculations of many dataframes
+    - use _local_ vars to iteratively make calculations of many dataframes
         - nie
         - DemRespParams (need DemRespParamsBase)
         - VTCShrAlt (needs VTCShrBase)
@@ -191,7 +191,7 @@ ToDos for Refining
 Planned Steps for Revised Contribution to Capstone Report 20191127
 ---------------------
 #### worthwhile points/approaches from bounds works
-- 
+- ???
 
 #### Factors to Highlight
 - effect of costs of CAV on VKT and Energy use
@@ -266,10 +266,13 @@ Summary of CAVESIM Model Steps (as of 20200216)
     - Plots of (net) Energy Intensity Changes by Technology Scenario (Year and VC)
     - Plot of Energy Intensity Effect ranges by Mechanism
 1. (Sec. 3.4) Establish Cases for Exogenous Demand Effects 
-    - `DEffectsTemp` specifies demand mechanism values in 4 EffectCase for 
+    - `DEffectsExog` specifies demand mechanism values in 4 EffectCase for 
         - `D_Underserved_travelers`, `D_Ride_Hailing_Empty_Miles`, `D_Induced_VMT_Demand`
+        - NOTE: these are not used directly, rather 
+          - `UnderservedVMTmult$USDmult` instead of `D_Underserved_travelers`
+          - `refRideHailingPoolingAdj` specifies, by Use and Automation, what becomes `DemScenAdjustment$RidePoolAdjFrac` instead of `D_Ride_Hailing_Empty_Miles`
     - combine this with `IEffects` to `CombIDEffects` and plot bar chart of mechanism effect ranges
-1. (Sec 4) Develop Demand Response to CAVs: exegenous demand shifts and an endogenous travel demand response to net change in generalized travel cost
+1. (Sec 4) Develop Demand Response to CAVs: exogenous demand shifts and an endogenous travel demand response to net change in generalized travel cost
 1. (Sec 4.1.1) Establish Demand Response Parameters in df `DemRespParams`
     - in `DemRespParams` for `VC`, `Parameter`, and 4 `EffectCase`s.
         - `ElasVKT`, `ExclVehCapCost`, `C_xxx`, for xxx in {deltaMaint, deltaInsurX, deltaCapCost, deltaTolls, deltaParking, deltaRegis, deltaVoTTHwy, deltaVoTTArt}
@@ -385,7 +388,7 @@ and each associated Technology and Demand scenario.
 - [x] ToDo: make occcupancy o = 1 if Use != "Shared"
 - [ ] ToDo: make ElasPKT depend on Use?
 - [ ] ToDo: Make C_time depend on A and U (can be done in `disaggCombScenResults()` if `disaggVoTT` =T)
-- [ ] ToDo: make C_V depend on A and F?
+- [ ] ToDo: make C_V depend on A and F? (see unused C_deltaCapCost)
 - [ ] ToDo: group by CombScen rather than DemScen?
 - [ ] ToDo: consider making occupancy levels vary endog with C_road 
 - [ ] ToDo: consider making travel segment shares vary with C_road (C_road applies to all road travel segments, shares still exog)
