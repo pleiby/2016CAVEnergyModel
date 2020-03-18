@@ -392,7 +392,7 @@ and each associated Technology and Demand scenario.
 - [ ] ToDo: group by CombScen rather than DemScen?
 - [ ] ToDo: consider making occupancy levels vary endog with C_road 
 - [ ] ToDo: consider making travel segment shares vary with C_road (C_road applies to all road travel segments, shares still exog)
-
+- [ ] ToDo: disaggregate effect of Ridehail on VMT in `RidePoolAdjFrac`, to be consistent with `refRideHailingPoolingAdj`. Latter specifies, by Use and Automation, what becomes `DemScenAdjustment$RidePoolAdjFrac` at aggregate VC level, rather than FAU level.
 ## Debug Notes 20200310
 - Notes: on occupancyEffectsDisagg_1o_0Croad
   - for the disaggVoTT == F case:
