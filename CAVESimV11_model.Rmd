@@ -1596,7 +1596,7 @@ Private :Partial    :0.0     :0.0     :0.0    :0.0
 Private :Full       :0.0     :0.0     :0.3    :0.6
 "), header = TRUE, sep = ":", strip.white = TRUE) #
 # refRideHailingPoolingAdj <- -0.2 # fractional change for total LDV VMT.
-# Only applies for DemScen and VC with flag for non-zero RidePoolAdj (Mult for HDV=1.0).
+# Only applies for DemScen and VC with flag for non-Zero RidePoolAdjCase (Mult for HDV=1.0).
 ```
 
 Specify Combined Scenarios. A combined scenario $CS_d$ associates each Demand Scenario $DS_d$ with and Underserved Multiplier Option `USOption` and possible further VMT adjustment for ride hailing/pooling (`refRideHailingPoolingAdj`). Note that all of these demand adjustments, for cost-based demand response $m_{vtdj}(c_{rel,vtdj})$, underserved-demand multiplier $\gamma_{USD,vd}$, and ride hailing/pooling demand shift $\rho_{HailPool,vd}$, are applied multiplicatively to the base demand level through net effect $M_{vtdsj}$.
@@ -1639,35 +1639,35 @@ Note: a more refined analysis would account for the different travel costs faced
 
 # Comment, these are not really Combined scenarios so much as adjustments to the demand scenarios
 DemScenAdjustments <- read.delim(textConnection("
-VC      :DemScen :USOption:RidePoolAdj : Comments
-LDV     :DS1     :0       :Zero        : Cost-base response (with ElasVKT) only
-LDV     :DS2     :1       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 1
-LDV     :DS3     :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-LDV     :DS4     :4       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 4
-LDV     :DS5     :4       :Zero        : scenario 4 with higher elasticity
-LDV     :DS6     :4       :Low         : scenario 5 with shift to carsharing (ride hailing/pooling)
-LDV     :DS7     :3       :Low         : scenario 3 with shift to carsharing (ride hailing/pooling)
-LDV     :Test    :4       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 4
-LDV     :Zero    :0       :Zero        : Cost-base response (with ElasVKT) only
-LDV     :Base    :0       :Med         : Cost-base response (with ElasVKT) only
-LDV     :B_Low   :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-LDV     :B_High  :3       :Zero        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-LDV     :C_Low   :3       :High        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-LDV     :C_High  :3       :High        : Cost-base response (with ElasVKT) with Underserved mult effect option 3
-HDV     :DS1     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :DS2     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :DS3     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :DS4     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :DS5     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :DS6     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :DS7     :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :Test    :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :Zero    :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :Base    :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :B_Low   :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :B_High  :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :C_Low   :0       :Zero        : Cost-base response (with ElasVKT) only
-HDV     :C_High  :0       :Zero        : Cost-base response (with ElasVKT) only
+VC      :DemScen :USOption:RidePoolAdjCase : Comments
+LDV     :DS1     :0       :Zero            : Cost-base response (with ElasVKT) only
+LDV     :DS2     :1       :Zero            : Cost-base response (with ElasVKT) with Underserved mult effect option 1
+LDV     :DS3     :3       :Zero            : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :DS4     :4       :Zero            : Cost-base response (with ElasVKT) with Underserved mult effect option 4
+LDV     :DS5     :4       :Zero            : scenario 4 with higher elasticity
+LDV     :DS6     :4       :Low             : scenario 5 with shift to carsharing (ride hailing/pooling)
+LDV     :DS7     :3       :Low             : scenario 3 with shift to carsharing (ride hailing/pooling)
+LDV     :Test    :4       :Zero            : Cost-base response (with ElasVKT) with Underserved mult effect option 4
+LDV     :Zero    :0       :Zero            : Cost-base response (with ElasVKT) only
+LDV     :Base    :0       :Med             : Cost-base response (with ElasVKT) only
+LDV     :B_Low   :3       :Zero            : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :B_High  :3       :Zero            : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :C_Low   :3       :High            : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+LDV     :C_High  :3       :High            : Cost-base response (with ElasVKT) with Underserved mult effect option 3
+HDV     :DS1     :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :DS2     :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :DS3     :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :DS4     :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :DS5     :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :DS6     :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :DS7     :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :Test    :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :Zero    :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :Base    :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :B_Low   :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :B_High  :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :C_Low   :0       :Zero            : Cost-base response (with ElasVKT) only
+HDV     :C_High  :0       :Zero            : Cost-base response (with ElasVKT) only
 "), header = TRUE, sep = ":", strip.white = TRUE) #
 
 
@@ -1676,20 +1676,20 @@ HDV     :C_High  :0       :Zero        : Cost-base response (with ElasVKT) only
 #   Then they are applied to the calculated demand change 
 #   VMTIncrease$fracVMTIncr
 
-# Pivot for Zero to High RidePoolAdj case adjustments for all Use, Automation
+# Pivot for Zero to High RidePoolAdjCase case adjustments for all Use, Automation
 RideHailingPoolingAdj <- refRideHailingPoolingAdj %>%
-  gather(key = "RidePoolAdj", value = RidePoolAdjFrac, -c(Use, Automation)) 
+  gather(key = "RidePoolAdjCase", value = RidePoolAdjFrac, -c(Use, Automation)) 
 
 # Initially, restrict focus to only Shared, Full Automation cases
-temp_refRideHailingPoolingAdj <- RideHailingPoolingAdj %>%
+temp_RideHailingPoolingAdj <- RideHailingPoolingAdj %>%
   filter(Use == "Shared", Automation == "Full") %>%
   select(-c(Use, Automation))
 
 DemScenAdjustments <- DemScenAdjustments %>%
   # ToDo: make these VMT adjustments on the disaggregated basis of vehicle Use and Automation level
-  mutate_at(.vars = c("VC", "DemScen", "RidePoolAdj"), .funs = as.character) %>%
-  # Use ride Hailing/Pooling multiplicative adjustment factor for all Demand Scenarios based on RidePoolAdj case
-  left_join(temp_refRideHailingPoolingAdj, by = c("RidePoolAdj")) # match VMT adjustment fractions for ride hailing/poolin to case
+  mutate_at(.vars = c("VC", "DemScen", "RidePoolAdjCase"), .funs = as.character) %>%
+  # Use ride Hailing/Pooling multiplicative adjustment factor for all Demand Scenarios based on RidePoolAdjCase
+  left_join(temp_RideHailingPoolingAdj, by = c("RidePoolAdjCase")) # match VMT adjustment fractions for ride hailing/poolin to case
 
 DemScenAdjustments <- DemScenAdjustments %>%
   left_join(select(UnderservedVMTmult, -description), by = c("USOption")) # combines base cost shares and Demand Reponse Parameters for their adjustment
@@ -1703,7 +1703,7 @@ VMTIncrease <- VMTIncrease %>%
 
 # ??? Disaggregate:
 # This VMTIncrease table is disagg by Year and VC, as is the
-#  Need to apply shares to this dataframe, by adding rows and columns for 
+#  Need to apply FAU shares to this dataframe, by adding rows and columns for 
 #  subcategories of vehicle type, e.g.
 #  - Automation (Base Non-Automated fraction)
 #  - Fuel/Drivetrain (electric fraction)
@@ -1730,8 +1730,13 @@ Note: this calculation applies the VKT elasticity, estimated and appropriate for
 - $\Delta I_{tjv}$ = `I_deltaCAV` = `NIE`
 - $c_{rel,vtdj}$ = `VTCShrAlt`
 - $m_{vtdj}$ = `fracVMTIncr`
+- $r_s$ = `RidePoolAdjFrac`
 
 VMT demand is further adjusted based on exogenous demand shifts associated with new use categories and the effect of ride-hailing/ride-pooling on VMT.
+
+$$M_{vtdsj} ~=~ 1 + m_{vtdj} ~=~ (c_{rel,vtdj})^{ElasVKT_{cvs}} \cdot \gamma_{USD,vd}\cdot (1+\rho_{HailPool,vd})$$
+
+      `fracVMTIncr` = (1 + fracVMTIncr) * USDmult * (1 + RidePoolAdjFrac) - 1)
 
 ```{r constructTechScenEffectsIE, echo=echoWorking}
 
@@ -1763,7 +1768,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   #   - DemRepsParams: demand params `value` by Parameter, VC, Zero, Low, Mid, High (EffectCase)
   #                    (Parameter includes cost changes, ElasVKT, overall intensity change I_deltaCAV)
   #   - VTCShrBase: df of base cost component shares `VTCost_shr`, by VehType, CostCat. 
-  #   - DemScenCostChang: 
+  #   - DemScenCostChange: vehicle travel cost parametes by DemScen, used only for C_deltaInsur and C_deltaVoTT
     
   # VTCShrAlt
 
@@ -1896,9 +1901,7 @@ CombScenInputsAndResultsForOneTechScen <- function(CurrTS, CurrYr, demScensWante
   # Case Effects on Demand (single Year, TechScen, multiple VC, DemScen, ElasCase)
   AssumpsD <- VMTIncrease %>%
     ungroup() %>%
-    # select(DemScen, VC, ElasCase, fracVMTIncr) %>%
-    # mutate(DemScen_Num  = as.integer(str_sub(DemScen, -1,-1)))
-    # add labels for year and TechScen, and associated Energy Intensity NIE
+    # add intensity mechanism effects for this Year and TechScen, and associated Energy Intensity NIE
     left_join(
       # In contrast to TechScenEffectsEI, EnergyIntensityCompons includes components as well as NIE.
       filter(EnergyIntensityCompons, TechScen == CurrTS, Year == CurrYr),
@@ -1915,8 +1918,8 @@ This calculates the fractional change in energy Intensity, VMT, and Energy Use b
 ```{r selectScensToPostProcess, echo=echoWorking, warning=F}
 # first select only scenarios for which we have disaggregated tech shares
 DetailedDemScens <- unique(shares_by_F_A$DemScen)
-DetailedDemScens <- DetailedDemScens[!(DetailedDemScens %in% c("Zero", "A_Low", "A_High", "B_Low", "C_Low", "Test"))] # not of interest, Zero does what is says
-# DetailedDemScens
+DetailedDemScens <- DetailedDemScens[!(DetailedDemScens %in% c("Zero", "A_Low", "A_High", "B_Low", "C_Low", "Test"))] # not of interest, Zero does what ii says
+# DetailedDemScens ***UNUSED***
 ```
 
 ```{r multCombScenarioResultsAndAssumptionsLoop, echo=echoWorking}
@@ -1934,6 +1937,11 @@ for (CurrTechScen in techScensWanted) {
     CombScenInputsAndResultsForOneTechScen(CurrTechScen, CurrYear, DetailedDemScens))
 }
 ```
+
+We now have dataframe of cases, one row for each case, with assumptions and
+aggregated results (for aggregate Vehicle Class and a single Year).
+Number of cases is card(VC) x card(ElasCase) x card(DemScen) x card(TechScen).
+Currently, this is 2 x 2 x 3 x 9 cases.
 
 5.1 Construct Detailed Scenarios Disaggregated by Vehicle Sub-types
 -------------------------------------------------------------------
@@ -1953,7 +1961,6 @@ For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_
 #
 #    # Relative Energy Intensity effect of full automation by Vehicle Class (LDV/HDV)
 #    mI_C   VC    Value
-#    mI_C   = 1.0,
 #    mI_C   "LDV", 1.0,
 #    mI_C   "HDV", 0.5,
 #    mI_C   otherwise, NA
@@ -1978,9 +1985,10 @@ For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_
 #    mD_U   Use,    Value
 #    mD_U   "Private", 1.0,
 #    # estab Shared repositioning demand mults/shifts
-#    mD_U   "Shared", (1 + RidePoolAdjFrac)
+#    mD_U   "Shared", (1 + RidePoolAdjFrac)  # should be more disagg, based on `refRideHailingPoolingAdj`
 #    mD_U   otherwise NA
 #
+#    # Adjusments to the Cost of Time (deltaVoTT) base on level of Automation (relative to Full Automation)
 #    mCT_A   Automation Value 
 #    mCT_A   "Full",    1.0,
 #    mCT_A   "Partial", 0.5,
@@ -2035,9 +2043,10 @@ appendDisaggParams <- function(DemScenData) {
       )
     ),
     # Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use
+    #  Should depend on combined Automation level and Use
     mD_U = ifelse(Use == "Private", 1.0,
       # estab Shared repositioning demand mults/shifts
-      ifelse(Use == "Shared", (1 + RidePoolAdjFrac),
+      ifelse(Use == "Shared", (1 + RidePoolAdjFrac), # should be more disagg, based on `refRideHailingPoolingAdj`
         NA
       )
     ),
@@ -2058,10 +2067,11 @@ appendDisaggParams <- function(DemScenData) {
         )
       )
     )
-  )
-} # fn appendDisaggParams
+  ) # produces and therefor returns the DemScenData with FAU-based modifying factors
+} # end fn appendDisaggParams
 
-DisaggParams <- DemScenAdjustments %>%  # ***UNUSED***
+# following has VC x DemScen x Fuel x Automation x Use = 2 x 3 x 3 x 3 x 2 = 108 demand adjustment combos
+DisaggDemScenAdjustments <- DemScenAdjustments %>%  # For info only ***UNUSED***
   select(-Comments) %>%
   filter(DemScen %in% DetailedDemScens) %>%
   appendDisaggParams()
@@ -2075,7 +2085,7 @@ for each vehicle category (Automation, Fuel, Use), vehicle class and scenario.
 
 $\Delta I_{jtv} = \mu_{jtv} - 1$ = `NIE` 
 
-$$\Delta I_{jtv, FAU} = \Delta I_{jtv} \cdot m_{I,Cx} \cdot m_{I,Ax} \cdot  m_{I,FAx} $$
+$$\Delta I_{jtv, fau} = \Delta I_{jtv} \cdot m_{IC,v} \cdot m_{IA,a} \cdot  m_{IFA,f} \cdot  m_{IFB,f} $$
 
 Also adjust other costs accordingly, for correct demand response calculation.
 
