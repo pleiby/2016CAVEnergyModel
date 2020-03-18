@@ -1588,12 +1588,12 @@ USOption  :USDmult       :description
 # fractional change for total LDV VMT
 refRideHailingPoolingAdj <- read.delim(textConnection("
 Use     :Automation :Zero    :Low     :Med    :High
-Shared  :None       :0.0     :-0.2    :0.3    :0.3
+Shared  :No         :0.0     :-0.2    :0.3    :0.3
 Shared  :Partial    :0.0     :-0.2    :0.3    :0.3 
 Shared  :Full       :0.0     :-0.2    :0.3    :0.6 
-Private :None       :0.0     :0.0     :0.0    :0.0  
+Private :No         :0.0     :0.0     :0.0    :0.0  
 Private :Partial    :0.0     :0.0     :0.0    :0.0 
-Private :Full       :0.0     :0.0     :0.3    :0.6
+Private :Full       :0.0     :0.0     :0.2    :0.4
 "), header = TRUE, sep = ":", strip.white = TRUE) #
 # refRideHailingPoolingAdj <- -0.2 # fractional change for total LDV VMT.
 # Only applies for DemScen and VC with flag for non-Zero RidePoolAdjCase (Mult for HDV=1.0).
@@ -2002,13 +2002,19 @@ For a target subset of `DemScen` in `DetailedDemScens` (e.g. Base, B_High and C_
 #   demand shift multipliers by Use case U
 appendDisaggParams <- function(DemScenData) {
   # Expand table to disaggregate by Vehicle category: Fuel Type, Automation, Use
-  #  (replicates rows card(A) x card(F) x card(U) times and appends shares
-  #  of each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
+  #  (replicates rows card(A) x card(F) x card(U) times and appends shares and multipliers
+  #  for each vehicle category (Fuel, Automation, Use) for matching VC and DemScen)
   # Note these are adjustments to the base vehicle energy efficiency, time cost, or demand shift,
   #  for the effect on energy use of electrification, automation, sharing
-  DemScenData %>%  # ***UNUSED***
-  left_join(shares_by_F_A, by = c("VC", "DemScen")) %>% # add Fuel and Automation shares by VC and DemScen
-  left_join(shares_by_U, by = c("VC", "DemScen")) %>% # add Use (Sharing, Hailing/Pooling) shares
+  RideHailingPooling_mults_by_A_U <- RideHailingPoolingAdj %>%
+    mutate_at(.vars = c("Use", "Automation"), .funs = as.character) %>%
+    mutate(RidePoolAdjMult = RidePoolAdjFrac + 1) %>% # exog Dem change from empty VMT by Use and Automation
+    select(-RidePoolAdjFrac)
+  
+  DemScenData %>%
+  left_join(shares_by_F_A, by = c("VC", "DemScen")) %>% # add Fuel, Automation and their joint shares by VC and DemScen
+  left_join(shares_by_U, by = c("VC", "DemScen")) %>% # add Use (Sharing, Hailing/Pooling) and shares
+  left_join(RideHailingPooling_mults_by_A_U, by = c("Use", "Automation", "RidePoolAdjCase")) %>% # get demand change for empty VMT by Use and Automation, and case
   mutate(
     # Note these are all adjustments to the incremental effect of full automation, which is the base calculated value
     # Fraction of estimated Net Energy Intensity Effect gained by Partial or No Automation
@@ -2044,12 +2050,13 @@ appendDisaggParams <- function(DemScenData) {
     ),
     # Adjustments to VMT Demand (not necessarily PMT demand) based on scenario vehicle Use
     #  Should depend on combined Automation level and Use
-    mD_U = ifelse(Use == "Private", 1.0,
-      # estab Shared repositioning demand mults/shifts
-      ifelse(Use == "Shared", (1 + RidePoolAdjFrac), # should be more disagg, based on `refRideHailingPoolingAdj`
-        NA
-      )
-    ),
+    mD_U = RidePoolAdjMult, # exog demand mult for ridehailing/empty VMT, disagg by A and U
+    # mD_U = ifelse(Use == "Private", 1.0,
+    #   # estab Shared repositioning demand mults/shifts
+    #   ifelse(Use == "Shared", (1 + RidePoolAdjFrac), # should be more disagg, based on `refRideHailingPoolingAdj`
+    #     NA
+    #   )
+    # ),
     # Fraction of estimated Time Cost Effect (C_deltaVoTT) gained by Partial or No Automation
     #   "Partial" value based on ratio of VoTT effects for Automation==High vs Automation==Low in ScenAssumps_VoTT
     mCT_A = ifelse(Automation == "Full", 1.0,
@@ -2187,9 +2194,25 @@ disaggCombScenResults <- function(dfCAR_preDisagg, # df with case assumps/result
 ```
 
 ```{r postProcessCombScenarioResults2, echo=echoWorking, warning=F}
-CaseAssumpsResults <- disaggCombScenResults(CaseAssumpsResults_many, DetailedDemScens, disaggVoTT = F)
+CaseAssumpsResultsAgVT <- disaggCombScenResults(CaseAssumpsResults_many, DetailedDemScens, disaggVoTT = F) # more aggregated VoTT case
 
-CaseAssumpsResultsDAVT <- disaggCombScenResults(CaseAssumpsResults_many, DetailedDemScens, disaggVoTT = T) # diaggregated time case
+CaseAssumpsResultsDAVT <- disaggCombScenResults(CaseAssumpsResults_many, DetailedDemScens, disaggVoTT = T) # diaggregated VoTT case
+```
+
+Set overall treatment of fine details of disaggregation.
+
+- related to potential variations in VoTT over vehicle Automation Level and Use type
+- related to variations in VMT shifts from deadheading/repositioning and empty VMT over Use type and Automation level (for Ridehail vehicles by Automation type and for Private fully Automated vehicles)
+
+```{r}
+global_disaggEmptyVMT = T
+global_disaggVoTT = T
+
+if (global_disaggVoTT) {
+  CaseAssumpsResults <- CaseAssumpsResultsDAVT
+} else {
+  CaseAssumpsResults <- CaseAssumpsResultsAgVT
+}
 ```
 
 #### Diagnosis/Testing: tables of revised intensities, `NIE` over original (`deltaCAV`)
@@ -2624,7 +2647,7 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
                                                 grouping_var_list = # list of variables that identify individual cases/scenarios
                                                   list("CombScen", "DemScen", "TechScen", "ElasCase", "VC", "Year")
 ) {
-  # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
+  # Aggregate Case assumps and results over some or all vehicle sub-types (Automation, Fuel, and Use), by share-weights
   # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars.
   #   Can be used to determine aggregates for specified subsets of A, F, U.
   
@@ -2743,6 +2766,16 @@ AggAssumpsResults <- aggregateSelectedCaseAssumpsResults(
   CaseAssumpsResults, 
   select(CombScen_Combinations_subset, -Notes) # defines scenarios wanted (DemScen, TechScen, Year, VC)
   )
+
+AggAssumpsResultsDAVT <- aggregateSelectedCaseAssumpsResults(
+  CaseAssumpsResultsDAVT, 
+  select(CombScen_Combinations_subset, -Notes) # defines scenarios wanted (DemScen, TechScen, Year, VC)
+  )
+
+temp <- AggAssumpsResults %>%
+  mutate(Case = "AgVT") %>%
+  filter(VC == "LDV") # %>%
+  # select(-)
 ```
 
 ```{r aggregateSelectedCaseEffects, echo = echoWorking}
@@ -3016,13 +3049,13 @@ AggAssumpsResultsShared <- aggregateSelectedCaseAssumpsResults(
 
 barPlotScenarioSetIntVMTEnergy(AggAssumpsResultsShared,
                                title = "Fig: Energy-Intensity, VMT, and Energy Scenarios",
-                               subtitle = "Shared Use, Excludes Ride-Pooling")
+                               subtitle = "Ridehailing Only, Excludes Ride-Pooling")
 ```
 
 ```{r}
 tableScenarioSetIntVMTEnergy(
   AggAssumpsResultsShared, 
-  tablecaption = "Shared Use, Excludes Ride-Pooling")
+  tablecaption = "Ridehailing Only, Excludes Ride-Pooling")
 ```
 
 #### Results for Private Non-Automated Vehicles, All drivetrains:
@@ -3210,11 +3243,6 @@ scenDisaggData <- addMainCostsPerVehMi(scenDisaggData, C_tot_base)
 ```
 
 ```{r}
-AggAssumpsResultsDAVT <- aggregateSelectedCaseAssumpsResults(
-  CaseAssumpsResultsDAVT, 
-  select(CombScen_Combinations_subset, -Notes) # defines scenarios wanted (DemScen, TechScen, Year, VC)
-  )
-
 scenAggDataDAVT <- AggAssumpsResultsDAVT %>%
   filter(
     DemScen %in% DemScenWanted,
@@ -3724,7 +3752,7 @@ By scenario assumption, in the non-pooled Shared (ride-hailing) Use case there i
 $$VMT(o=1) = PMT(o=1) \cdot \rho_{VMT,shared} $$
 Here $\rho_{VMT,shared}$ represents the multiplier for deadhead and repositioning travel for non-pooled ride-hailing, with a range of estimates of $\rho_{VMT,shared}$ for current TNCs range near $1.1 < \rho_{VMT,shared} < 1.3$ for comparatively efficient operations, and much higher estimated values in some service areas [see Lit.] 
 
-For this study, alternative values are taken for the Shared Use added VMT from the DOE SMART FY19 Scenarios, ranging from a low of 1.0 (Scenario 1 "Sharing is Caring") a mid-value of 1.3 (Baseline, and C_Low) to 1.6 (Scenario C_High, "All About Me"). We take these scenario Shared Use VMT multipliers as the starting points for the impact of pooling on VMT and PMT.
+For this study, alternative values are taken for the Ride-hailing (Shared) Use added VMT from the DOE SMART FY19 Scenarios, ranging from a low of 1.0 (Scenario 1 "Sharing is Caring") a mid-value of 1.3 (Baseline, and C_Low) to 1.6 (Scenario C_High, "All About Me"). We take these scenario Shared Use VMT multipliers as the starting points for the impact of pooling on VMT and PMT.
 
 Combining these last two relationships
 
@@ -3945,7 +3973,7 @@ grid.arrange(plt1 + theme(legend.position="none"),
              widths=c(3.2, 3.2, 0.8))
 
 ```
-In these figures, PKT demand responds to (full effective) cost of pooled ride-hailing
+In these figures, PMT demand responds to the (full effective) cost of pooled ride-hailing
 
 ### 6.3.2 Numerical results for a range of Occupancy, Road Charge ($/VMT) and Route-length Elasticity
 
@@ -4263,7 +4291,7 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
 
   # disaggregate the comb scenarios to the vehicle subcat (FAU) level
   CaseAssumpsResults_many %>% 
-  disaggCombScenResults(DetailedDemScens, disaggVoTT = F) %>% 
+  disaggCombScenResults(DetailedDemScens, disaggVoTT = global_disaggVoTT) %>% 
   # return() -> DisaggAssumpsResults #(3 DemScen * 9 TechScen * 2 VC * 2 ElasCase = 108)*(3 A * 3 F * 2 U) = 1944 subcat result rows
   # keep all rows in CaseAssumps that match row in CombScen_Combinations_subset (select desired subset)
   right_join(CombScen_Combinations_subset, by = c("Year", "ElasCase", "VC", "TechScen", "DemScen")) %>%
@@ -4491,10 +4519,11 @@ occupancyEffectsDisagg_0Croad %>% aggregateSelectedCaseAssumpsResultsByOAndCroad
 ```{r}
 AggAssumpsResultsShared2 %>%
   mutate(CombScen = DemScen) %>%
-  tableScenarioSetIntVMTEnergyVsO(tablecaption = "Shared Use, Includes Pooled Ride-hailing")
+  tableScenarioSetIntVMTEnergyVsO(tablecaption = "Ridehailing Only, Includes Pooled Ride-hailing")
 ```
 
-Shared Use, Includes Pooled Ride-hailing
+Shared Use (Ride-hailing), Includes Pooled Ride-hailing
+
 ```{r}
 plotEnergyVsPoolingForScenario(AggAssumpsResultsShared2)
 ```
