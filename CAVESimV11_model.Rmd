@@ -2620,21 +2620,25 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
                                                 # optionally can call for particular vehicle sub-cat
                                                 use_set = c("Private", "Shared"),
                                                 fuel_set = c("Gas", "PHEV", "BEV"),
-                                                auto_set = c("No", "Partial", "Full")
-                                                ) {
+                                                auto_set = c("No", "Partial", "Full"),
+                                                grouping_var_list = # list of variables that identify individual cases/scenarios
+                                                  list("CombScen", "DemScen", "TechScen", "ElasCase", "VC", "Year")
+) {
   # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
-  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars
+  # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars.
+  #   Can be used to determine aggregates for specified subsets of A, F, U.
+  
   case_assumps_results %>%
     # filter(Year==CurrYear) %>%
     right_join(comb_subset, # join assumps_results cols for cases matching rows in comb_subset
-      by = c("Year", "ElasCase", "VC", "TechScen", "DemScen") # case selectors
+               by = c("Year", "ElasCase", "VC", "TechScen", "DemScen") # case selectors
     ) %>%
     mutate(
       Joint_FAU_Share = F_A_Shares * U_Shares,
       totshare = Joint_FAU_Share, # will be needed if aggregating sub-segments
     ) %>%
     mutate_at( # convert all result vars to versions weighted by joint FAU share
-      vars( # divide each of these variables
+      vars( # mult each of these variables by joint share
         fracVMTIncr, NIE, EnergyUse,
         C_Fuel, C_Time, C_VNonF, C_Total,
         ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
@@ -2645,7 +2649,8 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
     filter(Automation %in% auto_set) %>%
     filter(Fuel %in% fuel_set) %>%
     filter(Use %in% use_set) %>%
-    group_by(CombScen, DemScen, TechScen, ElasCase, VC, Year) %>%
+    # group_by list of variables that are associated with invidual cases/scenarios (may vary)
+    group_by_(.dots = grouping_var_list) %>% # see https://datascience.blog.wzb.eu/2016/09/27/dynamic-columnvariable-names-with-dplyr-using-standard-evaluation-functions/
     summarise_at(
       # construct vehicle share-weighted average of these vars for each "scenario"
       vars(
@@ -2654,8 +2659,8 @@ aggregateSelectedCaseAssumpsResults <- function(case_assumps_results, # df with 
         C_Fuel, C_Time, C_VNonF, C_Total,
         ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
       ),
-      .funs = sum
-    ) %>% # this is an unweighted mean
+      .funs = sum # sum of share-weighted variables
+    ) %>%
     ungroup() %>%
     # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
     mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>% # replace zero by EPS to avoid divide by zero
@@ -4241,52 +4246,14 @@ aggregateSelectedCaseAssumpsResultsByOAndCroad <- function(case_assumps_results,
   # Aggregate Case assumps and results over all vehicle sub-types (Automation, Fuel, and Use), by share-weights
   # Returns df with 1 row per Scenario, 6 Scenario selection/ID variables, and 18 intermed and final results vars.
   #   Can be used to determine aggregates for specified subsets of A, F, U.
-  
-  case_assumps_results %>%
-    # filter(Year==CurrYear) %>%
-    right_join(comb_subset, # join assumps_results cols for cases matching rows in comb_subset
-      by = c("Year", "ElasCase", "VC", "TechScen", "DemScen") # case selectors
-    ) %>%
-    mutate(
-      Joint_FAU_Share = F_A_Shares * U_Shares,
-      totshare = Joint_FAU_Share, # will be needed if aggregating sub-segments
-    ) %>%
-    mutate_at( # convert all result vars to versions weighted by joint FAU share
-      vars( # mult each of these variables by joint share
-        fracVMTIncr, NIE, EnergyUse,
-        C_Fuel, C_Time, C_VNonF, C_Total,
-        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
-      ),
-      funs(. * Joint_FAU_Share)
-    ) %>%
-    # Allow aggregation of sub segments of the market
-    filter(Automation %in% auto_set) %>%
-    filter(Fuel %in% fuel_set) %>%
-    filter(Use %in% use_set) %>%
-    # group_by list of variables that are associated with invidual cases/scenarios (may vary)
-    group_by_(.dots = grouping_var_list) %>% # see https://datascience.blog.wzb.eu/2016/09/27/dynamic-columnvariable-names-with-dplyr-using-standard-evaluation-functions/
-    summarise_at(
-      # construct vehicle share-weighted average of these vars for each "scenario"
-      vars(
-        fracVMTIncr, NIE, EnergyUse,
-        totshare, F_A_Shares, U_Shares,
-        C_Fuel, C_Time, C_VNonF, C_Total,
-        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
-      ),
-      .funs = sum # sum of share-weighted variables
-    ) %>%
-    ungroup() %>%
-    # Now rescale for case where total shares are not 1.0 for this selected sub-segment of demand
-    mutate(totshare = ifelse(totshare == 0, 1E-8, totshare)) %>% # replace zero by EPS to avoid divide by zero
-    mutate_at(
-      vars(
-        fracVMTIncr, NIE, EnergyUse, F_A_Shares, U_Shares, 
-        C_Fuel, C_Time, C_VNonF, C_Total,
-        ElasVKT, RidePoolAdjFrac, USDmult, mI_A, mI_C, mI_FA, mI_FB, mD_U, mCT_A
-      ),
-      funs(. / totshare)
-    ) %>%
-    mutate(totshare = ifelse(totshare == 1E-8, 0, totshare)) # restore zeros to zero from EPS
+  aggregateSelectedCaseAssumpsResults(case_assumps_results, # df with precalc assumps & results
+                                                comb_subset, # df case subset to be aggregated (CombScen, Year, ElasCase, VC, TechScen, DemScen)
+                                                # optionally can call for particular vehicle sub-cat
+                                                use_set = use_set,
+                                                fuel_set = fuel_set,
+                                                auto_set = auto_set,
+                                                grouping_var_list = grouping_var_list # vars that ID cases/scenarios
+  )
 }
 ```
 
