@@ -416,3 +416,8 @@ Newer (in Sec 5.1 disaggCombScenResults())
   
   -.1296  -.0357
   0.2879  -.1191  0.4651	-.0185
+
+
+Docomunting Figures in Report
+---------------------------------------
+- plotStackedBarCostCompons(VTCostAlt, "C_High", "TS9", curr_title = " ")
