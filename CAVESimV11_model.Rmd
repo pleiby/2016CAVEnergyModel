@@ -4177,7 +4177,7 @@ plotfracEnergyChangevsC_road <- function(
     ylab("Change in Energy Use (0.0 = base)") +
     ylim(curr_ylimmin, curr_ylimmax) +  
     # annotate("text", x = 1.0, y = 25, label = "Some text") +
-    geom_rect(xmin = -0.5, xmax = 0.5, 
+    geom_rect(xmin = -1.0, xmax = 1.0, 
               ymin = min(0.0, baseEnergyChange), ymax = max(0.0, baseEnergyChange),
               color = "black", fill = my_colors[3], alpha = 0.5) +
     geom_hline(yintercept = 0.0, color = "black") +
@@ -4716,8 +4716,8 @@ occupancyEffectsDisagg_XCroad %>%
 (plt_rE_B + plt_rE_C) +
   plot_annotation(
     title = 'Relative Energy Use',
-    subtitle = 'Two scenarios with different levels of Ride-hailing',
-    caption = 'Exploratory results'
+    subtitle = 'Variations on the central outcomes for two scenarios which have different levels of Ride-hail travel.',
+    caption = 'CAVESim results'
   )
 ```
 
@@ -4726,8 +4726,8 @@ occupancyEffectsDisagg_XCroad %>%
 (plt_fE_B + plt_fE_C) +
   plot_annotation(
     title = 'Fractional Change in Energy Use',
-    subtitle = 'Two scenarios with different levels of Ride-hailing',
-    caption = 'Exploratory results'
+    subtitle = 'Variations on the central outcomes for two scenarios which have different levels of Ride-hail travel.',
+    caption = 'CAVESim results'
   )
 ```
 
